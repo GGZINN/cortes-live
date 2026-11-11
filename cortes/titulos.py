@@ -78,6 +78,8 @@ def _por_modelo(clip):
     motivo = (clip.get("motivo") or "").lower()
     frase = _frase_forte(clip)
     titulos = []
+    if clip.get("titulo_ia"):  # título de quem assistiu o corte (IA de cortes)
+        titulos.append(clip["titulo_ia"])
     if frase and len(frase) > 8:
         titulos.append(f"\"{frase}\" 💀")
     if "kkkk" in motivo or "reagindo" in motivo:
@@ -148,7 +150,8 @@ def _contexto(clip):
         f"Canal: {clip.get('canal')} ({clip.get('plataforma')})\n"
         f"Título da live: {clip.get('titulo_live') or '-'}\n"
         f"Por que foi cortado: {clip.get('motivo')}\n"
-        f"Palavras mais repetidas no chat nesse momento: {', '.join(clip.get('palavras_chat') or []) or '-'}\n"
+        + (f"O que a IA viu no corte: gancho = {clip.get('gancho')} | por que retém = {clip.get('por_que')} | "
+           f"título sugerido por quem assistiu = {clip.get('titulo_ia')}\n" if clip.get("gancho") else "") +
         f"Frase dita no auge do momento: {clip.get('frase_pico') or '-'}\n"
         f"Duração: {clip.get('duracao')} s\n\n"
         f"Transcrição do corte:\n{clip.get('transcricao') or '(sem fala)'}"
@@ -186,17 +189,31 @@ def _gemini(clip):
         response_json_schema=_schema_sem_refs(Sugestoes),
         temperature=0.9,
     )
+    resp = gemini_gerar(cliente, MODELOS_GEMINI, _contexto(clip), cfg)
+    return Sugestoes.model_validate_json(resp.text) if resp and resp.text else None
+
+
+TRANSITORIOS = ("ReadError", "ReadTimeout", "ConnectError", "RemoteProtocolError", "WriteError",
+                "500", "502", "503", "504", "UNAVAILABLE", "INTERNAL", "DEADLINE_EXCEEDED")
+
+
+def gemini_gerar(cliente, modelos, contents, cfg, tentativas=3):
+    """Chama o Gemini com tentativas: falha de rede passageira → tenta de novo;
+    limite grátis/erro do modelo → passa para o próximo modelo da lista."""
+    import time
     erro = None
-    for modelo in MODELOS_GEMINI:  # se o limite grátis de um estourar, tenta o próximo
-        try:
-            resp = cliente.models.generate_content(model=modelo, contents=_contexto(clip), config=cfg)
-            if resp.text:
-                return Sugestoes.model_validate_json(resp.text)
-        except Exception as e:  # noqa
-            erro = e
-    if erro:
-        raise erro
-    return None
+    for modelo in modelos:
+        for n in range(tentativas):
+            try:
+                return cliente.models.generate_content(model=modelo, contents=contents, config=cfg)
+            except Exception as e:  # noqa
+                erro = e
+                txt = f"{type(e).__name__} {e}"
+                if any(x in txt for x in TRANSITORIOS) and n + 1 < tentativas:
+                    time.sleep(2 + 3 * n)
+                    continue
+                break  # não é passageiro: tenta o próximo modelo
+    raise erro or RuntimeError("resposta vazia do Gemini")
 
 
 # ---- Claude (Anthropic) - pago

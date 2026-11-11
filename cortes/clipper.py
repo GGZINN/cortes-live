@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 
-from . import config, titulos
+from . import config, curadoria, titulos
 
 FLAGS = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
 INDEX = os.path.join(config.CLIPS_DIR, "cortes.json")
@@ -32,6 +32,10 @@ def _save():
         json.dump(clips, f, indent=1, ensure_ascii=False)
 
 
+if curadoria.preencher_lotes_antigos(clips):  # cortes de antes dos lotes existirem
+    _save()
+
+
 def update_clip(cid, **kw):
     with _lock:
         for c in clips:
@@ -42,6 +46,7 @@ def update_clip(cid, **kw):
 
 def add_clip(clip):
     with _lock:
+        curadoria.atribuir_lote(clip, clips)
         clips.insert(0, clip)
         _save()
 
@@ -296,6 +301,10 @@ def _worker():
         except Exception as e:  # noqa
             traceback.print_exc()
             update_clip(cid, status="erro", erro=str(e)[-300:])
+        try:
+            curadoria.verificar()  # fechou um lote de 10? escolhe os 2 para postar
+        except Exception:  # noqa
+            traceback.print_exc()
 
 
 threading.Thread(target=_worker, daemon=True).start()

@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import clipper, config, manager
+from . import clipper, config, curadoria, manager
 
 LIVES_FILE = os.path.join(config.DATA_DIR, "lives.json")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -34,13 +34,13 @@ def _startup():
                 manager.add_stream(url)
         except Exception:
             pass
+    curadoria.verificar()  # lotes completos que ainda não tiveram os 2 escolhidos
 
 
 @app.on_event("shutdown")
 def _shutdown():
     for s in list(manager.streams.values()):
-        s.recorder.stop()
-        s.chat.stop()
+        s.stop()
 
 
 @app.get("/")
@@ -77,7 +77,8 @@ def force_clip(sid: str):
     s = manager.streams.get(sid)
     if not s or s.recorder.status != "gravando":
         raise HTTPException(400, "live não está gravando")
-    s._trigger(s.recorder.t - 5, 9.9, "chat")
+    fim = s.recorder.covered_until()
+    s.criar_corte(max(0.0, fim - 30), fim, {"motivo": "Teste manual", "pontuacao": 0, "pico_rel": 3.0})
     return {"ok": True}
 
 
@@ -87,7 +88,21 @@ def estado():
         "lives": [s.to_dict() for s in manager.streams.values()],
         "cortes": clipper.list_clips(),
         "fila": clipper.jobs.qsize(),
+        "lotes": curadoria.estado(),
+        "tam_lote": curadoria.TAM_LOTE,
     }
+
+
+class LoteReq(BaseModel):
+    canal: str
+    lote: int
+
+
+@app.post("/api/lotes/escolher")
+def escolher_lote(req: LoteReq):
+    """Escolhe agora os melhores de um lote ainda incompleto."""
+    curadoria.verificar(forcar=(req.canal.lower(), req.lote))
+    return {"ok": True}
 
 
 @app.get("/api/config")

@@ -10,19 +10,37 @@ cortes **verticais 9:16 com legenda animada**, prontos para TikTok, Shorts e Ree
 3. Pode deixar rodando: se o canal estiver offline, ele fica esperando e começa a gravar quando a live abrir.
 4. Os cortes aparecem no painel e ficam salvos em `cortes_prontos/`.
 
-## Como ele decide o que cortar
+## Como ele decide o que cortar: a IA assiste a live
 
-A cada segundo ele compara a live com o "normal" dos últimos 5 minutos:
+Com a chave do Gemini (grátis, veja abaixo), **a IA assiste a live**, imagem e áudio, em blocos
+de 2 minutos (um a cada 1min30, com sobreposição para não perder nada na emenda). Ela escolhe
+os trechos pelo que **aparece na tela e é falado**. O chat não é usado.
 
-| Sinal | O que mede |
-|---|---|
-| **Chat** | mensagens por segundo explodindo |
-| **Hype** | `kkkk`, `KEKW`, `LUL`, `POG`, `???`, `😂`, `💀`, "clip"... |
-| **Áudio** | grito, risada, música alta (volume bem acima do normal) |
+Critérios que ela segue (do que mais segura gente em TikTok/Shorts/Reels):
 
-Quando a pontuação passa a linha amarela do gráfico, ele salva os **25 s antes e 10 s depois**.
-Se o momento continuar quente, o corte é esticado (até 60 s). Tudo ajustável em ⚙ Configurações.
-Precisa de ~1 minuto de live para "aprender" o normal antes do primeiro corte.
+1. **Gancho imediato**: o corte começa no instante em que algo já prende (frase forte, grito, ação na tela), sem começo morto.
+2. **Promessa e recompensa**: o começo deixa curioso e o trecho entrega um desfecho. O corte termina logo depois dele.
+3. **Se entende sozinho**, sem precisar ter visto a live.
+4. **O que mais retém**: reação forte e genuína, jogada absurda, fail/vergonha, algo inesperado, história com final engraçado, frase polêmica ou marcante, momento emocionante.
+5. **12 a 60 s** (ideal 20 a 40).
+6. **Evita**: tela parada, menu, carregamento, anúncio, leitura de doações, conversa morna.
+
+Cada trecho recebe uma **nota de 0 a 10**. A **sensibilidade** define a partir de qual nota corta
+(5–6 → nota 7+). No card da live, cada barra é um trecho analisado: **verde virou corte**,
+amarela passou da nota mas já tinha sido cortada, cinza não valia.
+
+**Sem a chave do Gemini**, ele usa a reserva: corta nos picos de áudio (grito, risada, explosão),
+pegando 25 s antes e 10 s depois.
+
+## Abas por streamer e os 2 melhores de cada 10
+
+Os cortes ficam separados em **uma aba por streamer** (ex.: *alanzoka*, *Gaules*). Dentro de cada aba:
+
+- **⭐ Para postar**: só os escolhidos. A cada **10 cortes** de um streamer (um *lote*), a IA compara
+  os 10 (gancho, desfecho, se entende sozinho, emoção, duração, variedade) e escolhe os **2** que
+  devem ser postados, explicando o porquê. Sem a chave do Gemini, escolhe pela maior nota.
+- **Todos**: todos os cortes, separados por lote. Os que ficaram de fora aparecem apagadinhos, mas não são apagados.
+- **Escolher agora**: escolhe os 2 melhores do lote atual sem esperar completar 10.
 
 ## Publicar (títulos + passo a passo)
 
@@ -53,10 +71,8 @@ quando não há chave do Gemini. As chaves ficam salvas só neste computador, em
 
 ## Situação por plataforma
 
-- **Twitch**: vídeo + chat ✅
-- **YouTube**: vídeo + chat ✅
-- **Kick**: vídeo ✅. A Kick trocou o sistema de chat dela e o novo não é público,
-  então nas lives da Kick o corte é decidido **só pelo áudio**.
+Twitch, YouTube e Kick funcionam igual: a IA assiste o vídeo, então não depende do chat de
+nenhuma plataforma. Na Twitch, os intervalos comerciais são pulados na gravação.
 
 ## Dicas
 

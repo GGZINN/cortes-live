@@ -73,6 +73,32 @@
   select{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:8px;border-radius:8px;font:inherit;width:100%}
   .field input[type=password],.field input[type=text]{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:9px 10px;border-radius:8px;font:inherit}
   .clip .acts .pub{background:var(--accent);border-color:var(--accent);font-weight:600}
+  .ctabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:12px}
+  .ctabs button{border-radius:10px;padding:9px 16px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .ctabs button span{font-weight:500;font-size:12px;color:var(--muted)}
+  .ctabs button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+  .ctabs button.on span{color:#555}
+  .csub{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .seg button{border:none;background:none;padding:7px 14px;border-radius:8px;font-weight:600;font-size:13px;color:var(--muted)}
+  .seg button.on{background:var(--panel2);color:var(--text)}
+  .loteinfo{font-size:13px;color:var(--muted)}
+  .loteinfo b{color:var(--text)}
+  button.mini{padding:4px 10px;font-size:12px;border-radius:7px;margin-left:6px}
+  .lotecab{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:18px 0 10px}
+  .lotecab b{font-size:14px}
+  .lotecab span{font-size:12.5px;color:var(--muted)}
+  .lotecab .resumo{flex-basis:100%;font-size:12.5px;color:var(--muted);font-style:italic}
+  .clip.esc{border-color:rgba(255,176,32,.7);box-shadow:0 0 0 1px rgba(255,176,32,.35)}
+  .clip.desc{opacity:.5}
+  .clip.desc:hover{opacity:1}
+  .clip .star{font-size:12px;font-weight:700;color:var(--accent2)}
+  .clip .pq{font-size:12px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .modo{padding:2px 8px;border-radius:6px;background:var(--panel2);color:var(--muted)}
+  .modo.ia{background:rgba(145,70,255,.18);color:#c9a8ff;font-weight:600}
+  .iabox{font-size:12.5px;margin:-2px 0 10px;min-height:18px}
+  .iast{color:var(--muted)}
+  .iares{color:var(--text);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
   /* ---------- Publicar ---------- */
   dialog#pub{width:min(1040px,96vw);padding:0;max-height:92vh}
@@ -129,15 +155,17 @@
   <div class="lives" id="lives"></div>
 
   <h2>Cortes</h2>
-  <div class="clips" id="clips"></div>
+  <div class="ctabs" id="ctabs"></div>
+  <div class="csub" id="csub"></div>
+  <div id="cbody"></div>
 </main>
 
 <dialog id="cfg">
   <h3 style="margin-top:0">Configurações</h3>
   <div class="field"><label>Sensibilidade <span id="v_sensibilidade"></span></label>
-    <input type="range" min="1" max="10" data-k="sensibilidade"><small>Mais alto = mais cortes (inclusive momentos menos fortes).</small></div>
+    <input type="range" min="1" max="10" data-k="sensibilidade"><small>Mais alto = mais cortes. Com a IA: 1–2 corta só nota 9+, 5–6 corta nota 7+, 9–10 corta nota 5+.</small></div>
   <div class="field"><label>Segundos antes do pico <span id="v_segundos_antes"></span></label>
-    <input type="range" min="5" max="60" data-k="segundos_antes"><small>O chat reage alguns segundos depois do momento, então pegue uma margem.</small></div>
+    <input type="range" min="5" max="60" data-k="segundos_antes"><small>Só no modo áudio (sem chave do Gemini). Com a IA, ela mesma escolhe onde o corte começa e termina.</small></div>
   <div class="field"><label>Segundos depois do pico <span id="v_segundos_depois"></span></label>
     <input type="range" min="0" max="30" data-k="segundos_depois"></div>
   <div class="field"><label>Duração máxima do corte <span id="v_duracao_maxima"></span></label>
@@ -210,7 +238,7 @@ function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&
 
 function renderLives(lives){
   const box = $("#lives");
-  if(!lives.length){ box.innerHTML = '<div class="empty">Cole o link de um canal acima. A ferramenta grava a live, lê o chat e corta sozinha os melhores momentos.</div>'; return; }
+  if(!lives.length){ box.innerHTML = '<div class="empty">Cole o link de um canal acima. A IA assiste a live e corta sozinha os momentos com mais potencial de retenção.</div>'; return; }
   const ids = new Set(lives.map(l=>l.id));
   [...box.children].forEach(c => { if(!ids.has(c.dataset.id)) c.remove(); });
   for(const l of lives){
@@ -218,7 +246,7 @@ function renderLives(lives){
     if(!el){
       el = document.createElement("div"); el.className="live"; el.dataset.id=l.id;
       el.innerHTML = `<div class="top"><span class="badge ${l.plataforma}">${l.plataforma}</span><span class="name"></span><span class="status"><b></b><em></em></span><button class="x" title="Remover">✕</button></div>
-        <div class="title"></div><div class="stats"></div><canvas></canvas>`;
+        <div class="title"></div><div class="stats"></div><div class="iabox"></div><canvas></canvas>`;
       el.querySelector(".x").onclick = () => delLive(l.id);
       box.appendChild(el);
     }
@@ -226,11 +254,35 @@ function renderLives(lives){
     const st = el.querySelector(".status"); st.className = "status "+l.status;
     st.querySelector("em").textContent = statusTxt[l.status] || l.status;
     el.querySelector(".title").textContent = l.status==="gravando" ? l.titulo : (l.detalhe || l.titulo || "");
+    const modo = l.modo==="ia" ? `<span class="modo ia">🧠 IA assistindo</span>` : `<span class="modo">🔊 só áudio</span>`;
     el.querySelector(".stats").innerHTML =
-      `<span>gravado <b>${fmtTime(l.tempo)}</b></span><span>chat <b>${esc(l.chat)}</b> · <b>${l.msgs_chat}</b> msgs</span><span>cortes <b>${l.cortes}</b></span>` +
+      `${modo}<span>gravado <b>${fmtTime(l.tempo)}</b></span><span>cortes <b>${l.cortes}</b></span>` +
       (l.aguardando_corte ? `<span style="color:var(--accent2)"><b>● cortando momento…</b></span>`:"") ;
-    drawChart(el.querySelector("canvas"), l.serie, l.limite);
+    const ult = (l.analises||[]).slice(-1)[0];
+    el.querySelector(".iabox").innerHTML = l.modo==="ia"
+      ? `<div class="iast">${esc(l.ia_status)}</div>` + (ult ? `<div class="iares">“${esc(ult.resumo)}” <b>nota ${ult.nota}/10</b>${ult.cortes?` · <span style="color:var(--ok)">✂ ${ult.cortes} corte${ult.cortes>1?"s":""}</span>`:""}</div>` : "")
+      : `<div class="iast">Sem chave do Gemini: cortando só pelos picos de áudio. Coloque a chave grátis em ⚙ Configurações para a IA assistir a live.</div>`;
+    if(l.modo==="ia") drawBars(el.querySelector("canvas"), l.analises||[], l.limite_nota);
+    else drawChart(el.querySelector("canvas"), l.serie, l.limite);
   }
+}
+
+/* modo IA: uma barra por trecho analisado (nota 0-10); verde = virou corte */
+function drawBars(cv, an, limite){
+  const dpr = devicePixelRatio||1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w*dpr; cv.height = h*dpr;
+  const g = cv.getContext("2d"); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
+  const y = v => h-8 - (v/10)*(h-20);
+  g.strokeStyle="rgba(255,176,32,.6)"; g.setLineDash([4,4]); g.beginPath(); g.moveTo(0,y(limite)); g.lineTo(w,y(limite)); g.stroke(); g.setLineDash([]);
+  g.fillStyle="rgba(255,176,32,.85)"; g.font="10px Inter"; g.fillText(`corta a partir da nota ${limite}`, 6, y(limite)-4);
+  if(!an.length){ g.fillStyle="#666"; g.fillText("a IA analisa a cada 1min30 (blocos de 2 min de live)", 6, h/2+14); return; }
+  const N = 24, bw = w/N, ini = Math.max(0, an.length-N);
+  an.slice(ini).forEach((a,i)=>{
+    const x = (N - Math.min(N, an.length) + i)*bw;
+    g.fillStyle = a.cortes ? "#2bd67b" : (a.nota>=limite ? "#ffb020" : "#3a3f4b");
+    const top = y(Math.max(a.nota, 0.3));
+    g.fillRect(x+3, top, bw-6, h-8-top);
+  });
 }
 
 function drawChart(cv, serie, limite){
@@ -253,38 +305,120 @@ function drawChart(cv, serie, limite){
 
 function clipHTML(c){
   const when = new Date(c.criado).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-  const tags = (c.palavras_chat||[]).map(w=>`<span class="tag">${esc(w)}</span>`).join("");
+  const tags = c.por_que ? `<div class="pq">${esc(c.por_que)}</div>` : "";
+  const motivo = c.por_que ? `🧠 nota ${c.pontuacao}/10 · ${esc(String(c.motivo).replace(/^IA: /,""))}` : `⚡ ${esc(c.motivo)}`;
   let vid;
   if(c.status==="pronto") vid = `<video src="${c.arquivo}" poster="${c.capa}" controls preload="none" playsinline></video>`;
   else if(c.status==="erro") vid = `<div class="proc err">Falhou<br><small>${esc(c.erro)}</small></div>`;
   else vid = `<div class="proc"><div class="spinner"></div>${esc(c.status)}…</div>`;
+  const star = c.escolhido ? `<div class="star">⭐ Escolhido para postar</div>${c.motivo_escolha?`<div class="pq">${esc(c.motivo_escolha)}</div>`:""}` : "";
   return `<div class="vid">${vid}</div><div class="info">
+    ${star}
     <div class="t">${esc(c.titulo || c.motivo)}</div>
     <div class="m">${esc(c.canal)} · ${when} · ${c.duracao}s</div>
-    <div class="m">⚡ ${esc(c.motivo)} (força ${c.pontuacao})</div>
-    <div>${tags}</div>
+    <div class="m">${motivo}</div>
+    ${tags}
     <div class="acts">${c.status==="pronto" ? `<button class="pub" onclick="abrirPublicar('${c.id}')">Publicar</button><a href="${c.arquivo}" download="${slug(c.titulo)||"corte-"+c.id}.mp4">Baixar</a>`:""}<button onclick="delClip('${c.id}')">Apagar</button></div>
   </div>`;
 }
-function renderClips(clips){
-  const box = $("#clips");
-  if(!clips.length){ box.innerHTML = '<div class="empty" style="grid-column:1/-1">Nenhum corte ainda. Eles aparecem aqui sozinhos quando a live tiver um momento forte.</div>'; return; }
-  box.querySelector(".empty")?.remove();
-  clips.forEach((c, i) => {
-    const key = c.status + (c.titulo||"");
-    let el = document.getElementById("c_"+c.id);
-    if(!el){ el = document.createElement("div"); el.className="clip"; el.id="c_"+c.id; }
-    if(clipCache[c.id] !== key){ el.innerHTML = clipHTML(c); clipCache[c.id] = key; }
-    if(box.children[i] !== el) box.insertBefore(el, box.children[i] || null);
-  });
+/* ---------- cortes: uma aba por streamer, "Para postar" / "Todos" por lote ---------- */
+function lsGet(k){ try{ return localStorage.getItem("cl_"+k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem("cl_"+k, v); }catch(e){} }
+let abaCanal = lsGet("aba"), filtro = lsGet("filtro") || "postar", estrutura = "";
+
+const _html = {};
+function setHTML(sel, h){ if(_html[sel] !== h){ _html[sel] = h; $(sel).innerHTML = h; } }
+
+function cardDe(c){
+  let el = document.getElementById("c_"+c.id);
+  if(!el){ el = document.createElement("div"); el.className="clip"; el.id="c_"+c.id; }
+  const key = [c.status, c.titulo, c.escolhido, c.motivo_escolha].join("|");
+  if(clipCache[c.id] !== key){ el.innerHTML = clipHTML(c); clipCache[c.id] = key; }
+  el.classList.toggle("desc", c.escolhido === false);
+  el.classList.toggle("esc", c.escolhido === true);
+  return el;
 }
+
+function renderClips(clips, lotes, tam){
+  const canais = {};
+  clips.forEach(c => { const k = (c.canal||"?").toLowerCase(); (canais[k] = canais[k] || {nome:c.canal, clips:[]}).clips.push(c); });
+  const keys = Object.keys(canais).sort((a,b) => String(canais[b].clips[0].criado).localeCompare(String(canais[a].clips[0].criado)));
+  if(!keys.length){
+    setHTML("#ctabs", ""); setHTML("#csub", ""); estrutura = "";
+    $("#cbody").innerHTML = '<div class="empty">Nenhum corte ainda. Eles aparecem aqui sozinhos quando a IA achar um momento forte.</div>';
+    return;
+  }
+  if(!abaCanal || !canais[abaCanal]) abaCanal = keys[0];
+  const meus = canais[abaCanal].clips;
+
+  // lotes do streamer da aba (mais novo primeiro)
+  const porLote = {};
+  meus.forEach(c => (porLote[c.lote||0] = porLote[c.lote||0] || []).push(c));
+  const nums = Object.keys(porLote).map(Number).sort((a,b)=>b-a);
+  const st = n => (lotes[`${abaCanal}|${n}`]||{});
+  const escolhidos = meus.filter(c => c.escolhido === true);
+
+  // abas de streamer
+  setHTML("#ctabs", keys.map(k => {
+    const cs = canais[k].clips, e = cs.filter(c=>c.escolhido===true).length;
+    return `<button class="${k===abaCanal?"on":""}" data-aba="${esc(k)}">${esc(canais[k].nome)}<span>${e?`⭐ ${e} · `:""}${cs.length}</span></button>`;
+  }).join(""));
+
+  // sub-abas + situação do lote atual
+  const atual = nums[0], nAtual = porLote[atual].length, sAtual = st(atual).status;
+  let info;
+  if(sAtual === "escolhendo") info = `🧠 IA escolhendo os ${Math.min(2,nAtual)} melhores do lote ${atual}…`;
+  else if(sAtual === "feito") info = `Lote ${atual} fechado. Os próximos cortes começam o lote ${atual+1}.`;
+  else info = `Lote ${atual}: <b>${nAtual}/${tam}</b> cortes · a IA escolhe os 2 melhores quando completar ${tam}`
+            + (nAtual ? ` <button class="mini" data-escolher="${atual}">Escolher agora</button>` : "");
+  setHTML("#csub",
+    `<div class="seg"><button class="${filtro==="postar"?"on":""}" data-filtro="postar">⭐ Para postar (${escolhidos.length})</button>`+
+    `<button class="${filtro==="todos"?"on":""}" data-filtro="todos">Todos (${meus.length})</button></div><div class="loteinfo">${info}</div>`);
+
+  // corpo: só reconstrói a estrutura se algo mudou (senão os vídeos que estão tocando param)
+  const grupos = nums.map(n => {
+    const lista = filtro === "postar" ? porLote[n].filter(c => c.escolhido === true) : porLote[n];
+    return {n, lista, s: st(n)};
+  }).filter(g => g.lista.length);
+  const assinatura = abaCanal + filtro + JSON.stringify(grupos.map(g => [g.n, g.s.status, g.s.resumo, g.lista.map(c=>c.id)]));
+  if(assinatura !== estrutura){
+    estrutura = assinatura;
+    const body = $("#cbody"); body.innerHTML = "";
+    if(!grupos.length){
+      body.innerHTML = `<div class="empty">Ainda não há cortes escolhidos para postar de ${esc(canais[abaCanal].nome)}. `+
+        `A cada ${tam} cortes a IA escolhe os 2 melhores. Lote atual: ${nAtual}/${tam}. Veja todos em <b>Todos</b>.</div>`;
+    }
+    grupos.forEach(g => {
+      const total = porLote[g.n].length;
+      const cab = document.createElement("div"); cab.className = "lotecab";
+      const estado = g.s.status === "feito" ? `⭐ ${porLote[g.n].filter(c=>c.escolhido===true).length} escolhido(s) de ${total}${g.s.fonte==="nota"?" (pela nota)":""}`
+                   : g.s.status === "escolhendo" ? "🧠 IA escolhendo…" : `${total}/${tam} cortes`;
+      cab.innerHTML = `<b>Lote ${g.n}</b><span>${estado}</span>` + (g.s.resumo ? `<div class="resumo">${esc(g.s.resumo)}</div>` : "");
+      const grid = document.createElement("div"); grid.className = "clips";
+      g.lista.forEach(c => grid.appendChild(cardDe(c)));
+      body.appendChild(cab); body.appendChild(grid);
+    });
+  } else {
+    grupos.forEach(g => g.lista.forEach(cardDe));  // só atualiza o conteúdo dos cards
+  }
+}
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-aba],[data-filtro],[data-escolher]"); if(!b) return;
+  if(b.dataset.aba){ abaCanal = b.dataset.aba; lsSet("aba", abaCanal); }
+  if(b.dataset.filtro){ filtro = b.dataset.filtro; lsSet("filtro", filtro); }
+  if(b.dataset.escolher){
+    if(!confirm("Escolher agora os 2 melhores deste lote, mesmo sem completar 10 cortes? Os próximos cortes vão para um lote novo.")) return;
+    b.disabled = true; await api("/api/lotes/escolher", {method:"POST", body:JSON.stringify({canal:abaCanal, lote:Number(b.dataset.escolher)})});
+  }
+  tick();
+});
 
 const clipsById = {};
 async function tick(){
   try{
     const s = await api("/api/estado");
     s.cortes.forEach(c => clipsById[c.id] = c);
-    renderLives(s.lives); renderClips(s.cortes);
+    renderLives(s.lives); renderClips(s.cortes, s.lotes||{}, s.tam_lote||10);
     $("#fila").textContent = "fila de processamento: " + s.fila;
   }catch(e){ $("#fila").textContent = "servidor desconectado"; }
 }
@@ -377,7 +511,7 @@ function abrirPublicar(id){
   pubClip = clipsById[id]; if(!pubClip) return;
   pubSel = 0; pubCustom = null;
   const v = $("#pubVideo"); v.src = pubClip.arquivo; v.poster = pubClip.capa || "";
-  $("#pubInfo").innerHTML = `${esc(pubClip.canal)} · ${pubClip.duracao}s<br>⚡ ${esc(pubClip.motivo)}`;
+  $("#pubInfo").innerHTML = `${esc(pubClip.canal)} · ${pubClip.duracao}s<br>${pubClip.por_que ? "🧠 "+esc(pubClip.por_que) : "⚡ "+esc(pubClip.motivo)}`;
   renderPub();
   pub.showModal();
   if(!pubClip.sugestoes) gerarDeNovo();
