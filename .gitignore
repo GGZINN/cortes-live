@@ -1,0 +1,19 @@
+# Configurações locais (contém as chaves do Gemini/Claude!) e buffer das lives
+dados/
+
+# Cortes gerados (vídeos pesados)
+cortes_prontos/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Sistema
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Arquivos locais do Claude Code
+.claude/settings.local.json

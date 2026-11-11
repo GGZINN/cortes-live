@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cortes-live",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-c", "import uvicorn; uvicorn.run('cortes.app:app', host='127.0.0.1', port=8765, log_level='warning')"],
+      "port": 8765
+    }
+  ]
+}

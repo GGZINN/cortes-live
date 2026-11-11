@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cortes Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0d10; --panel:#15171c; --panel2:#1c1f26; --line:#272b34;
+    --text:#eceef2; --muted:#8b91a0; --accent:#ff3b5c; --accent2:#ffb020;
+    --ok:#2bd67b; --twitch:#9146ff; --youtube:#ff2e2e; --kick:#53fc18;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,sans-serif}
+  header{display:flex;align-items:center;gap:16px;padding:18px 28px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(12,13,16,.92);backdrop-filter:blur(8px);z-index:5}
+  .logo{font-weight:800;letter-spacing:.5px;font-size:18px;display:flex;align-items:center;gap:10px}
+  .logo i{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  header .sp{flex:1}
+  .chip{padding:6px 12px;border-radius:999px;background:var(--panel2);color:var(--muted);font-size:12px}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 14px;border-radius:10px}
+  button:hover{border-color:#3a404c}
+  button.primary{background:var(--accent);border-color:var(--accent);font-weight:600}
+  button.ghost{background:none}
+  main{padding:24px 28px;max-width:1500px;margin:0 auto}
+  .add{display:flex;gap:10px;margin-bottom:22px}
+  .add input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:13px 16px;border-radius:12px;font:inherit;font-size:15px}
+  .add input:focus{outline:none;border-color:var(--accent)}
+  .add button{padding:0 22px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:26px 0 12px;font-weight:600}
+  .lives{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px}
+  .live{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .live .top{display:flex;align-items:center;gap:10px}
+  .badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;color:#fff}
+  .badge.twitch{background:var(--twitch)} .badge.youtube{background:var(--youtube)} .badge.kick{background:var(--kick);color:#000} .badge.outro{background:#555}
+  .live .name{font-weight:700;font-size:16px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .status{font-size:12px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+  .status b{width:8px;height:8px;border-radius:50%;background:#666;display:inline-block}
+  .status.gravando b{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  .status.gravando{color:var(--text)}
+  .status.offline b{background:#555}
+  .live .title{color:var(--muted);font-size:12.5px;margin:6px 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px}
+  .stats{display:flex;gap:18px;font-size:12px;color:var(--muted);margin-bottom:10px;flex-wrap:wrap}
+  .stats span b{color:var(--text);font-weight:600}
+  canvas{width:100%;height:110px;display:block;background:var(--panel2);border-radius:10px}
+  .x{background:none;border:none;color:var(--muted);font-size:18px;padding:2px 6px}
+  .x:hover{color:var(--accent)}
+  .clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+  .clip{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+  .clip .vid{aspect-ratio:9/16;background:#000;position:relative;display:flex;align-items:center;justify-content:center}
+  .clip video{width:100%;height:100%;object-fit:cover;display:block}
+  .clip .proc{color:var(--muted);text-align:center;font-size:13px;padding:20px}
+  .spinner{width:28px;height:28px;border:3px solid #333;border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .clip .info{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .clip .t{font-weight:600;font-size:13.5px;line-height:1.3}
+  .clip .m{font-size:12px;color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;background:rgba(255,59,92,.15);color:#ff8ea2;margin-right:4px}
+  .clip .acts{display:flex;gap:8px;margin-top:auto;padding-top:6px}
+  .clip .acts a,.clip .acts button{flex:1;text-align:center;text-decoration:none;font-size:12.5px;padding:7px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}
+  .clip .acts a.dl{background:var(--accent);border-color:var(--accent);font-weight:600}
+  .empty{color:var(--muted);padding:28px;border:1px dashed var(--line);border-radius:14px;text-align:center}
+  .err{color:#ff8ea2;font-size:12px}
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:24px;width:min(520px,92vw)}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .field{margin:14px 0}
+  .field label{display:flex;justify-content:space-between;font-weight:500;margin-bottom:6px}
+  .field label span{color:var(--accent2);font-weight:700}
+  .field small{color:var(--muted);display:block;margin-top:4px;font-size:12px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  select{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:8px;border-radius:8px;font:inherit;width:100%}
+  .field input[type=password],.field input[type=text]{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:9px 10px;border-radius:8px;font:inherit}
+  .clip .acts .pub{background:var(--accent);border-color:var(--accent);font-weight:600}
+
+  /* ---------- Publicar ---------- */
+  dialog#pub{width:min(1040px,96vw);padding:0;max-height:92vh}
+  .pub-wrap{display:grid;grid-template-columns:260px 1fr;min-height:0}
+  .pub-side{background:#000;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .pub-side video{width:100%;aspect-ratio:9/16;border-radius:12px;background:#111;object-fit:cover}
+  .pub-main{padding:20px 22px;overflow:auto;max-height:92vh}
+  .pub-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .pub-head h3{margin:0;flex:1;font-size:17px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .tabs button{border-radius:999px;padding:7px 14px;font-weight:600;font-size:13px}
+  .tabs button.on{color:#fff;border-color:transparent}
+  .sec{margin:16px 0}
+  .sec>b{display:block;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .tits{display:flex;flex-direction:column;gap:6px}
+  .tit{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:10px;font-size:14px}
+  .tit span{flex:1}
+  .tit.on{border-color:var(--accent2);background:rgba(255,176,32,.08)}
+  .tit i{font-style:normal;font-size:11px;color:var(--muted)}
+  .box{position:relative}
+  .box textarea,.box input{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;font-size:14px;resize:vertical}
+  .box textarea{min-height:120px}
+  .row{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+  .row small{color:var(--muted);flex:1}
+  .row small.bad{color:#ff8ea2}
+  .bigacts{display:flex;gap:8px;flex-wrap:wrap}
+  .bigacts a,.bigacts button{flex:1;min-width:150px;text-align:center;text-decoration:none;padding:11px;border-radius:10px;font-weight:600;border:1px solid var(--line);background:var(--panel2);color:var(--text)}
+  .bigacts .go{color:#fff;border-color:transparent}
+  .bigacts .off{opacity:.55;cursor:default}
+  ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+  ul.dicas{margin:0;padding-left:18px;color:var(--muted);display:flex;flex-direction:column;gap:4px;font-size:13px}
+  .nota{font-size:12.5px;color:var(--muted);background:var(--panel2);border-radius:10px;padding:10px 12px;border-left:3px solid var(--accent2)}
+  .fonte{font-size:11.5px;padding:3px 8px;border-radius:6px;background:var(--panel2);color:var(--muted)}
+  .fonte.ia{background:rgba(145,70,255,.18);color:#c9a8ff}
+  @media (max-width:760px){.pub-wrap{grid-template-columns:1fr}.pub-side video{max-height:45vh;width:auto;margin:0 auto}.pub-main{max-height:none;overflow:visible}dialog#pub{overflow:auto}}
+  @media (max-width:600px){header,main{padding-left:16px;padding-right:16px}.lives{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><i></i>CORTES LIVE</div>
+  <span class="chip" id="fila">fila: 0</span>
+  <div class="sp"></div>
+  <button class="ghost" onclick="abrirPasta()">📁 Abrir pasta</button>
+  <button onclick="abrirConfig()">⚙ Configurações</button>
+</header>
+<main>
+  <form class="add" onsubmit="addLive(event)">
+    <input id="url" placeholder="Cole o link do canal: twitch.tv/canal · youtube.com/@canal/live · kick.com/canal" autocomplete="off">
+    <button class="primary">Monitorar</button>
+  </form>
+
+  <h2>Lives monitoradas</h2>
+  <div class="lives" id="lives"></div>
+
+  <h2>Cortes</h2>
+  <div class="clips" id="clips"></div>
+</main>
+
+<dialog id="cfg">
+  <h3 style="margin-top:0">Configurações</h3>
+  <div class="field"><label>Sensibilidade <span id="v_sensibilidade"></span></label>
+    <input type="range" min="1" max="10" data-k="sensibilidade"><small>Mais alto = mais cortes (inclusive momentos menos fortes).</small></div>
+  <div class="field"><label>Segundos antes do pico <span id="v_segundos_antes"></span></label>
+    <input type="range" min="5" max="60" data-k="segundos_antes"><small>O chat reage alguns segundos depois do momento, então pegue uma margem.</small></div>
+  <div class="field"><label>Segundos depois do pico <span id="v_segundos_depois"></span></label>
+    <input type="range" min="0" max="30" data-k="segundos_depois"></div>
+  <div class="field"><label>Duração máxima do corte <span id="v_duracao_maxima"></span></label>
+    <input type="range" min="15" max="120" step="5" data-k="duracao_maxima"></div>
+  <div class="field"><label>Intervalo mínimo entre cortes <span id="v_intervalo_minimo"></span></label>
+    <input type="range" min="15" max="300" step="5" data-k="intervalo_minimo"></div>
+  <div class="field"><label>Legenda automática</label>
+    <select data-k="legenda"><option value="true">Ligada</option><option value="false">Desligada</option></select></div>
+  <div class="field"><label>Qualidade da legenda</label>
+    <select data-k="modelo_whisper">
+      <option value="base">Rápida (base)</option><option value="small">Equilibrada (small)</option><option value="medium">Precisa (medium, pesada)</option>
+    </select></div>
+  <div class="field"><label>Idioma da live</label>
+    <select data-k="idioma"><option value="pt">Português</option><option value="en">Inglês</option><option value="es">Espanhol</option><option value="auto">Detectar</option></select></div>
+  <div class="field"><label>Chave do Gemini <span style="color:var(--ok)">grátis</span></label>
+    <input type="password" data-k="chave_gemini" placeholder="AIza..." autocomplete="off">
+    <small>Com a chave, a IA escreve os títulos e legendas olhando o que aconteceu no corte. Pegue de graça em
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--accent2)">aistudio.google.com/apikey</a>
+      (entre com sua conta Google → <i>Create API key</i> → copie e cole aqui). No plano grátis o Google pode usar o texto enviado para melhorar os produtos dele.</small></div>
+  <div class="field"><label>Chave da Claude (opcional, paga)</label>
+    <input type="password" data-k="chave_claude" placeholder="sk-ant-..." autocomplete="off">
+    <small>Só é usada se não houver chave do Gemini. Custa centavos por corte.</small></div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+    <button class="ghost" onclick="cfg.close()">Fechar</button>
+    <button class="primary" onclick="salvarConfig()">Salvar</button>
+  </div>
+</dialog>
+
+<dialog id="pub">
+  <div class="pub-wrap">
+    <div class="pub-side">
+      <video id="pubVideo" controls playsinline></video>
+      <div class="m" id="pubInfo" style="font-size:12px;color:var(--muted)"></div>
+    </div>
+    <div class="pub-main">
+      <div class="pub-head">
+        <h3>Publicar corte</h3>
+        <span class="fonte" id="pubFonte"></span>
+        <button class="x" onclick="pub.close()" title="Fechar">✕</button>
+      </div>
+      <div class="tabs" id="pubTabs"></div>
+      <div id="pubBody"></div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const statusTxt = {gravando:"ao vivo · gravando", offline:"offline · aguardando", conectando:"conectando…", reconectando:"reconectando…", erro:"erro"};
+const clipCache = {};
+
+async function api(path, opts={}){
+  const r = await fetch(path, {headers:{"Content-Type":"application/json"}, ...opts});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function addLive(e){
+  e.preventDefault();
+  const url = $("#url").value.trim(); if(!url) return;
+  $("#url").value = "";
+  await api("/api/lives", {method:"POST", body:JSON.stringify({url})});
+  tick();
+}
+async function delLive(id){ if(confirm("Parar de monitorar essa live?")){ await api("/api/lives/"+id,{method:"DELETE"}); tick(); } }
+async function delClip(id){ if(confirm("Apagar esse corte?")){ await api("/api/cortes/"+id,{method:"DELETE"}); delete clipCache[id]; document.getElementById("c_"+id)?.remove(); } }
+function abrirPasta(){ api("/api/abrir-pasta",{method:"POST"}); }
+
+function fmtTime(s){ const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return (h? h+"h ":"")+m+"m "+String(x).padStart(2,"0")+"s"; }
+function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function renderLives(lives){
+  const box = $("#lives");
+  if(!lives.length){ box.innerHTML = '<div class="empty">Cole o link de um canal acima. A ferramenta grava a live, lê o chat e corta sozinha os melhores momentos.</div>'; return; }
+  const ids = new Set(lives.map(l=>l.id));
+  [...box.children].forEach(c => { if(!ids.has(c.dataset.id)) c.remove(); });
+  for(const l of lives){
+    let el = box.querySelector(`[data-id="${l.id}"]`);
+    if(!el){
+      el = document.createElement("div"); el.className="live"; el.dataset.id=l.id;
+      el.innerHTML = `<div class="top"><span class="badge ${l.plataforma}">${l.plataforma}</span><span class="name"></span><span class="status"><b></b><em></em></span><button class="x" title="Remover">✕</button></div>
+        <div class="title"></div><div class="stats"></div><canvas></canvas>`;
+      el.querySelector(".x").onclick = () => delLive(l.id);
+      box.appendChild(el);
+    }
+    el.querySelector(".name").textContent = l.nome;
+    const st = el.querySelector(".status"); st.className = "status "+l.status;
+    st.querySelector("em").textContent = statusTxt[l.status] || l.status;
+    el.querySelector(".title").textContent = l.status==="gravando" ? l.titulo : (l.detalhe || l.titulo || "");
+    el.querySelector(".stats").innerHTML =
+      `<span>gravado <b>${fmtTime(l.tempo)}</b></span><span>chat <b>${esc(l.chat)}</b> · <b>${l.msgs_chat}</b> msgs</span><span>cortes <b>${l.cortes}</b></span>` +
+      (l.aguardando_corte ? `<span style="color:var(--accent2)"><b>● cortando momento…</b></span>`:"") ;
+    drawChart(el.querySelector("canvas"), l.serie, l.limite);
+  }
+}
+
+function drawChart(cv, serie, limite){
+  const dpr = devicePixelRatio||1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w*dpr; cv.height = h*dpr;
+  const g = cv.getContext("2d"); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
+  const max = Math.max(limite*1.4, ...serie.map(p=>p.s), 1);
+  const y = v => h-6 - (v/max)*(h-14);
+  g.strokeStyle="rgba(255,176,32,.6)"; g.setLineDash([4,4]); g.beginPath(); g.moveTo(0,y(limite)); g.lineTo(w,y(limite)); g.stroke(); g.setLineDash([]);
+  g.fillStyle="rgba(255,176,32,.8)"; g.font="10px Inter"; g.fillText("gatilho de corte", 6, y(limite)-4);
+  if(serie.length<2){ g.fillStyle="#666"; g.fillText("aquecendo… (precisa de ~1 min de live)", 6, h/2+10); return; }
+  const N = 300, step = w/(N-1), off = N - serie.length;
+  const grad = g.createLinearGradient(0,0,0,h); grad.addColorStop(0,"rgba(255,59,92,.45)"); grad.addColorStop(1,"rgba(255,59,92,0)");
+  g.beginPath(); g.moveTo(off*step, h);
+  serie.forEach((p,i)=> g.lineTo((off+i)*step, y(p.s)));
+  g.lineTo(w,h); g.closePath(); g.fillStyle=grad; g.fill();
+  g.beginPath(); serie.forEach((p,i)=> i? g.lineTo((off+i)*step, y(p.s)) : g.moveTo((off+i)*step, y(p.s)));
+  g.strokeStyle="#ff3b5c"; g.lineWidth=1.6; g.stroke();
+}
+
+function clipHTML(c){
+  const when = new Date(c.criado).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+  const tags = (c.palavras_chat||[]).map(w=>`<span class="tag">${esc(w)}</span>`).join("");
+  let vid;
+  if(c.status==="pronto") vid = `<video src="${c.arquivo}" poster="${c.capa}" controls preload="none" playsinline></video>`;
+  else if(c.status==="erro") vid = `<div class="proc err">Falhou<br><small>${esc(c.erro)}</small></div>`;
+  else vid = `<div class="proc"><div class="spinner"></div>${esc(c.status)}…</div>`;
+  return `<div class="vid">${vid}</div><div class="info">
+    <div class="t">${esc(c.titulo || c.motivo)}</div>
+    <div class="m">${esc(c.canal)} · ${when} · ${c.duracao}s</div>
+    <div class="m">⚡ ${esc(c.motivo)} (força ${c.pontuacao})</div>
+    <div>${tags}</div>
+    <div class="acts">${c.status==="pronto" ? `<button class="pub" onclick="abrirPublicar('${c.id}')">Publicar</button><a href="${c.arquivo}" download="${slug(c.titulo)||"corte-"+c.id}.mp4">Baixar</a>`:""}<button onclick="delClip('${c.id}')">Apagar</button></div>
+  </div>`;
+}
+function renderClips(clips){
+  const box = $("#clips");
+  if(!clips.length){ box.innerHTML = '<div class="empty" style="grid-column:1/-1">Nenhum corte ainda. Eles aparecem aqui sozinhos quando a live tiver um momento forte.</div>'; return; }
+  box.querySelector(".empty")?.remove();
+  clips.forEach((c, i) => {
+    const key = c.status + (c.titulo||"");
+    let el = document.getElementById("c_"+c.id);
+    if(!el){ el = document.createElement("div"); el.className="clip"; el.id="c_"+c.id; }
+    if(clipCache[c.id] !== key){ el.innerHTML = clipHTML(c); clipCache[c.id] = key; }
+    if(box.children[i] !== el) box.insertBefore(el, box.children[i] || null);
+  });
+}
+
+const clipsById = {};
+async function tick(){
+  try{
+    const s = await api("/api/estado");
+    s.cortes.forEach(c => clipsById[c.id] = c);
+    renderLives(s.lives); renderClips(s.cortes);
+    $("#fila").textContent = "fila de processamento: " + s.fila;
+  }catch(e){ $("#fila").textContent = "servidor desconectado"; }
+}
+
+const cfg = $("#cfg");
+async function abrirConfig(){
+  const c = await api("/api/config");
+  cfg.querySelectorAll("[data-k]").forEach(el => {
+    el.value = String(c[el.dataset.k]);
+    const out = $("#v_"+el.dataset.k);
+    if(out){ const upd=()=> out.textContent = el.value + (el.dataset.k==="sensibilidade" ? "" : "s"); el.oninput = upd; upd(); }
+  });
+  cfg.showModal();
+}
+async function salvarConfig(){
+  const body = {};
+  cfg.querySelectorAll("[data-k]").forEach(el => body[el.dataset.k] = el.value==="true" ? true : el.value==="false" ? false : el.value);
+  await api("/api/config",{method:"POST", body:JSON.stringify(body)});
+  cfg.close();
+}
+
+/* ===================== Publicar ===================== */
+function slug(s){
+  return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w\s-]/g,"").trim().replace(/\s+/g,"-").toLowerCase().slice(0,60);
+}
+const PLAT = {
+  tiktok: {
+    nome:"TikTok", cor:"#ff0050", url:"https://www.tiktok.com/tiktokstudio/upload", botao:"Abrir TikTok Studio",
+    passos:[
+      "Clique em <b>Baixar vídeo</b> acima.",
+      "Abra o <b>TikTok Studio</b> no PC (ou no celular: app do TikTok → botão <b>+</b> → Carregar).",
+      "Envie o vídeo e cole a <b>legenda pronta</b> no campo de descrição.",
+      "Em <b>Capa</b>, escolha o frame com a reação mais forte.",
+      "Deixe comentários ligados e clique em <b>Publicar</b>."
+    ],
+    dicas:[
+      "Os 2 primeiros segundos decidem se a pessoa fica: se o começo estiver parado, apare no editor do TikTok.",
+      "Poste com regularidade (2 a 4 cortes por dia rendem mais que 10 de uma vez).",
+      "Responda os primeiros comentários: isso ajuda o vídeo a ser entregue para mais gente."
+    ]
+  },
+  shorts: {
+    nome:"YouTube Shorts", cor:"#ff2e2e", url:"https://www.youtube.com/upload", botao:"Abrir YouTube Studio",
+    passos:[
+      "Clique em <b>Baixar vídeo</b> acima.",
+      "Abra o <b>YouTube Studio</b> → <b>Criar</b> → <b>Enviar vídeos</b> (no celular: app → <b>+</b> → Short).",
+      "Cole o <b>Título</b> (até 100 caracteres) e a <b>Descrição</b>.",
+      "Em <b>Público</b>, marque “Não, não é conteúdo para crianças”.",
+      "Vídeo vertical de até 3 minutos vira Short automaticamente. Visibilidade <b>Pública</b> → <b>Publicar</b>."
+    ],
+    dicas:[
+      "Título que alguém digitaria na busca (nome do streamer + o que aconteceu) ajuda o Short a ser achado depois.",
+      "Agrupe os cortes de um mesmo streamer numa playlist.",
+      "Na descrição, o link do canal do streamer é o crédito, e muitos streamers exigem."
+    ]
+  },
+  reels: {
+    nome:"Instagram Reels", cor:"#c13584", url:"https://www.instagram.com/", botao:"Abrir Instagram",
+    passos:[
+      "Baixe o vídeo (ou mande para o celular).",
+      "No app do Instagram toque em <b>+</b> → <b>Reel</b>. No PC: <b>Criar</b> → escolha o vídeo (vídeos verticais viram Reel).",
+      "Escolha a <b>capa</b> e cole a <b>legenda pronta</b>.",
+      "Se quiser, marque o perfil do streamer na legenda (@).",
+      "Toque em <b>Compartilhar</b>."
+    ],
+    dicas:[
+      "Use poucas hashtags e bem específicas; a legenda já vem com as principais.",
+      "Responder comentários e mandar o Reel nos Stories na primeira hora ajuda no alcance.",
+      "Evite postar o mesmo arquivo com marca d'água de outro app (ex.: baixado do TikTok): use o arquivo daqui."
+    ]
+  },
+  kwai: {
+    nome:"Kwai", cor:"#ff7a00", url:null, botao:"Só pelo app do celular",
+    passos:[
+      "Mande o vídeo para o celular: WhatsApp (conversa com você mesmo), Google Drive ou cabo USB.",
+      "Abra o <b>Kwai</b> e toque no botão <b>+</b> (câmera).",
+      "Toque em <b>Álbum</b>/<b>Galeria</b> e escolha o corte.",
+      "Cole a <b>legenda pronta</b> e toque em <b>Publicar</b>."
+    ],
+    dicas:[
+      "O público do Kwai gosta de títulos diretos e bem populares.",
+      "Postar no mesmo horário todo dia ajuda a criar público fiel."
+    ]
+  }
+};
+const pub = $("#pub");
+let pubClip = null, pubPlat = "tiktok", pubSel = 0, pubCustom = null;
+
+function abrirPublicar(id){
+  pubClip = clipsById[id]; if(!pubClip) return;
+  pubSel = 0; pubCustom = null;
+  const v = $("#pubVideo"); v.src = pubClip.arquivo; v.poster = pubClip.capa || "";
+  $("#pubInfo").innerHTML = `${esc(pubClip.canal)} · ${pubClip.duracao}s<br>⚡ ${esc(pubClip.motivo)}`;
+  renderPub();
+  pub.showModal();
+  if(!pubClip.sugestoes) gerarDeNovo();
+}
+pub.addEventListener("close", () => $("#pubVideo").pause());
+
+async function gerarDeNovo(){
+  $("#pubBody").innerHTML = `<div class="proc" style="padding:40px;text-align:center;color:var(--muted)"><div class="spinner"></div>Escrevendo títulos…</div>`;
+  try{
+    pubClip = await api(`/api/cortes/${pubClip.id}/sugestoes`, {method:"POST"});
+    clipsById[pubClip.id] = pubClip; pubSel = 0; pubCustom = null;
+  }catch(e){}
+  renderPub();
+}
+
+function tituloAtual(){
+  const s = pubClip.sugestoes; if(pubCustom !== null) return pubCustom;
+  return (s && s.titulos[pubSel]) || pubClip.titulo || "";
+}
+function hashtags(p){ return (p.hashtags||[]).map(h=>"#"+h).join(" "); }
+function legendaPronta(plat){
+  const s = pubClip.sugestoes, p = s.plataformas[plat];
+  if(plat === "shorts") return [p.legenda, s.credito, hashtags(p)].filter(Boolean).join("\n\n");
+  return [tituloAtual(), p.legenda, s.credito, hashtags(p)].filter(Boolean).join("\n\n");
+}
+
+function renderPub(){
+  const P = PLAT[pubPlat], s = pubClip.sugestoes;
+  $("#pubTabs").innerHTML = Object.entries(PLAT).map(([k,v]) =>
+    `<button class="${k===pubPlat?"on":""}" style="${k===pubPlat?`background:${v.cor}`:""}" onclick="pubPlat='${k}';renderPub()">${v.nome}</button>`).join("");
+  const f = $("#pubFonte");
+  if(s){ f.className = "fonte" + (s.fonte==="ia"?" ia":""); f.textContent = s.fonte==="ia" ? `✨ escrito por IA (${s.provedor||"IA"})` : "sugestões automáticas"; }
+  else { f.textContent = ""; }
+  if(!s){ return; }
+
+  const tits = s.titulos.map((t,i) =>
+    `<button class="tit ${pubCustom===null&&i===pubSel?"on":""}" onclick="pubSel=${i};pubCustom=null;renderPub()"><span>${esc(t)}</span><i>${t.length} car.</i></button>`).join("");
+
+  const tituloLimite = pubPlat === "shorts" ? 100 : null;
+  const titulo = tituloAtual();
+  const campoTexto = pubPlat === "shorts"
+    ? `<div class="sec"><b>Título</b><div class="box"><input id="fTitulo" value="${esc(titulo)}" oninput="pubCustom=this.value;contar()"></div>
+         <div class="row"><small id="cnt"></small><button onclick="copiar('fTitulo',this)">Copiar título</button></div></div>
+       <div class="sec"><b>Descrição</b><div class="box"><textarea id="fTexto">${esc(legendaPronta("shorts"))}</textarea></div>
+         <div class="row"><small>Créditos e hashtags já incluídos (#shorts entra na descrição).</small><button onclick="copiar('fTexto',this)">Copiar descrição</button></div></div>`
+    : `<div class="sec"><b>Legenda pronta</b><div class="box"><textarea id="fTexto">${esc(legendaPronta(pubPlat))}</textarea></div>
+         <div class="row"><small>Título + texto + créditos + hashtags. Pode editar antes de copiar.</small><button onclick="copiar('fTexto',this)">Copiar legenda</button></div></div>`;
+
+  const abrir = P.url
+    ? `<a class="go" style="background:${P.cor}" href="${P.url}" target="_blank" rel="noopener">↗ ${P.botao}</a>`
+    : `<button class="off" disabled>📱 ${P.botao}</button>`;
+
+  $("#pubBody").innerHTML = `
+    <div class="sec"><b>Títulos sugeridos</b><div class="tits">${tits}</div>
+      <div class="row"><small>${s.aviso ? esc(s.aviso) : (s.fonte==="ia" ? "Clique em um título para usar." : "Clique em um título para usar. Para títulos escritos por IA, coloque a chave grátis do Gemini em ⚙ Configurações.")}</small>
+      <button onclick="gerarDeNovo()">↻ Gerar de novo</button></div></div>
+    ${campoTexto}
+    <div class="sec bigacts">
+      <a href="${pubClip.arquivo}" download="${slug(titulo)||"corte-"+pubClip.id}.mp4">⬇ Baixar vídeo</a>
+      ${abrir}
+    </div>
+    <div class="sec"><b>Como postar no ${P.nome}</b><ol class="passos">${P.passos.map(x=>`<li>${x}</li>`).join("")}</ol></div>
+    <div class="sec"><b>Dicas</b><ul class="dicas">${P.dicas.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+    <div class="nota">⚠ Antes de postar, confira se o streamer permite cortes do conteúdo dele. A maioria permite com crédito, que já vai na legenda, mas sem autorização o vídeo pode tomar strike de direitos autorais.</div>`;
+  if(tituloLimite) contar();
+}
+function contar(){
+  const el = $("#fTitulo"), c = $("#cnt"); if(!el||!c) return;
+  c.textContent = `${el.value.length}/100 caracteres`; c.className = el.value.length>100 ? "bad" : "";
+}
+async function copiar(id, btn){
+  const el = document.getElementById(id);
+  try{ await navigator.clipboard.writeText(el.value); }
+  catch(e){ el.select(); document.execCommand("copy"); }
+  const t = btn.textContent; btn.textContent = "✓ Copiado!"; setTimeout(()=>btn.textContent=t, 1400);
+}
+
+tick(); setInterval(tick, 1500);
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+yt-dlp[default]
+streamlink
+faster-whisper
+numpy
+websockets
+httpx
+google-genai
+anthropic
