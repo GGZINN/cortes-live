@@ -32,7 +32,9 @@ COTA = ("quotaExceeded", "uploadLimitExceeded", "dailyLimitExceeded", "rateLimit
 EDITAVEIS = ("planejado", "erro", "aguardando_cota")
 
 _lock = threading.RLock()
-_dados = {"config": dict(PADRAO), "itens": [], "pausa_ate": None}
+# fora_auto: cortes que o usuário tirou da agenda (o preenchimento automático não põe de volta);
+# pulados: horários que o usuário esvaziou (o automático não preenche de novo)
+_dados = {"config": dict(PADRAO), "itens": [], "pausa_ate": None, "fora_auto": [], "pulados": []}
 
 
 # ------------------------------------------------------------------ utilidades
@@ -62,6 +64,8 @@ def _carregar():
         _dados["config"].update({k: v for k, v in (d.get("config") or {}).items() if k in PADRAO})
         _dados["itens"] = d.get("itens") or []
         _dados["pausa_ate"] = d.get("pausa_ate")
+        _dados["fora_auto"] = d.get("fora_auto") or []
+        _dados["pulados"] = d.get("pulados") or []
         for it in _dados["itens"]:  # envio interrompido ao fechar o programa: tenta de novo
             if it["status"] == "enviando":
                 it["status"] = "planejado"
@@ -141,7 +145,7 @@ def _livre(t, ocupados):
 def proximo_livre(ignorar=None):
     ocup = _ocupados(ignorar)
     for t in _slots(60):
-        if _livre(t, ocup):
+        if _livre(t, ocup) and not _pulado(t):  # horário que o usuário esvaziou só recebe corte escolhido à mão
             return t
     return None
 
@@ -183,11 +187,19 @@ def adicionar(cid, quando=None, titulo=None, descricao=None):
             if not t:
                 raise ValueError("Nenhum horário livre nos próximos 60 dias. Confira os horários e dias da agenda.")
         it = _novo_item(clip, t, "manual", titulo, descricao)
+        if cid in _dados["fora_auto"]:  # colocou de volta à mão: o automático pode voltar a usar
+            _dados["fora_auto"].remove(cid)
         _save()
         return dict(it)
 
 
+def _pulado(t):
+    return any(abs(t - _dt(p)) < JANELA for p in _dados["pulados"])
+
+
 def remover(iid):
+    """Tira um corte da agenda. Ele não volta sozinho e o horário fica vazio (o preenchimento automático
+    pula os dois); dá para pôr outro corte nesse horário à mão."""
     with _lock:
         it = _achar(iid)
         if it["status"] == "enviando":
@@ -196,6 +208,10 @@ def remover(iid):
             youtube.desagendar(it["cid"], it["video_id"])  # continua no canal, como privado
         _dados["itens"].remove(it)
         _desmarca(it["cid"])
+        if it["cid"] not in _dados["fora_auto"]:
+            _dados["fora_auto"].append(it["cid"])
+        if it["quando"] not in _dados["pulados"]:
+            _dados["pulados"].append(it["quando"])
         _save()
 
 
@@ -271,7 +287,7 @@ def _preencher():
     """Coloca os ⭐ escolhidos nos horários livres dos próximos dias, sem repetir streamer em sequência."""
     cfg = _dados["config"]
     limite = _agora() + timedelta(days=cfg["dias_auto"])
-    usados = {i["cid"] for i in _dados["itens"]}
+    usados = {i["cid"] for i in _dados["itens"]} | set(_dados["fora_auto"])
     cands = [c for c in clipper.list_clips()
              if c.get("escolhido") is True and c["id"] not in usados and _livre_para_agenda(c)]
     if not cands:
@@ -281,7 +297,7 @@ def _preencher():
     for t in _slots(cfg["dias_auto"] + 1):
         if t > limite or not cands:
             break
-        if not _livre(t, _ocupados()):
+        if not _livre(t, _ocupados()) or _pulado(t):
             continue
         antes = [i for i in _dados["itens"] if _dt(i["quando"]) < t]
         anterior = ""
@@ -364,6 +380,11 @@ def _ciclo():
                 except ValueError as e:
                     it.update(status="erro", erro=str(e))
                 mudou = True
+
+        # horários esvaziados que já passaram não precisam mais ser lembrados
+        antes = len(_dados["pulados"])
+        _dados["pulados"] = [p for p in _dados["pulados"] if _dt(p) > agora]
+        mudou |= len(_dados["pulados"]) != antes
 
         # limpa publicados antigos
         corte = agora - timedelta(days=30)

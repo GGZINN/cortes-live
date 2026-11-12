@@ -1670,8 +1670,8 @@ document.addEventListener("click", async ev => {
     }
     if(acao === "remover"){
       const msg = b.dataset.st === "agendado"
-        ? "Tirar da agenda? O vídeo já está no YouTube: ele continua no canal, mas como privado e sem data para publicar."
-        : "Tirar este corte da agenda?";
+        ? "Tirar da agenda? O vídeo já está no YouTube: ele continua no canal, mas como privado e sem data para publicar. O horário fica vazio."
+        : "Tirar este corte da agenda? Ele não volta sozinho e o horário fica vazio (dá para escolher outro corte para ele).";
       if(!confirm(msg)) return;
       b.disabled = true;
       await api(`/api/agenda/${id}`, {method:"DELETE"});
@@ -1706,7 +1706,7 @@ $("#agPick").addEventListener("click", async ev => {
   }catch(e){ alert(erroTxt(e)); }
 });
 async function agTirar(id){
-  if(!confirm("Tirar este corte da agenda?")) return;
+  if(!confirm("Tirar este corte da agenda? Ele não volta sozinho e o horário fica vazio.")) return;
   try{ await api(`/api/agenda/${id}`, {method:"DELETE"}); pubClip.agenda = null; renderYtBox(true); agCarregar(); }
   catch(e){ alert(erroTxt(e)); }
 }
