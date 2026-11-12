@@ -34,6 +34,7 @@ class Momento(BaseModel):
 
 class Analise(BaseModel):
     resumo: str          # o que está acontecendo nesse trecho da live (1 frase)
+    jogo: str            # nome do jogo na tela (ex.: "Mario Party Jamboree"); "" se não for jogo
     momentos: List[Momento]
 
 
@@ -61,6 +62,8 @@ Se nada no trecho valer a pena, devolva "momentos" vazio. Nunca invente o que n�
 "cena" de cada momento (define o formato do vídeo): "jogo" se durante o momento a tela mostra principalmente um jogo
 sendo jogado; "conversa" se o streamer está falando com o chat/a câmera e a câmera ocupa a maior parte da tela (bate-papo,
 reação a algo fora do jogo, IRL); "outro" para o resto (vídeo, navegador, tela de espera).
+"jogo": o nome oficial do jogo que aparece na tela (ex.: "Mario Party Jamboree", "Counter-Strike 2", "Minecraft"),
+como as pessoas buscam no YouTube; deixe vazio se não for jogo ou se não der para saber com certeza.
 Timestamps no formato MM:SS, relativos ao início DESTE vídeo. Textos em português do Brasil."""
 
 
@@ -223,6 +226,7 @@ class Analisador:
                 "motivo": f"IA: {m.tipo}", "pontuacao": m.nota, "gancho": m.gancho,
                 "por_que": m.por_que, "titulo_ia": m.titulo, "pico_rel": min(3.0, (fim_abs - ini_abs) / 2),
                 "cena": (m.cena or "").strip().lower() or None,  # jogo → tela dividida; conversa → formato de sempre
+                "jogo": (analise.jogo or "").strip() or None,     # entra no título, hashtags e tags do YouTube
             })
 
         melhor = max((m.nota for m in analise.momentos), default=0)

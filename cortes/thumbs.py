@@ -30,6 +30,7 @@ FONTE_TAG = [r"C:\Windows\Fonts\seguibl.ttf", r"C:\Windows\Fonts\ariblk.ttf", r"
 LIVE_CROP = clipper.LIVE_CROP  # (use clipper.fonte_16x9: nos cortes divididos a live fica no live.mp4)
 
 _lock = threading.Lock()
+_ativos_lock = threading.Lock()
 
 
 def _pasta(cid):
@@ -110,6 +111,7 @@ Recebe quadros numerados de um corte e o contexto do que acontece nele.
 - "foco": onde está o rosto/ação principal no melhor quadro: "esquerda", "centro" ou "direita".
 - "textos": 3 opções de texto para a thumbnail, cada uma com 2 a 4 palavras em CAIXA ALTA, português do Brasil,
   que gerem curiosidade e combinem com o que aconteceu. Não repita o título inteiro. Sem emoji, aspas ou hashtag.
+  Escreva com a acentuação correta do português (NÃO, CABEÇA, É), nunca sem acento.
   Seja fiel ao corte: nada de prometer algo que não está no vídeo."""
 
 
@@ -263,9 +265,16 @@ def _tag(img, canal, x, y, ancora="esq", tam=None):
     d.text((x0 + px, y + py - tam * 0.12), txt, font=f, fill="white")
 
 
-def _base(caminho, tamanho):
+def _base(caminho, tamanho, foco="centro"):
     from PIL import Image, ImageEnhance, ImageOps
     im = Image.open(caminho).convert("RGB")
+    if foco in ("esquerda", "direita"):
+        # o rosto/ação está num canto (câmera da live): aproxima um pouco puxando esse lado para dentro,
+        # senão ele cai justamente na parte que o YouTube corta nas thumbnails de Shorts (~3:2)
+        w, h = im.size
+        cw = int(w * 0.86)
+        x0 = 0 if foco == "esquerda" else w - cw
+        im = im.crop((x0, 0, x0 + cw, h))
     im = ImageOps.fit(im, tamanho, Image.LANCZOS)
     im = ImageEnhance.Color(im).enhance(1.25)
     im = ImageEnhance.Contrast(im).enhance(1.12)
@@ -273,55 +282,173 @@ def _base(caminho, tamanho):
     return im.convert("RGBA")
 
 
-def montar(quadro, texto, cor, layout, foco, canal):
-    """Thumbnail 1280x720."""
+# Área segura: nas thumbnails de Shorts o YouTube mostra a imagem perto de 3:2, cortando ~100 px de cada lado
+# de uma imagem 1280x720. Texto e etiqueta ficam a 150 px das laterais para nunca serem cortados.
+SEG_X = 150
+
+
+def _rosto(img, quadro, camera, layout):
+    """Amplia a câmera do streamer (rosto = o que mais chama clique) e cola com borda, do lado em que ela já
+    estava, dentro da área segura e sem cobrir o texto. camera: [x, y, w, h] de 0 a 1 no quadro 16:9."""
+    from PIL import Image, ImageDraw, ImageFilter
+    x, y, w, h = camera
+    src = Image.open(quadro).convert("RGB")
+    sw, sh = src.size
+    cam = src.crop((int(x * sw), int(y * sh), int((x + w) * sw), int((y + h) * sh)))
+    if cam.size[0] < 40 or cam.size[1] < 40:
+        return "centro"
+    # a câmera pequena original vira fundo (desfocada), para o rosto não aparecer duas vezes
+    ix, iy = int(x * LARG), int(y * ALT)
+    reg = img.crop((ix, iy, ix + int(w * LARG), iy + int(h * ALT)))
+    img.paste(reg.filter(ImageFilter.GaussianBlur(28)), (ix, iy))
+    alt = int(ALT * {"faixa": 0.56, "topo": 0.47}.get(layout, 0.72))
+    larg = int(cam.size[0] * alt / cam.size[1])
+    if larg > LARG * 0.42:                      # câmera muito larga: limita pela largura
+        larg = int(LARG * 0.42)
+        alt = int(cam.size[1] * larg / cam.size[0])
+    cam = cam.resize((larg, alt), Image.LANCZOS)
+    lado = "esquerda" if x + w / 2 < 0.5 else "direita"
+    px = SEG_X if lado == "esquerda" else LARG - SEG_X - larg
+    py = {"faixa": 40, "topo": ALT - alt - 40}.get(layout, (ALT - alt) // 2)
+    b = 8
+    sombra = Image.new("RGBA", (larg + 2 * b + 30, alt + 2 * b + 30), (0, 0, 0, 0))
+    ImageDraw.Draw(sombra).rounded_rectangle([15, 15, 15 + larg + 2 * b, 15 + alt + 2 * b], 26, fill=(0, 0, 0, 170))
+    img.alpha_composite(sombra.filter(ImageFilter.GaussianBlur(12)), (px - b - 15, py - b - 15 + 8))
+    moldura = Image.new("RGBA", (larg + 2 * b, alt + 2 * b), (0, 0, 0, 0))
+    ImageDraw.Draw(moldura).rounded_rectangle([0, 0, larg + 2 * b - 1, alt + 2 * b - 1], 24, fill="white")
+    img.alpha_composite(moldura, (px - b, py - b))
+    mask = Image.new("L", (larg, alt), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, larg - 1, alt - 1], 18, fill=255)
+    img.paste(cam, (px, py), mask)
+    return lado
+
+
+def montar(quadro, texto, cor, layout, foco, canal, camera=None):
+    """Thumbnail 1280x720 (com área segura lateral para Shorts). camera: rosto ampliado nos cortes de gameplay."""
     from PIL import ImageDraw
-    img = _base(quadro, (LARG, ALT))
+    img = _base(quadro, (LARG, ALT), "centro" if camera else foco)
+    lado_rosto = None
+    if camera:
+        lado_rosto = "esquerda" if camera[0] + camera[2] / 2 < 0.5 else "direita"
+        foco = lado_rosto  # o texto lateral vai para o lado oposto ao rosto
+
+    def rosto():  # depois do degradê e antes do texto: o rosto não escurece e o texto fica por cima
+        nonlocal lado_rosto
+        if camera and _rosto(img, quadro, camera, layout) == "centro":
+            lado_rosto = None
+
     d = ImageDraw.Draw(img)
     cor = CORES.get(cor, cor)
-    m = 44
+    m = 44                      # margem vertical (em cima/embaixo nada é cortado)
+    larg_util = LARG - 2 * SEG_X
     if layout == "lateral":
         lado = "direita" if foco == "esquerda" else "esquerda"
         _gradiente(img, lado, 215, 0.65)
-        f, sw, linhas, tam = _quebrar(d, texto, LARG * 0.52, ALT * 0.8, 3, 170)
+        rosto()
+        f, sw, linhas, tam = _quebrar(d, texto, larg_util * 0.55, ALT * 0.8, 3, 150)
         y = (ALT - len(linhas) * tam * 1.02) / 2 - tam * 0.08
         if lado == "esquerda":
-            _texto(img, linhas, f, sw, tam, m, y, "esq", cor)
-            _tag(img, canal, LARG - m, ALT - m - 50, "dir")
+            _texto(img, linhas, f, sw, tam, SEG_X, y, "esq", cor)
+            if lado_rosto:  # etiqueta embaixo do texto, longe do rosto
+                _tag(img, canal, SEG_X, ALT - m - 50)
+            else:
+                _tag(img, canal, LARG - SEG_X, ALT - m - 50, "dir")
         else:
-            _texto(img, linhas, f, sw, tam, LARG - m, y, "dir", cor)
-            _tag(img, canal, m, ALT - m - 50)
+            _texto(img, linhas, f, sw, tam, LARG - SEG_X, y, "dir", cor)
+            if lado_rosto:
+                _tag(img, canal, LARG - SEG_X, ALT - m - 50, "dir")
+            else:
+                _tag(img, canal, SEG_X, ALT - m - 50)
     elif layout == "faixa":
         _gradiente(img, "baixo", 230, 0.55)
-        f, sw, linhas, tam = _quebrar(d, texto, LARG * 0.92, ALT * 0.38, 2, 150)
+        rosto()
+        f, sw, linhas, tam = _quebrar(d, texto, larg_util, ALT * 0.38, 2, 150)
         y = ALT - m - len(linhas) * tam * 1.02
         _texto(img, linhas, f, sw, tam, LARG / 2, y, "centro", cor)
-        _tag(img, canal, m, m)
+        if lado_rosto == "esquerda":
+            _tag(img, canal, LARG - SEG_X, m, "dir")
+        elif lado_rosto == "direita":
+            _tag(img, canal, SEG_X, m)
+        else:
+            _tag(img, canal, LARG / 2, m, "centro")
     else:  # topo
         _gradiente(img, "cima", 220, 0.55)
-        f, sw, linhas, tam = _quebrar(d, texto, LARG * 0.92, ALT * 0.42, 2, 150)
+        rosto()
+        f, sw, linhas, tam = _quebrar(d, texto, larg_util, ALT * (0.36 if lado_rosto else 0.42), 2, 150)
         cores = ["#FFFFFF"] * (len(linhas) - 1) + [cor] if len(linhas) > 1 else [cor]
         _texto(img, linhas, f, sw, tam, LARG / 2, m - tam * 0.05, "centro", cores)
-        _tag(img, canal, m, ALT - m - 50)
+        if lado_rosto == "direita":
+            _tag(img, canal, SEG_X, ALT - m - 50)
+        elif lado_rosto == "esquerda":
+            _tag(img, canal, LARG - SEG_X, ALT - m - 50, "dir")
+        else:
+            _tag(img, canal, LARG / 2, ALT - m - 50, "centro")
     return img.convert("RGB")
 
 
-def montar_vertical(quadro, texto, cor, canal):
-    """Capa 1080x1920: fundo desfocado, a live no meio e o texto em cima (igual ao corte, sem legenda)."""
-    from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
-    base = _base(quadro, (LARG, ALT))
-    fundo = base.convert("RGB").resize((VALT * LARG // ALT, VALT)).crop(
-        ((VALT * LARG // ALT - VLARG) // 2, 0, (VALT * LARG // ALT + VLARG) // 2, VALT))
-    fundo = ImageEnhance.Brightness(fundo.filter(ImageFilter.GaussianBlur(40))).enhance(0.55).convert("RGBA")
-    live = base.resize((VLARG, VLARG * ALT // LARG), Image.LANCZOS)
-    y_live = 760
-    fundo.alpha_composite(live, (0, y_live))
-    d = ImageDraw.Draw(fundo)
-    f, sw, linhas, tam = _quebrar(d, texto, VLARG * 0.9, y_live - 160, 3, 190, 60)
-    h = len(linhas) * tam * 1.02
-    _texto(fundo, linhas, f, sw, tam, VLARG / 2, (y_live - h) / 2 + 20, "centro", CORES.get(cor, cor))
-    _tag(fundo, canal, VLARG / 2, y_live + live.size[1] + 50, "centro", tam=44)
-    return fundo.convert("RGB")
+# Capa vertical: no grid do perfil o TikTok e o Instagram mostram só o miolo 3:4 (1080x1440, de y=240 a 1680),
+# e embaixo ficam os botões/contadores. Texto e nome ficam dentro dessa faixa.
+V_SEG_TOPO, V_SEG_BAIXO = 300, 1600
+
+
+def _realce(im):
+    from PIL import ImageEnhance
+    im = ImageEnhance.Color(im).enhance(1.25)
+    im = ImageEnhance.Contrast(im).enhance(1.12)
+    return ImageEnhance.Sharpness(im).enhance(1.5)
+
+
+def _faixa_escura(img, y_centro, altura, forca=170):
+    """Faixa escura suave atrás do texto (some nas pontas), para ele ler em qualquer fundo."""
+    from PIL import Image
+    w, h = img.size
+    alfa = Image.new("L", (1, altura))
+    alfa.putdata([int(forca * (1 - abs(i - altura / 2) / (altura / 2)) ** 0.6) for i in range(altura)])
+    preto = Image.new("RGBA", (w, altura), (0, 0, 0, 255))
+    preto.putalpha(alfa.resize((w, altura)))
+    img.alpha_composite(preto, (0, int(y_centro - altura / 2)))
+
+
+def montar_vertical(quadro, texto, cor, canal, camera=None, foco="centro"):
+    """Capa 1080x1920 para Shorts/TikTok/Reels/Kwai.
+    - Gameplay com câmera: rosto grande em cima, jogo embaixo (igual ao corte em tela dividida), texto na emenda.
+    - Sem câmera separada: a imagem preenche a tela, centrada no rosto/ação, texto no meio.
+    Texto e nome dentro do miolo 3:4 (o que aparece no grid do perfil)."""
+    from PIL import Image, ImageDraw, ImageFilter, ImageOps
+    src = Image.open(quadro).convert("RGB")
+    sw, sh = src.size
+    capa = Image.new("RGBA", (VLARG, VALT), (0, 0, 0, 255))
+    cor = CORES.get(cor, cor)
+    if camera:
+        x, y, w, h = camera
+        caixa = (int(x * sw), int(y * sh), int((x + w) * sw), int((y + h) * sh))
+        # o rodapé da câmera costuma ter barra de "último sub", meta, etc.: fica de fora da capa
+        cam = src.crop((caixa[0], caixa[1], caixa[2], caixa[3] - int((caixa[3] - caixa[1]) * 0.17)))
+        emenda = int(VALT * 0.47)
+        rosto = _realce(ImageOps.fit(cam, (VLARG, emenda), Image.LANCZOS, centering=(0.5, 0.42)))
+        jogo_src = src.copy()  # tira a câmera pequena do jogo (vira fundo desfocado)
+        jogo_src.paste(jogo_src.crop(caixa).filter(ImageFilter.GaussianBlur(30)), caixa[:2])
+        cx = 0.42 if x + w / 2 >= 0.5 else 0.58  # puxa para longe de onde estava a câmera
+        jogo = _realce(ImageOps.fit(jogo_src, (VLARG, VALT - emenda), Image.LANCZOS, centering=(cx, 0.5)))
+        capa.paste(rosto.convert("RGBA"), (0, 0))
+        capa.paste(jogo.convert("RGBA"), (0, emenda))
+        ImageDraw.Draw(capa).rectangle([0, emenda - 5, VLARG, emenda + 5], fill=cor)  # linha da emenda
+        y_texto = emenda + 40
+    else:
+        fx = {"esquerda": 0.2, "direita": 0.8}.get(foco, 0.5)
+        capa.paste(_realce(ImageOps.fit(src, (VLARG, VALT), Image.LANCZOS, centering=(fx, 0.45))).convert("RGBA"), (0, 0))
+        y_texto = int(VALT * 0.56)
+    d = ImageDraw.Draw(capa)
+    f, swk, linhas, tam = _quebrar(d, texto, VLARG * 0.88, 520, 3, 210, 90)
+    alt_txt = len(linhas) * tam * 1.02
+    y0 = min(max(y_texto, V_SEG_TOPO), V_SEG_BAIXO - alt_txt - 120)
+    _faixa_escura(capa, y0 + alt_txt / 2, int(alt_txt + 260))
+    cores = [cor] * len(linhas)
+    if len(linhas) > 1:
+        cores[0] = "#FFFFFF"  # 1ª linha branca, o resto na cor: mais contraste e leitura em 1 segundo
+    _texto(capa, linhas, f, swk, tam, VLARG / 2, y0, "centro", cores)
+    _tag(capa, canal, VLARG / 2, y0 + alt_txt + 40, "centro", tam=48)
+    return capa.convert("RGB")
 
 
 def _salvar(img, caminho):
@@ -330,11 +457,39 @@ def _salvar(img, caminho):
         img.save(caminho, "JPEG", quality=78, optimize=True)
 
 
-def _render(cid, nome, var, canal):
+def _camera(cid):
+    """Caixa da câmera do streamer (x, y, w, h de 0 a 1): a do corte em tela dividida ou a achada na capa."""
+    clip = clipper.get_clip(cid) or {}
+    lay = clip.get("layout") or {}
+    for cam in ((lay.get("camera") if lay.get("modo") == "dividido" else None), (clip.get("thumbs") or {}).get("camera")):
+        if isinstance(cam, (list, tuple)) and len(cam) == 4:
+            return [float(v) for v in cam]
+    return None
+
+
+def _detectar_camera(caminho_quadro):
+    """Cortes sem tela dividida (ou antigos): a IA acha a câmera do streamer no quadro da capa.
+    Mesma pergunta do formato do corte (layout). Devolve [x, y, w, h] de 0 a 1, ou None."""
+    from . import layout
+    try:
+        with open(caminho_quadro, "rb") as f:
+            cena = layout._perguntar(f.read())
+    except Exception:  # noqa - sem resposta: capa sem rosto ampliado
+        traceback.print_exc()
+        return None
+    if cena.tipo == "gameplay" and cena.tem_camera:
+        return layout._caixa(cena.camera)
+    return None
+
+
+def _render(cid, nome, var, canal, camera=None):
     pasta = _pasta(cid)
     q = os.path.join(pasta, var["quadro"])
-    _salvar(montar(q, var["texto"], var["cor"], var["layout"], var.get("foco", "centro"), canal), os.path.join(pasta, nome + ".jpg"))
-    _salvar(montar_vertical(q, var["texto"], var["cor"], canal), os.path.join(pasta, nome + "_v.jpg"))
+    camera = camera if camera is not None else _camera(cid)
+    _salvar(montar(q, var["texto"], var["cor"], var["layout"], var.get("foco", "centro"), canal, camera),
+            os.path.join(pasta, nome + ".jpg"))
+    _salvar(montar_vertical(q, var["texto"], var["cor"], canal, camera, var.get("foco", "centro")),
+            os.path.join(pasta, nome + "_v.jpg"))
     var.update(arq=nome + ".jpg", arq_v=nome + "_v.jpg", img=_url(cid, nome + ".jpg"), img_v=_url(cid, nome + "_v.jpg"))
     return var
 
@@ -363,15 +518,22 @@ def gerar_agora(cid):
             q1 = quadros[o[0]]["arq"]
             q2 = quadros[o[1] if len(o) > 1 else o[0]]["arq"]
             canal = clip.get("canal") or ""
+            # rosto grande na capa: câmera do corte em tela dividida, ou a IA acha no quadro (gameplay com câmera)
+            lay = clip.get("layout") or {}
+            camera = lay.get("camera") if lay.get("modo") == "dividido" else None
+            if not camera and titulos._chave_gemini() and clip.get("cena") != "conversa":
+                camera = _detectar_camera(os.path.join(pasta, q1))
+            # a 1ª (a que vai para o YouTube se ninguém trocar) é a de texto centralizado: sobrevive ao corte 3:2
             variacoes = [
-                {"quadro": q1, "texto": t[0], "cor": "amarelo", "layout": "lateral", "foco": foco},
-                {"quadro": q2, "texto": t[1], "cor": "branco", "layout": "faixa", "foco": foco},
-                {"quadro": q1, "texto": t[2], "cor": "vermelho", "layout": "topo", "foco": foco},
+                {"quadro": q1, "texto": t[0], "cor": "amarelo", "layout": "faixa", "foco": foco},
+                {"quadro": q2, "texto": t[1], "cor": "branco", "layout": "topo", "foco": foco},
+                {"quadro": q1, "texto": t[2], "cor": "vermelho", "layout": "lateral", "foco": foco},
             ]
             for i, v in enumerate(variacoes, 1):
-                _render(cid, f"var_{i}", v, canal)
+                _render(cid, f"var_{i}", v, canal, camera or [])
             clipper.update_clip(cid, thumbs={
                 "status": "pronto", "fonte": plano["fonte"], "aviso": aviso, "foco": foco, "escolhida": 0,
+                "camera": camera,
                 "quadros": [{**q, "img": _url(cid, q["arq"])} for q in quadros],
                 "variacoes": variacoes, "textos": t, "gerado_em": time.strftime("%Y-%m-%dT%H:%M:%S"),
             })
@@ -383,13 +545,18 @@ def gerar_agora(cid):
     return clipper.get_clip(cid)["thumbs"]
 
 
+_ativos = set()  # cortes com geração rodando AGORA neste processo (o "gerando" salvo no arquivo pode ser de antes)
+
+
 def gerar(cid):
     """Gera em segundo plano (o painel acompanha pelo status)."""
     clip = clipper.get_clip(cid)
     if not clip or clip.get("status") != "pronto":
         raise ValueError("Corte não encontrado ou ainda processando.")
-    if (clip.get("thumbs") or {}).get("status") == "gerando":
-        return clip["thumbs"]
+    with _ativos_lock:
+        if cid in _ativos:
+            return clip.get("thumbs") or {}
+        _ativos.add(cid)
     clipper.update_clip(cid, thumbs={**(clip.get("thumbs") or {}), "status": "gerando", "erro": None})
 
     def rodar():
@@ -397,8 +564,20 @@ def gerar(cid):
             gerar_agora(cid)
         except Exception:  # noqa - o erro já fica salvo no corte
             pass
+        finally:
+            with _ativos_lock:
+                _ativos.discard(cid)
     threading.Thread(target=rodar, daemon=True).start()
     return clipper.get_clip(cid)["thumbs"]
+
+
+def _limpar_interrompidas():
+    """Ao ligar: geração que estava rodando quando o programa fechou não volta sozinha; vira 'tente de novo'."""
+    for c in clipper.list_clips():
+        t = c.get("thumbs") or {}
+        if t.get("status") == "gerando":
+            clipper.update_clip(c["id"], thumbs={**t, "status": "erro" if not t.get("variacoes") else "pronto",
+                                                 "erro": "interrompida (o programa foi fechado); gere de novo"})
 
 
 def personalizar(cid, quadro, texto, cor, layout):

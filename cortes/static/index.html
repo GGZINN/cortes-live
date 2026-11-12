@@ -609,12 +609,19 @@ function drawChart(cv, serie, limite){
   g.strokeStyle="#ff3b5c"; g.lineWidth=1.6; g.stroke();
 }
 
+function capaV(c){  // capa 9:16 escolhida do corte (ou null se ainda não foi gerada)
+  const t = c.thumbs || {}, vs = t.variacoes || [];
+  const v = vs[Math.min(t.escolhida || 0, Math.max(vs.length - 1, 0))];
+  return t.status === "pronto" && v && v.img_v ? v.img_v : null;
+}
+function abrirCapa(cid){ abrirTh(cid); thFmt = "v"; renderTh(true); }
+
 function clipHTML(c){
   const when = new Date(c.criado).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
   const tags = c.por_que ? `<div class="pq">${esc(c.por_que)}</div>` : "";
   const motivo = c.por_que ? `🧠 nota ${c.pontuacao}/10 · ${esc(String(c.motivo).replace(/^IA: /,""))}` : `⚡ ${esc(c.motivo)}`;
   let vid;
-  if(c.status==="pronto") vid = `<video src="${c.arquivo}" poster="${c.capa}" controls preload="none" playsinline></video>`;
+  if(c.status==="pronto") vid = `<video src="${c.arquivo}" poster="${esc(capaV(c) || c.capa)}" controls preload="none" playsinline></video>`;
   else if(c.status==="erro") vid = `<div class="proc err">Falhou<br><small>${esc(c.erro)}</small></div>`;
   else vid = `<div class="proc"><div class="spinner"></div>${esc(c.status)}…</div>`;
   const star = c.escolhido ? `<div class="star">⭐ Escolhido para postar</div>${c.motivo_escolha?`<div class="pq">${esc(c.motivo_escolha)}</div>`:""}` : "";
@@ -624,7 +631,7 @@ function clipHTML(c){
     <div class="m">${esc(c.canal)} · ${when} · ${c.duracao}s</div>
     <div class="m">${motivo}</div>
     ${tags}
-    <div class="acts">${c.status==="pronto" ? `<button class="pub" onclick="abrirPublicar('${c.id}')">Publicar</button><a href="${c.arquivo}" download="${slug(c.titulo)||"corte-"+c.id}.mp4">Baixar</a>`:""}${c.status==="erro" ? `<button onclick="refazerClip('${c.id}')">↻ Tentar de novo</button>`:""}<button onclick="delClip('${c.id}')">Apagar</button></div>
+    <div class="acts">${c.status==="pronto" ? `<button class="pub" onclick="abrirPublicar('${c.id}')">Publicar</button><button onclick="abrirCapa('${c.id}')" title="Capa 9:16 e thumbnail">🖼 Capa</button><a href="${c.arquivo}" download="${slug(c.titulo)||"corte-"+c.id}.mp4">Baixar</a>`:""}${c.status==="erro" ? `<button onclick="refazerClip('${c.id}')">↻ Tentar de novo</button>`:""}<button onclick="delClip('${c.id}')">Apagar</button></div>
   </div>`;
 }
 /* ---------- cortes: uma aba por streamer, "Para postar" / "Todos" por lote ---------- */
@@ -638,7 +645,7 @@ function setHTML(sel, h){ if(_html[sel] !== h){ _html[sel] = h; $(sel).innerHTML
 function cardDe(c){
   let el = document.getElementById("c_"+c.id);
   if(!el){ el = document.createElement("div"); el.className="clip"; el.id="c_"+c.id; }
-  const key = [c.status, c.titulo, c.escolhido, c.motivo_escolha].join("|");
+  const key = [c.status, c.titulo, c.escolhido, c.motivo_escolha, capaV(c)].join("|");
   if(clipCache[c.id] !== key){ el.innerHTML = clipHTML(c); clipCache[c.id] = key; }
   const yl = el.querySelector(".ytl"), yh = ytLinha(c);  // separado: o progresso do envio não reinicia o vídeo
   if(yl && yl.innerHTML !== yh) yl.innerHTML = yh;
@@ -847,12 +854,14 @@ async function gerarDeNovo(){
 
 function tituloAtual(){
   const s = pubClip.sugestoes; if(pubCustom !== null) return pubCustom;
+  // no Shorts, a 1ª opção é o título pensado para busca (com nome do streamer/jogo), o mesmo que a agenda envia
+  if(pubPlat === "shorts" && pubSel === 0 && s && s.youtube) return s.youtube.titulo;
   return (s && s.titulos[pubSel]) || pubClip.titulo || "";
 }
 function hashtags(p){ return (p.hashtags||[]).map(h=>"#"+h).join(" "); }
 function legendaPronta(plat){
   const s = pubClip.sugestoes, p = s.plataformas[plat];
-  if(plat === "shorts") return [p.legenda, s.credito, hashtags(p)].filter(Boolean).join("\n\n");
+  if(plat === "shorts") return s.youtube ? s.youtube.descricao : [p.legenda, s.credito, hashtags(p)].filter(Boolean).join("\n\n");
   return [tituloAtual(), p.legenda, s.credito, hashtags(p)].filter(Boolean).join("\n\n");
 }
 
@@ -874,7 +883,7 @@ function renderPub(){
     ? `<div class="sec"><b>Título</b><div class="box"><input id="fTitulo" value="${esc(titulo)}" oninput="pubCustom=this.value;contar()"></div>
          <div class="row"><small id="cnt"></small><button onclick="copiar('fTitulo',this)">Copiar título</button></div></div>
        <div class="sec"><b>Descrição</b><div class="box"><textarea id="fTexto">${esc(legendaPronta("shorts"))}</textarea></div>
-         <div class="row"><small>Créditos e hashtags já incluídos (#shorts entra na descrição).</small><button onclick="copiar('fTexto',this)">Copiar descrição</button></div></div>`
+         <div class="row"><small>Jogo, link da live, convite e 3 a 5 hashtags já incluídos (as 3 primeiras aparecem em cima do título).</small><button onclick="copiar('fTexto',this)">Copiar descrição</button></div></div>`
     : `<div class="sec"><b>Legenda pronta</b><div class="box"><textarea id="fTexto">${esc(legendaPronta(pubPlat))}</textarea></div>
          <div class="row"><small>Título + texto + créditos + hashtags. Pode editar antes de copiar.</small><button onclick="copiar('fTexto',this)">Copiar legenda</button></div></div>`;
 
@@ -1093,7 +1102,7 @@ async function ytEnviar(){
     }catch(e){ alert(erroTxt(e)); }
     return;
   }
-  const tags = [...(pubClip.sugestoes?.plataformas?.shorts?.hashtags || []), pubClip.canal].filter(Boolean);
+  const tags = pubClip.sugestoes?.youtube?.tags || [...(pubClip.sugestoes?.plataformas?.shorts?.hashtags || []), pubClip.canal].filter(Boolean);
   const body = {titulo, descricao, tags, privacidade: ytVis === "agendar" ? "private" : ytVis, forcar: ytForcar};
   if(ytVis === "agendar"){
     const d = new Date(ytQuando);
@@ -1198,7 +1207,8 @@ function renderTh(forcar){
     ${y.thumb_erro ? `<p class="err">${esc(y.thumb_erro)}</p>` : ""}
     <div class="nota">A 16:9 é a thumbnail do YouTube: ${ytSt.thumb_automatica ? "ela vai junto quando o corte é enviado." : "o envio automático está desligado em ▶ YouTube."}
       No Shorts ela aparece no seu canal e na busca; no feed de Shorts o YouTube mostra o próprio vídeo.
-      A capa 9:16 é para subir no TikTok, Reels e Kwai.</div>`;
+      A capa 9:16 é para subir como capa no TikTok, Reels e Kwai: rosto grande em cima, jogo embaixo e o texto
+      no miolo que aparece no grid do perfil.</div>`;
 }
 thDlg.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-thv],[data-thq],[data-thc],[data-tht]"); if(!b) return;

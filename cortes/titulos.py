@@ -19,9 +19,43 @@ MODELO_CLAUDE = "claude-opus-5-5"
 
 # ------------------------------------------------------------------ utilidades
 def _tag(texto):
-    """'Gaules TV' -> 'gaulestv' (hashtag válida, sem acento)."""
+    """'Gaules TV' -> 'gaulestv' (só letras/números, sem espaço; para nomes de canal)."""
     t = unicodedata.normalize("NFKD", texto or "").encode("ascii", "ignore").decode()
     return re.sub(r"[^a-zA-Z0-9_]", "", t).lower()
+
+
+def _hashtag(texto):
+    """'Mario Party Jamboree' -> 'mariopartyjamboree'; mantém acento ('engraçado'), tira espaço e símbolos."""
+    t = unicodedata.normalize("NFC", str(texto or "")).lstrip("#")
+    return re.sub(r"[^\w]", "", t, flags=re.UNICODE).replace("_", "").lower()
+
+
+# hashtags genéricas demais: não ajudam ninguém a achar o vídeo e ocupam o lugar das que importam
+GENERICAS = {"viral", "fyp", "foryou", "foryoupage", "fy", "fypシ", "trending", "explore", "explorar", "parati",
+             "cortes", "cortesdelive", "corteslive", "cortesdelives", "video", "videos", "shortsvideo", "viralvideo",
+             "reels", "reelsinstagram", "kwai", "tiktok", "youtube", "youtubeshorts", "streamer", "live", "lives"}
+MAX_HASHTAGS = 5  # o YouTube mostra até 3 em cima do título; mais que isso dilui (e passar de 60 anula todas)
+
+
+def hashtags_finais(clip, plataforma, sugeridas=(), jogo=None):
+    """3 a 5 hashtags, da mais importante para a menos: streamer, jogo, cortes do streamer, tema."""
+    canal = _hashtag(clip.get("canal"))
+    jogo = _hashtag(jogo or clip.get("jogo"))
+    ordem = [canal, jogo, f"cortesdo{canal}" if canal else ""]
+    ordem += [_hashtag(t) for t in sugeridas or ()]
+    out = []
+    for t in ordem:
+        if t and t not in GENERICAS and t != "shorts" and t not in out and 2 < len(t) <= 40:
+            out.append(t)
+    out = out[:MAX_HASHTAGS - (1 if plataforma == "shorts" else 0)]
+    if plataforma == "shorts":
+        out.append("shorts")  # por último: não toma o lugar das que aparecem em cima do título
+    return out
+
+
+def _url_completa(clip):
+    u = _url_canal(clip)
+    return ("https://" + u) if u and not u.startswith("http") else u
 
 
 def _limpa(frase):
@@ -56,12 +90,63 @@ def hashtags_base(clip):
     return tags
 
 
-EXTRA = {
-    "tiktok": ["fyp", "viral", "foryou"],
-    "shorts": ["shorts"],
-    "reels": ["reels", "viral"],
-    "kwai": ["kwai", "viral"],
-}
+def descricao_youtube(clip, legenda, hashtags, jogo=None):
+    """Descrição do Short: 1ª linha com palavras de busca, jogo, live com link clicável, convite e hashtags no fim."""
+    canal = clip.get("canal") or "o streamer"
+    jogo = jogo or clip.get("jogo")
+    url = _url_completa(clip)
+    linhas = [legenda.strip()] if legenda and legenda.strip() else []
+    bloco = []
+    if jogo:
+        bloco.append(f"🎮 Jogo: {jogo}")
+    bloco.append(f"🎥 Live de {canal}" + (f": {url}" if url else ""))
+    bloco.append(f"🔔 Se inscreve para ver os melhores cortes do {canal} todo dia!")
+    linhas.append("\n".join(bloco))
+    if hashtags:
+        linhas.append(" ".join("#" + h for h in hashtags))
+    return "\n\n".join(linhas)
+
+
+def tags_youtube(clip, palavras=(), jogo=None):
+    """Tags (campo escondido do YouTube): termos que alguém digitaria na busca."""
+    canal = clip.get("canal") or ""
+    jogo = jogo or clip.get("jogo") or ""
+    base = [canal, f"cortes do {canal}", f"{canal} cortes", f"melhores momentos {canal}"]
+    if jogo:
+        base += [jogo, f"{canal} {jogo}", f"{jogo} engraçado"]
+    out, vistos = [], set()
+    for t in base + list(palavras or ()):
+        t = re.sub(r"\s+", " ", str(t or "").replace("#", "")).strip()
+        if t and t.lower() not in vistos:
+            vistos.add(t.lower())
+            out.append(t)
+    return out[:20]
+
+
+def pacote_youtube(clip, sug=None):
+    """O que vai para o YouTube: {titulo, descricao, tags, hashtags}. Mesma conta no painel e no envio."""
+    s = sug or clip.get("sugestoes") or {}
+    p = (s.get("plataformas") or {}).get("shorts") or {}
+    jogo = s.get("jogo") or clip.get("jogo")
+    base = p.get("titulo") or clip.get("titulo") or (s.get("titulos") or [None])[0] or clip.get("motivo") or "Corte"
+    hashtags = hashtags_finais(clip, "shorts", p.get("hashtags") or [], jogo)
+    return {
+        "titulo": titulo_shorts(clip, base, jogo),
+        "descricao": descricao_youtube(clip, p.get("legenda") or "", hashtags, jogo),
+        "tags": tags_youtube(clip, (s.get("palavras_chave") or []) + hashtags[:-1], jogo),
+        "hashtags": hashtags,
+    }
+
+
+def titulo_shorts(clip, titulo, jogo=None):
+    """Título do Short: sem hashtag, até 100 caracteres, e com o nome do streamer ou do jogo (é o que se busca)."""
+    t = re.sub(r"\s*#\w+", "", titulo or "").strip()
+    canal = clip.get("canal") or ""
+    jogo = jogo or clip.get("jogo") or ""
+    tem_nome = any(n and n.lower() in t.lower() for n in (canal, jogo, _tag(canal)))
+    if canal and not tem_nome and len(t) + len(canal) + 3 <= 70:
+        t = f"{t} | {canal}"
+    return t[:100]
 
 
 # ------------------------------------------------------------------ sem IA (modelos prontos)
@@ -99,21 +184,22 @@ def _por_modelo(clip):
             unicos.append(t)
     titulos = unicos[:5]
 
-    base = hashtags_base(clip)
+    jogo = clip.get("jogo")
     gancho = {
         "tiktok": "Assiste até o final 👀",
-        "shorts": "Se inscreve pra mais cortes!",
+        "shorts": f"{canal} {'jogando ' + jogo if jogo else 'ao vivo'}: olha o que aconteceu nessa live!",
         "reels": "Marca aquele amigo que faria isso 😂",
         "kwai": "Segue pra mais cortes todo dia!",
     }
     plats = {}
     for p in PLATAFORMAS:
         plats[p] = {
-            "titulo": titulos[0][:100],
+            "titulo": titulo_shorts(clip, titulos[0], jogo) if p == "shorts" else titulos[0][:100],
             "legenda": gancho[p],
-            "hashtags": base + EXTRA[p],
+            "hashtags": hashtags_finais(clip, p, [], jogo),
         }
-    return {"titulos": titulos, "plataformas": plats, "fonte": "modelo"}
+    return {"titulos": titulos, "plataformas": plats, "fonte": "modelo", "jogo": jogo,
+            "palavras_chave": tags_youtube(clip, [], jogo)}
 
 
 # ------------------------------------------------------------------ com IA (Claude)
@@ -125,6 +211,8 @@ class SugestaoPlataforma(BaseModel):
 
 class Sugestoes(BaseModel):
     titulos: List[str]
+    jogo: str                 # nome do jogo do corte ("" se não for jogo)
+    palavras_chave: List[str]  # termos de busca para as tags do YouTube
     tiktok: SugestaoPlataforma
     shorts: SugestaoPlataforma
     reels: SugestaoPlataforma
@@ -132,17 +220,30 @@ class Sugestoes(BaseModel):
 
 
 SISTEMA = """Você é editor de um canal brasileiro de cortes de lives (estilo TikTok/Shorts/Reels/Kwai).
-Recebe a transcrição de um corte e dados do chat e escreve títulos e legendas que fazem a pessoa parar de rolar o feed.
+Recebe a transcrição de um corte e o que a IA viu nele e escreve títulos, legendas e hashtags que fazem a pessoa
+parar de rolar o feed E que ajudam o vídeo a ser achado na busca.
 
-Regras:
+Regras gerais:
 - Português do Brasil, linguagem de internet, natural. Pode usar CAIXA ALTA em 1 ou 2 palavras e no máximo 1 emoji por título.
-- Seja fiel ao que acontece no corte: nada de prometer algo que não está no vídeo.
-- Títulos curtos: até 60 caracteres. Uma frase marcante dita no corte, entre aspas, costuma funcionar muito bem.
-- "titulos": 5 opções bem diferentes entre si (frase do streamer, reação do chat, curiosidade, exagero engraçado, descritivo).
-- Para cada plataforma: "titulo" (no Shorts até 100 caracteres), "legenda" com 1 ou 2 linhas curtas que complementam o título
-  (sem repetir o título, sem créditos e sem hashtags, que são adicionados depois) e "hashtags" com 3 a 6 itens, sem o símbolo #,
-  minúsculas, sem acento. Inclua o nome do canal e o assunto/jogo se der para identificar.
-- TikTok: tom mais jovem e direto. Shorts: título que funcione em busca. Reels: tom de conversa, convida a marcar alguém. Kwai: bem popular e direto."""
+- Escreva as palavras inteiras e com acento: nada de abreviação (mto, vc, pq, tbm, q) nem erro de digitação.
+- Seja fiel ao que acontece no corte: nada de prometer algo que não está no vídeo (título enganoso derruba o vídeo).
+- "titulos": 5 opções bem diferentes entre si (frase marcante do streamer entre aspas, curiosidade, exagero engraçado,
+  descritivo com o nome do streamer, reação). Até 60 caracteres cada. Sem hashtag no título.
+- "jogo": nome oficial do jogo do corte, como se busca no YouTube (ex.: "Mario Party Jamboree", "Counter-Strike 2");
+  vazio se o corte não for de jogo ou se não der para saber. Use o que o contexto diz; não invente.
+- "palavras_chave": 6 a 10 termos que alguém digitaria na busca para achar ESTE corte (ex.: "alanzoka mario party",
+  "alanzoka rindo", "mario party jamboree engraçado"). Sem hashtag.
+
+Para cada plataforma:
+- "titulo": no Shorts, 40 a 70 caracteres, com o NOME DO STREAMER ou do JOGO escrito (é o que as pessoas buscam) e um gancho
+  de curiosidade. Nas outras, o mesmo estilo dos "titulos".
+- "legenda": 1 ou 2 linhas curtas que complementam o título sem repeti-lo. No Shorts, a primeira frase precisa ter o nome
+  do streamer e o do jogo (se houver) e dizer o que acontece: ela é lida pela busca. Sem créditos, link ou hashtag
+  (isso é adicionado depois).
+- "hashtags": 3 a 5, da mais importante para a menos, sem o símbolo #, sem espaço (pode ter acento): o nome do streamer,
+  o jogo, e o tema/situação do corte (ex.: "marioparty", "fail", "susto"). PROIBIDO hashtag genérica que não descreve o
+  vídeo: viral, fyp, foryou, parati, trending, cortes, cortesdelive, reels, shorts, tiktok.
+- Tom: TikTok mais jovem e direto; Shorts pensado para busca; Reels conversa e convida a marcar alguém; Kwai bem popular."""
 
 
 def _aprendizado():
@@ -164,6 +265,7 @@ def _contexto_corte(clip):
         f"Canal: {clip.get('canal')} ({clip.get('plataforma')})\n"
         f"Título da live: {clip.get('titulo_live') or '-'}\n"
         f"Por que foi cortado: {clip.get('motivo')}\n"
+        + (f"Jogo da live: {clip.get('jogo')}\n" if clip.get("jogo") else "")
         + (f"O que a IA viu no corte: gancho = {clip.get('gancho')} | por que retém = {clip.get('por_que')} | "
            f"título sugerido por quem assistiu = {clip.get('titulo_ia')}\n" if clip.get("gancho") else "") +
         f"Frase dita no auge do momento: {clip.get('frase_pico') or '-'}\n"
@@ -207,7 +309,9 @@ def _gemini(clip):
     return Sugestoes.model_validate_json(resp.text) if resp and resp.text else None
 
 
-TRANSITORIOS = ("ReadError", "ReadTimeout", "ConnectError", "RemoteProtocolError", "WriteError",
+GEMINI_TIMEOUT_MS = 180_000  # 3 min: a análise de 2 min de live leva ~1 min; mais que isso, travou
+
+TRANSITORIOS = ("ReadError", "ReadTimeout", "ConnectError", "RemoteProtocolError", "WriteError", "TimeoutException",
                 "500", "502", "503", "504", "UNAVAILABLE", "INTERNAL", "DEADLINE_EXCEEDED")
 
 
@@ -215,6 +319,12 @@ def gemini_gerar(cliente, modelos, contents, cfg, tentativas=3):
     """Chama o Gemini com tentativas: falha de rede passageira → tenta de novo;
     limite grátis/erro do modelo → passa para o próximo modelo da lista."""
     import time
+    try:  # sem limite de tempo, uma chamada que não volta segura a fila (thumbs, títulos) para sempre
+        from google.genai import types
+        if getattr(cfg, "http_options", None) is None:
+            cfg = cfg.model_copy(update={"http_options": types.HttpOptions(timeout=GEMINI_TIMEOUT_MS)})
+    except Exception:  # noqa
+        pass
     erro = None
     for modelo in modelos:
         for n in range(tentativas):
@@ -263,29 +373,61 @@ def _por_ia(clip):
         return None
     if s is None:
         return None
-    base = hashtags_base(clip)
+    jogo = (s.jogo or "").strip() or clip.get("jogo") or None
     plats = {}
     for p in PLATAFORMAS:
         sp = getattr(s, p)
-        tags = []
-        for t in list(sp.hashtags) + base + EXTRA[p][:1]:
-            t = _tag(t.lstrip("#"))
-            if t and t not in tags:
-                tags.append(t)
-        plats[p] = {"titulo": sp.titulo[:100], "legenda": sp.legenda.strip(), "hashtags": tags[:8]}
-    titulos = [t.strip() for t in s.titulos if t.strip()][:6]
+        titulo = re.sub(r"\s*#\w+", "", sp.titulo or "").strip()
+        plats[p] = {
+            "titulo": titulo_shorts(clip, titulo, jogo) if p == "shorts" else titulo[:100],
+            "legenda": sp.legenda.strip(),
+            "hashtags": hashtags_finais(clip, p, sp.hashtags, jogo),
+        }
+    titulos = [re.sub(r"\s*#\w+", "", t).strip() for t in s.titulos if t.strip()][:6]
     if not titulos:
         return None
-    return {"titulos": titulos, "plataformas": plats, "fonte": "ia", "provedor": provedor}
+    return {"titulos": titulos, "plataformas": plats, "fonte": "ia", "provedor": provedor, "jogo": jogo,
+            "palavras_chave": tags_youtube(clip, s.palavras_chave, jogo)}
+
+
+def _jogo_provavel(clip):
+    """Corte sem jogo anotado (ex.: anterior a esse campo): usa o jogo do corte mais próximo do mesmo streamer,
+    até 2 h de diferença (mesma live). None se não houver."""
+    from datetime import datetime
+    try:
+        from . import clipper
+        quando = datetime.fromisoformat(clip.get("criado"))
+    except Exception:  # noqa
+        return None
+    canal = (clip.get("canal") or "").lower()
+    melhor, dist = None, 7200
+    for c in clipper.list_clips():
+        if c.get("id") == clip.get("id") or (c.get("canal") or "").lower() != canal:
+            continue
+        j = c.get("jogo") or (c.get("sugestoes") or {}).get("jogo")
+        if not j:
+            continue
+        try:
+            d = abs((datetime.fromisoformat(c.get("criado")) - quando).total_seconds())
+        except Exception:  # noqa
+            continue
+        if d < dist:
+            melhor, dist = j, d
+    return melhor
 
 
 def gerar(clip):
     """Retorna {titulos, plataformas:{tiktok|shorts|reels|kwai: {titulo, legenda, hashtags}}, fonte, aviso?}."""
+    if not clip.get("jogo"):
+        jp = _jogo_provavel(clip)
+        if jp:  # entra no contexto da IA e nas hashtags/tags como o jogo do corte
+            clip = {**clip, "jogo": jp}
     aviso = None
     try:
         r = _por_ia(clip)
         if r:
             r["credito"] = credito(clip)
+            r["youtube"] = pacote_youtube(clip, r)
             return r
     except Exception as e:  # noqa - sem internet, chave inválida, limite grátis...
         txt = f"{type(e).__name__} {e}"
@@ -303,6 +445,7 @@ def gerar(clip):
         aviso = f"IA indisponível ({motivo}). Usando sugestões automáticas."
     r = _por_modelo(clip)
     r["credito"] = credito(clip)
+    r["youtube"] = pacote_youtube(clip, r)
     if aviso:
         r["aviso"] = aviso
     return r

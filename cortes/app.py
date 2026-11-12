@@ -33,6 +33,7 @@ def _startup():
                 manager.add_stream(url)
         except Exception:
             pass
+    thumbs._limpar_interrompidas()  # thumbnail que estava sendo gerada quando o programa fechou
     curadoria.verificar()  # lotes completos que ainda não tiveram os 2 escolhidos
 
 
@@ -79,6 +80,20 @@ def force_clip(sid: str):
     fim = s.recorder.covered_until()
     s.criar_corte(max(0.0, fim - 30), fim, {"motivo": "Teste manual", "pontuacao": 0, "pico_rel": 3.0})
     return {"ok": True}
+
+
+@app.get("/api/diagnostico/tarefas")
+def diagnostico_tarefas():
+    """Onde cada tarefa em segundo plano está agora (para achar travamentos). Só responde neste PC."""
+    import sys
+    import threading
+    import traceback
+    nomes = {t.ident: t.name for t in threading.enumerate()}
+    out = {}
+    for ident, frame in sys._current_frames().items():
+        pilha = [f"{os.path.basename(f.filename)}:{f.lineno} {f.name}" for f in traceback.extract_stack(frame)]
+        out[f"{nomes.get(ident, '?')} ({ident})"] = [p for p in pilha if "site-packages" not in p][-8:] + pilha[-3:]
+    return out
 
 
 @app.get("/api/estado")

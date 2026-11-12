@@ -15,7 +15,7 @@ import traceback
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from . import clipper, config, youtube
+from . import clipper, config, titulos, youtube
 
 ARQ = os.path.join(config.DATA_DIR, "agenda.json")
 PADRAO = {
@@ -76,22 +76,17 @@ def _reset_cota():
     return r if r > a else r + timedelta(days=1)
 
 
+# título, descrição e tags vêm do "pacote do YouTube" (titulos.pacote_youtube): o mesmo que o painel mostra
 def _descricao(clip):
-    s = clip.get("sugestoes") or {}
-    p = (s.get("plataformas") or {}).get("shorts") or {}
-    tags = " ".join("#" + h for h in p.get("hashtags") or [])
-    return "\n\n".join(x for x in (p.get("legenda"), s.get("credito"), tags) if x)
+    return titulos.pacote_youtube(clip)["descricao"]
 
 
 def _tags(clip):
-    s = clip.get("sugestoes") or {}
-    p = (s.get("plataformas") or {}).get("shorts") or {}
-    return list(p.get("hashtags") or []) + ([clip["canal"]] if clip.get("canal") else [])
+    return titulos.pacote_youtube(clip)["tags"]
 
 
 def _titulo(clip):
-    s = clip.get("sugestoes") or {}
-    return clip.get("titulo") or (s.get("titulos") or [None])[0] or clip.get("motivo") or "Corte"
+    return titulos.pacote_youtube(clip)["titulo"]
 
 
 def _livre_para_agenda(c):

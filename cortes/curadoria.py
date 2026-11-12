@@ -155,6 +155,19 @@ def _por_ia(prontos, k):
     return out[:k], e.resumo.strip()
 
 
+def _thumbs_dos_escolhidos(ids):
+    """Deixa prontas a thumbnail 16:9 e a capa 9:16 dos escolhidos (os que vão ser postados)."""
+    from . import clipper, thumbs
+    for cid in ids:
+        c = clipper.get_clip(cid) or {}
+        if (c.get("thumbs") or {}).get("status") in ("pronto", "gerando"):
+            continue
+        try:
+            thumbs.gerar(cid)  # roda em segundo plano; uma de cada vez (thumbs usa trava)
+        except Exception:  # noqa - o painel mostra o botão de gerar de novo
+            pass
+
+
 def _escolher(canal, lote):
     from . import clipper
     try:
@@ -182,6 +195,7 @@ def _escolher(canal, lote):
         with _lock:
             _lotes[_k(canal, lote)] = {"status": "feito", "resumo": resumo, "fonte": fonte}
             _salvar()
+        _thumbs_dos_escolhidos(list(motivos))
     except Exception as e:  # noqa
         with _lock:
             _lotes[_k(canal, lote)] = {"status": "pendente", "resumo": f"erro: {type(e).__name__}"}
