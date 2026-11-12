@@ -243,10 +243,9 @@ def _linhas(texto, tam, max_w):
     return linhas
 
 
-def _eventos_gancho(gancho, complemento, ate, modo):
-    """Texto de gancho dos primeiros segundos (estilo dos canais grandes de cortes): frase em amarelo, até 2 linhas,
-    linha de piada menor em branco, sobre uma faixa escura em degradê. Na tela dividida fica logo abaixo da emenda
-    câmera/jogo; no formato padrão, logo acima da imagem da live."""
+def layout_gancho(gancho, complemento, modo):
+    """Onde e em que tamanho vai o texto de gancho, e a área (y0, y1) do desfoque atrás dele.
+    Na tela dividida fica logo abaixo da emenda câmera/jogo; no formato padrão, logo acima da imagem da live."""
     from . import layout
     # tamanhos em px "de verdade" (medidos com o Pillow); a libass desenha esta fonte menor no mesmo \fs,
     # por isso o \fs vai multiplicado por ESCALA_LIBASS. Meta (da referência): a linha mais longa ocupa ~85% da tela.
@@ -261,34 +260,32 @@ def _eventos_gancho(gancho, complemento, ate, modo):
     alt = int(len(ls) * tam * 1.45 + (len(lc) * tam_c * 1.45 + 6 if lc else 0))  # altura aproximada do bloco
     if modo == "dividido":   # logo abaixo da emenda câmera/jogo (o selo fica em cima da emenda)
         ancora, y_ancora = r"\an8", layout.ALT_CAM + 58
-        y0, y1 = y_ancora - 60, y_ancora + alt + 60
+        y0, y1 = y_ancora - 34, y_ancora + alt + 26
     else:                    # formato padrão: a BASE do bloco fica acima do selo da live (não encosta nele)
         ancora, y_ancora = r"\an2", layout.TOPO_LIVE - 100
-        y0, y1 = max(0, y_ancora - alt - 70), y_ancora + 40
+        y0, y1 = max(0, y_ancora - alt - 26), y_ancora + 30
+    return {"tam": tam, "ls": ls, "tam_c": tam_c, "lc": lc, "ancora": ancora, "y_ancora": y_ancora,
+            "y0": int(y0) // 2 * 2, "y1": int(y1) // 2 * 2}
+
+
+def _eventos_gancho(gancho, complemento, ate, modo):
+    """Texto de gancho dos primeiros segundos (estilo dos canais grandes de cortes): frase em amarelo, até 2 linhas,
+    e a linha de piada menor em branco. O fundo desfocado atrás dele é feito no filtro do vídeo (layout.filtro_video)."""
+    g = layout_gancho(gancho, complemento, modo)
     fim = _ts_cs(int(round(ate * 100)))
-    ev = []
-    # faixa escura em degradê atrás do texto (some nas bordas de cima e de baixo)
-    n = 32  # muitas faixas finas: degradê sem listras
-    for i in range(n):
-        ya = y0 + (y1 - y0) * i // n
-        yb = y0 + (y1 - y0) * (i + 1) // n
-        meio = 1 - abs((i + 0.5) / n - 0.5) * 2              # 0 nas bordas, 1 no meio
-        alfa = int(255 - 150 * (meio ** 0.7))                 # &HFF = transparente
-        ev.append(f"Dialogue: 0,0:00:00.00,{fim},Faixa,,0,0,0,,{{\\an7\\pos(0,{ya})\\1a&H{alfa:02X}&\\fad(120,200)\\p1}}"
-                  f"m 0 0 l 1080 0 1080 {yb - ya + 1} 0 {yb - ya + 1}{{\\p0}}")
     # um bloco só (a libass cuida do espaço entre as linhas): frase em amarelo + complemento menor em branco
-    pop = r"\fscx92\fscy92\t(0,140,\fscx100\fscy100)"
-    texto = r"\N".join(_esc(x) for x in ls)
-    if lc:
-        texto += r"\N{\fs" + str(round(tam_c * ESCALA_LIBASS)) + r"\c&HFFFFFF&\bord1.5\shad3}" + r"\N".join(_esc(x) for x in lc)
-    ev.append(f"Dialogue: 2,0:00:00.00,{fim},Gancho,,0,0,0,,"
-              f"{{{ancora}\\pos(540,{y_ancora})\\fad(120,200){pop}\\fs{round(tam * ESCALA_LIBASS)}}}" + texto)
-    return ev
+    pop = r"\fscx92\fscy92\t(0,120,\fscx100\fscy100)"
+    texto = r"\N".join(_esc(x) for x in g["ls"])
+    if g["lc"]:
+        texto += (r"\N{\fs" + str(round(g["tam_c"] * ESCALA_LIBASS)) + r"\c&HFFFFFF&\bord1.5\shad3}"
+                  + r"\N".join(_esc(x) for x in g["lc"]))
+    return [f"Dialogue: 2,0:00:00.00,{fim},Gancho,,0,0,0,,"
+            f"{{{g['ancora']}\\pos(540,{g['y_ancora']})\\fad(100,180){pop}\\fs{round(g['tam'] * ESCALA_LIBASS)}}}" + texto]
 
 
 def duracao_gancho(dur):
-    """Quanto tempo o texto de gancho fica na tela (na referência, ~8 s de 60)."""
-    return round(min(8.0, max(4.0, dur * 0.35)), 2)
+    """Quanto tempo o texto de gancho fica na tela: ~3 s (2,5 a 4 s). Só o tempo de ler e já sair do caminho."""
+    return round(min(4.0, max(2.5, dur * 0.12)), 2)
 
 
 def build_ass(words, path, gancho=None, complemento=None, ate=0.0, modo="dividido"):
@@ -472,8 +469,12 @@ def _process(cid, raw, offset, dur):
         has_subs = build_ass(words_video, os.path.join(d, "legenda.ass"), gancho, clip.get("complemento"), ate, lay["modo"])
     selo = bool(config.get("selo_live")) and layout.criar_selo(clip, os.path.join(d, "selo.png"))
     trocas_div = trocas if lay["modo"] == "dividido" else None
+    caixa = None
+    if gancho and has_subs:  # área do desfoque atrás do texto de gancho
+        lg = layout_gancho(gancho, clip.get("complemento"), lay["modo"])
+        caixa = (lg["y0"], lg["y1"], ate)
     vf = "[0:a:0]asetpts=PTS-STARTPTS[aud];" + layout.filtro_video(lay["modo"], lay["camera"], selo, has_subs,
-                                                                   lay.get("janela"), trocas_div)
+                                                                   lay.get("janela"), trocas_div, caixa)
     run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", fonte, *(["-i", "selo.png"] if selo else []),
                 "-filter_complex", vf, "-map", "[v]", "-map", "[aud]",
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",

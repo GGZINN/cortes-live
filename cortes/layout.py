@@ -178,7 +178,20 @@ def _enable(trechos):
     return "+".join(f"between(t,{a:.2f},{b:.2f})" for a, b in trechos)
 
 
-def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None):
+def _fundo_gancho(entrada, y0, y1, ate):
+    """Desfoque atrás do texto de gancho: a faixa da imagem fica borrada e um pouco mais escura, com as bordas
+    de cima e de baixo suaves (sem corte duro), entra e sai com fade e some quando o gancho sai."""
+    h = max(40, (y1 - y0) // 2 * 2)
+    pena = max(12, min(48, h // 3))  # altura da borda suave
+    fade_out = max(0.0, ate - 0.18)
+    return (f";[{entrada}]split=2[gb0][gb1];"
+            f"[gb1]trim=end={ate:.2f},crop={W}:{h}:0:{y0},gblur=sigma=24,eq=brightness=-0.13:saturation=0.85,"
+            f"format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='255*min(1,min(Y,H-1-Y)/{pena})',"
+            f"fade=t=in:st=0:d=0.12:alpha=1,fade=t=out:st={fade_out:.2f}:d=0.18:alpha=1[gbl];"
+            f"[gb0][gbl]overlay=0:{y0}:eof_action=pass[gch]")
+
+
+def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None, gancho_caixa=None):
     """filter_complex do vídeo. Entrada 0 = live; entrada 1 = selo.png (se selo). Saída [v].
     camera: a parte da câmera que vai em cima; janela: a janela inteira dela (fica de fora do jogo).
     trocas (só na tela dividida): [(ini, fim, "rosto"|"jogo")] em segundos do corte: nesses trechos a tela
@@ -215,6 +228,10 @@ def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None):
              "[bg][fg]overlay=(W-w)/2:(H-h)/2[base]")
         y_selo = f"{TOPO_LIVE - 22}-h"      # logo acima da imagem da live
     atual = "basef" if "[basef]" in g else "base"
+    if gancho_caixa:  # (y0, y1, até quando): fundo desfocado atrás do texto de gancho
+        y0, y1, ate = gancho_caixa
+        g += _fundo_gancho(atual, int(y0), int(y1), float(ate))
+        atual = "gch"
     if selo:
         g += f";[{atual}][1:v]overlay=(W-w)/2:{y_selo}[sel]"
         atual = "sel"
