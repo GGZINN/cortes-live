@@ -174,18 +174,38 @@ def decidir(clip, quadro_jpg):
 
 
 # ------------------------------------------------------------------ montagem (filtros do ffmpeg)
-def filtro_video(modo, camera, selo, legenda, janela=None):
+def _enable(trechos):
+    return "+".join(f"between(t,{a:.2f},{b:.2f})" for a, b in trechos)
+
+
+def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None):
     """filter_complex do vídeo. Entrada 0 = live; entrada 1 = selo.png (se selo). Saída [v].
-    camera: a parte da câmera que vai em cima; janela: a janela inteira dela (fica de fora do jogo)."""
+    camera: a parte da câmera que vai em cima; janela: a janela inteira dela (fica de fora do jogo).
+    trocas (só na tela dividida): [(ini, fim, "rosto"|"jogo")] em segundos do corte: nesses trechos a tela
+    inteira vira só a câmera (reação) ou só o jogo (detalhe), como na edição dos canais grandes."""
     if modo == "dividido":
         x, y, w, h = camera
         jx, jy, jw, jh = recorte_jogo(janela or camera)
-        g = ("[0:v]setpts=PTS-STARTPTS,split=2[a][b];"
-             f"[a]crop=w='floor(iw*{w}/2)*2':h='floor(ih*{h}/2)*2':x='floor(iw*{x})':y='floor(ih*{y})',"
+        rosto = [(a, b) for a, b, e in trocas or [] if e == "rosto" and b - a > 0.3]
+        jogo_cheio = [(a, b) for a, b, e in trocas or [] if e == "jogo" and b - a > 0.3]
+        n = 2 + bool(rosto) + bool(jogo_cheio)
+        saidas = "[a][b]" + ("[c]" if rosto else "") + ("[d]" if jogo_cheio else "")
+        corta_cam = f"crop=w='floor(iw*{w}/2)*2':h='floor(ih*{h}/2)*2':x='floor(iw*{x})':y='floor(ih*{y})'"
+        g = (f"[0:v]setpts=PTS-STARTPTS,split={n}{saidas};"
+             f"[a]{corta_cam},"
              f"scale={W}:{ALT_CAM}:force_original_aspect_ratio=increase,crop={W}:{ALT_CAM},setsar=1[cam];"
              f"[b]crop=w='floor(iw*{jw:.4f}/2)*2':h='floor(ih*{jh:.4f}/2)*2':x='floor(iw*{jx:.4f})':y='floor(ih*{jy:.4f})',"
              f"scale={W}:{ALT_JOGO}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{ALT_JOGO},setsar=1[jogo];"
              "[cam][jogo]vstack=inputs=2[base]")
+        if rosto:   # só a câmera, em tela cheia
+            g += (f";[c]{corta_cam},scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,"
+                  f"crop={W}:{H},setsar=1[rcheio];[base][rcheio]overlay=0:0:enable='{_enable(rosto)}'[base2]")
+        if jogo_cheio:  # só o jogo, em tela cheia (miolo do jogo, sem a câmera)
+            entrada = "base2" if rosto else "base"
+            g += (f";[d]crop=w='floor(ih*9/16/2)*2':h=ih:x='(iw-ow)/2':y=0,scale={W}:{H}:flags=lanczos,setsar=1[gcheio];"
+                  f"[{entrada}][gcheio]overlay=0:0:enable='{_enable(jogo_cheio)}'[base3]")
+        atual_div = "base3" if jogo_cheio else ("base2" if rosto else "base")
+        g = g if atual_div == "base" else g + f";[{atual_div}]null[basef]"
         y_selo = f"{ALT_CAM}-h/2"           # na emenda entre a câmera e o jogo
     else:
         g = ("[0:v]setpts=PTS-STARTPTS,split=2[a][b];"
@@ -194,11 +214,12 @@ def filtro_video(modo, camera, selo, legenda, janela=None):
              f"[b]scale={W}:-2[fg];"
              "[bg][fg]overlay=(W-w)/2:(H-h)/2[base]")
         y_selo = f"{TOPO_LIVE - 22}-h"      # logo acima da imagem da live
-    atual = "base"
+    atual = "basef" if "[basef]" in g else "base"
     if selo:
         g += f";[{atual}][1:v]overlay=(W-w)/2:{y_selo}[sel]"
         atual = "sel"
-    return g + f";[{atual}]" + ("ass=legenda.ass," if legenda else "") + "format=yuv420p[v]"
+    from .clipper import FONTES_REL  # fonte do texto de gancho (Montserrat), vista da pasta do corte
+    return g + f";[{atual}]" + (f"ass=legenda.ass:fontsdir={FONTES_REL}," if legenda else "") + "format=yuv420p[v]"
 
 
 # ------------------------------------------------------------------ selo da plataforma

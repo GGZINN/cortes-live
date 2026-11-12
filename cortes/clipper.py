@@ -221,23 +221,99 @@ def _agrupar(words, max_words=3, max_chars=15):
     return groups
 
 
-def build_ass(words, path):
+FONTE_GANCHO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fontes", "Montserrat-ExtraBold.ttf")
+FONTES_REL = "../../cortes/fontes"  # pasta das fontes vista de dentro de cortes_prontos/<id> (o ffmpeg roda lá)
+ESCALA_LIBASS = 1.575  # Montserrat: no mesmo \fs a libass desenha a 1/1,575 do tamanho do Pillow (medido)
+
+
+def _linhas(texto, tam, max_w):
+    """Quebra o texto em linhas que cabem em max_w px na fonte do gancho."""
+    from PIL import ImageFont
+    f = ImageFont.truetype(FONTE_GANCHO, tam)
+    linhas, atual = [], ""
+    for p in texto.split():
+        t = (atual + " " + p).strip()
+        if f.getlength(t) <= max_w or not atual:
+            atual = t
+        else:
+            linhas.append(atual)
+            atual = p
+    if atual:
+        linhas.append(atual)
+    return linhas
+
+
+def _eventos_gancho(gancho, complemento, ate, modo):
+    """Texto de gancho dos primeiros segundos (estilo dos canais grandes de cortes): frase em amarelo, até 2 linhas,
+    linha de piada menor em branco, sobre uma faixa escura em degradê. Na tela dividida fica logo abaixo da emenda
+    câmera/jogo; no formato padrão, logo acima da imagem da live."""
+    from . import layout
+    # tamanhos em px "de verdade" (medidos com o Pillow); a libass desenha esta fonte menor no mesmo \fs,
+    # por isso o \fs vai multiplicado por ESCALA_LIBASS. Meta (da referência): a linha mais longa ocupa ~85% da tela.
+    tam = 104
+    while True:
+        ls = _linhas(gancho, tam, 920)
+        if len(ls) <= 2 or tam <= 60:
+            break
+        tam -= 4
+    tam_c = max(40, int(tam * 0.62))
+    lc = _linhas(complemento, tam_c, 920) if complemento else []
+    alt = int(len(ls) * tam * 1.45 + (len(lc) * tam_c * 1.45 + 6 if lc else 0))  # altura aproximada do bloco
+    if modo == "dividido":   # logo abaixo da emenda câmera/jogo (o selo fica em cima da emenda)
+        ancora, y_ancora = r"\an8", layout.ALT_CAM + 58
+        y0, y1 = y_ancora - 60, y_ancora + alt + 60
+    else:                    # formato padrão: a BASE do bloco fica acima do selo da live (não encosta nele)
+        ancora, y_ancora = r"\an2", layout.TOPO_LIVE - 100
+        y0, y1 = max(0, y_ancora - alt - 70), y_ancora + 40
+    fim = _ts_cs(int(round(ate * 100)))
+    ev = []
+    # faixa escura em degradê atrás do texto (some nas bordas de cima e de baixo)
+    n = 32  # muitas faixas finas: degradê sem listras
+    for i in range(n):
+        ya = y0 + (y1 - y0) * i // n
+        yb = y0 + (y1 - y0) * (i + 1) // n
+        meio = 1 - abs((i + 0.5) / n - 0.5) * 2              # 0 nas bordas, 1 no meio
+        alfa = int(255 - 150 * (meio ** 0.7))                 # &HFF = transparente
+        ev.append(f"Dialogue: 0,0:00:00.00,{fim},Faixa,,0,0,0,,{{\\an7\\pos(0,{ya})\\1a&H{alfa:02X}&\\fad(120,200)\\p1}}"
+                  f"m 0 0 l 1080 0 1080 {yb - ya + 1} 0 {yb - ya + 1}{{\\p0}}")
+    # um bloco só (a libass cuida do espaço entre as linhas): frase em amarelo + complemento menor em branco
+    pop = r"\fscx92\fscy92\t(0,140,\fscx100\fscy100)"
+    texto = r"\N".join(_esc(x) for x in ls)
+    if lc:
+        texto += r"\N{\fs" + str(round(tam_c * ESCALA_LIBASS)) + r"\c&HFFFFFF&\bord1.5\shad3}" + r"\N".join(_esc(x) for x in lc)
+    ev.append(f"Dialogue: 2,0:00:00.00,{fim},Gancho,,0,0,0,,"
+              f"{{{ancora}\\pos(540,{y_ancora})\\fad(120,200){pop}\\fs{round(tam * ESCALA_LIBASS)}}}" + texto)
+    return ev
+
+
+def duracao_gancho(dur):
+    """Quanto tempo o texto de gancho fica na tela (na referência, ~8 s de 60)."""
+    return round(min(8.0, max(4.0, dur * 0.35)), 2)
+
+
+def build_ass(words, path, gancho=None, complemento=None, ate=0.0, modo="dividido"):
     """Legenda estilo cortes: as palavras aparecem conforme são faladas, a palavra
-    atual "pula" na tela (zoom com elástico) colorida e cada frase entra subindo."""
+    atual "pula" na tela (zoom com elástico) colorida e cada frase entra subindo.
+    Com gancho: o texto grande fica nos primeiros `ate` segundos e a legenda das falas começa depois dele."""
     header = """[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080
 PlayResY: 1920
-WrapStyle: 0
+WrapStyle: 2
 ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Corte,Arial Black,92,&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,1,0,1,8,4,2,50,50,470,1
+Style: Gancho,Montserrat ExtraBold,88,&H001AC2FF,&H001AC2FF,&H00101010,&H8C000000,0,0,0,0,100,100,0,0,1,2,4,8,40,40,0,1
+Style: Complemento,Montserrat ExtraBold,48,&H00FFFFFF,&H00FFFFFF,&H00101010,&H8C000000,0,0,0,0,100,100,0,0,1,1.5,3,8,40,40,0,1
+Style: Faixa,Arial,20,&H00000000,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
+    if gancho and ate > 0:
+        words = [w for w in words if w["s"] >= ate - 0.1]  # as falas começam a aparecer quando o gancho sai
     groups = _agrupar(words)
     cs = lambda t: int(round(t * 100))  # noqa: E731
     lines = []
@@ -272,8 +348,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 else:         # ainda não falada: reserva o espaço, invisível (a linha não fica pulando de lugar)
                     parts.append(r"{\alpha&HFF&\c&HFFFFFF&\fscx100\fscy100}" + t)
             lines.append(f"Dialogue: 0,{_ts_cs(ini)},{_ts_cs(end)},Corte,,0,0,0,,{{{pos}}}" + " ".join(parts))
+    if gancho and ate > 0:
+        lines = _eventos_gancho(gancho, complemento, ate, modo) + lines
     with open(path, "w", encoding="utf-8") as f:
         f.write(header + "\n".join(lines) + "\n")
+    return bool(lines)
 
 
 # ------------------------------------------------------------------ Processamento
@@ -339,35 +418,68 @@ def _esperar_disco(cid):
         time.sleep(30)
 
 
+def _montar(d, offset, partes):
+    """Junta os pedaços escolhidos pela IA (cortes secos) num vídeo só. partes: [(ini, fim, enquadramento)] em
+    segundos do corte. Devolve (arquivo, duração, trocas no tempo do vídeo montado)."""
+    entradas, filtro, trocas, t = [], "", [], 0.0
+    for i, (x, y, enq) in enumerate(partes):
+        entradas += ["-ss", f"{offset + x:.2f}", "-t", f"{y - x:.2f}", "-i", "bruto.ts"]
+        filtro += f"[{i}:v:0]setpts=PTS-STARTPTS[v{i}];[{i}:a:0]asetpts=PTS-STARTPTS,aresample=async=1[a{i}];"
+        trocas.append((round(t, 2), round(t + y - x, 2), enq))
+        t += y - x
+    filtro += "".join(f"[v{i}][a{i}]" for i in range(len(partes))) + f"concat=n={len(partes)}:v=1:a=1[v][a]"
+    run_ffmpeg([*entradas, "-filter_complex", filtro, "-map", "[v]", "-map", "[a]",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", "-c:a", "aac", "-b:a", "192k",
+                "montado.mp4"], cwd=d)
+    return "montado.mp4", round(t, 2), trocas
+
+
 def _process(cid, raw, offset, dur):
     d = os.path.dirname(raw)
     t0 = time.time()
     if offset is None:
         offset = _offset_estimado(raw, dur)
-    words = []
-    has_subs = False
-    if config.get("legenda"):
-        update_clip(cid, status="transcrevendo")
-        run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", "bruto.ts",
-                    "-vn", "-ac", "1", "-ar", "16000", "-f", "s16le", "audio.pcm"], cwd=d)
-        words = transcribe(os.path.join(d, "audio.pcm"))
-        if words:
-            build_ass(words, os.path.join(d, "legenda.ass"))
-            has_subs = True
+    clip = get_clip(cid) or {}
+    fonte, trocas = "bruto.ts", []
+    partes = [p for p in clip.get("partes") or [] if len(p) == 3 and p[1] > p[0]]
+    if partes:
+        com_salto = any(partes[i + 1][0] - partes[i][1] > 0.3 for i in range(len(partes) - 1))
+        if com_salto:  # a IA montou a história com pedaços separados: junta com cortes secos
+            update_clip(cid, status="montando")
+            fonte, dur, trocas = _montar(d, offset, partes)
+            offset = 0.0
+            update_clip(cid, duracao=round(dur, 1))
+        else:          # trecho contínuo: só as trocas de enquadramento
+            trocas = [(p[0], min(p[1], dur), p[2]) for p in partes]
+    gancho = clip.get("texto_gancho")
+    ate = duracao_gancho(dur) if gancho else 0.0
+    # a fala é sempre transcrita: alimenta títulos, hashtags, curadoria e capas.
+    # A opção "legenda" só decide se ela aparece escrita no vídeo.
+    update_clip(cid, status="transcrevendo")
+    run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", fonte,
+                "-vn", "-ac", "1", "-ar", "16000", "-f", "s16le", "audio.pcm"], cwd=d)
+    words = transcribe(os.path.join(d, "audio.pcm"))
+    words_video = words if config.get("legenda") else []
 
     update_clip(cid, status="renderizando")
     clip = get_clip(cid) or {}
     # formato: gameplay com a câmera do streamer vira tela dividida (a IA acha a câmera num quadro do pico)
     t_quadro = offset + min(float(clip.get("pico_rel") or dur * 0.5), max(dur - 0.5, 0))
-    lay = layout.decidir(clip, layout.quadro(raw, t_quadro, config.ffmpeg()))
+    lay = layout.decidir(clip, layout.quadro(os.path.join(d, fonte), t_quadro, config.ffmpeg()))
+    # legenda das falas + texto de gancho dos primeiros segundos (num arquivo só)
+    has_subs = False
+    if words_video or gancho:
+        has_subs = build_ass(words_video, os.path.join(d, "legenda.ass"), gancho, clip.get("complemento"), ate, lay["modo"])
     selo = bool(config.get("selo_live")) and layout.criar_selo(clip, os.path.join(d, "selo.png"))
-    vf = "[0:a:0]asetpts=PTS-STARTPTS[aud];" + layout.filtro_video(lay["modo"], lay["camera"], selo, has_subs, lay.get("janela"))
-    run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", "bruto.ts", *(["-i", "selo.png"] if selo else []),
+    trocas_div = trocas if lay["modo"] == "dividido" else None
+    vf = "[0:a:0]asetpts=PTS-STARTPTS[aud];" + layout.filtro_video(lay["modo"], lay["camera"], selo, has_subs,
+                                                                   lay.get("janela"), trocas_div)
+    run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", fonte, *(["-i", "selo.png"] if selo else []),
                 "-filter_complex", vf, "-map", "[v]", "-map", "[aud]",
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
                 "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "corte.mp4"], cwd=d)
     if lay["modo"] == "dividido":  # cópia 16:9 só da live, para thumbnails e compilados (o corte não tem mais a live inteira)
-        run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", "bruto.ts", "-vf", "scale=1280:-2,format=yuv420p",
+        run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", fonte, "-vf", "scale=1280:-2,format=yuv420p",
                     "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", "-c:a", "aac", "-b:a", "128k",
                     "-movflags", "+faststart", "live.mp4"], cwd=d)
     update_clip(cid, layout=lay)
@@ -378,7 +490,7 @@ def _process(cid, raw, offset, dur):
     clip = get_clip(cid) or {}
     pico = clip.get("pico_rel", dur * 0.7)
     frase = " ".join(w["w"] for w in words if pico - 6 <= w["s"] <= pico + 3)
-    for f in ("bruto.ts", "audio.pcm"):
+    for f in ("bruto.ts", "audio.pcm", "montado.mp4"):
         try:
             os.remove(os.path.join(d, f))
         except OSError:

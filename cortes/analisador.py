@@ -21,6 +21,12 @@ PASSO = 90     # de quanto em quanto tempo analisa (sobreposição de 30 s para 
 MODELOS = ("gemini-3.6-flash", "gemini-3.5-flash-lite")  # ambos no plano gratuito
 
 
+class Parte(BaseModel):
+    inicio: str          # "MM:SS" relativo ao vídeo enviado
+    fim: str
+    enquadramento: str   # "dividido" (câmera em cima, jogo embaixo) | "rosto" (só a câmera) | "jogo" (só o jogo)
+
+
 class Momento(BaseModel):
     inicio: str          # "MM:SS" relativo ao vídeo enviado
     fim: str
@@ -30,6 +36,9 @@ class Momento(BaseModel):
     por_que: str         # por que segura a pessoa até o fim
     titulo: str          # sugestão de título curto
     cena: str            # "jogo" (gameplay na tela) | "conversa" (falando com o chat, câmera na tela) | "outro"
+    partes: List[Parte]  # montagem: pedaços em ordem (cortes secos), cada um com o enquadramento
+    texto_gancho: str    # frase grande na tela nos primeiros segundos (CAIXA ALTA)
+    complemento: str     # linha menor de piada/contexto entre parênteses ("" se não tiver)
 
 
 class Analise(BaseModel):
@@ -62,6 +71,20 @@ Se nada no trecho valer a pena, devolva "momentos" vazio. Nunca invente o que n�
 "cena" de cada momento (define o formato do vídeo): "jogo" se durante o momento a tela mostra principalmente um jogo
 sendo jogado; "conversa" se o streamer está falando com o chat/a câmera e a câmera ocupa a maior parte da tela (bate-papo,
 reação a algo fora do jogo, IRL); "outro" para o resto (vídeo, navegador, tela de espera).
+MONTAGEM (como os canais de cortes que passam de 1 milhão de views editam):
+- "partes": os pedaços deste vídeo, em ordem, que contam a história do momento. Use cortes secos para tirar espera,
+  carregamento, menu sem graça, silêncio e conversa paralela, e para pular de uma tentativa para o resultado.
+  Se o momento é contínuo e sem enrolação, mande 1 parte só. Cada parte com 2 s ou mais; somadas, 15 a 60 s.
+  O "inicio" do momento é o da 1ª parte e o "fim" o da última.
+- "enquadramento" de cada parte (só vale quando a tela tem jogo + câmera do streamer):
+  "dividido" = padrão (câmera em cima, jogo embaixo); "rosto" = só a câmera em tela cheia, para a REAÇÃO forte
+  (gargalhada, grito, cara de choque, fala importante olhando pra câmera); "jogo" = só o jogo em tela cheia, para um
+  detalhe ou jogada que precisa ser vista grande. Use "rosto" e "jogo" com moderação, em partes curtas (1 a 4 s):
+  quebre uma parte em pedaços seguidos quando o enquadramento muda. Em conversa sem jogo, tudo "dividido".
+- "texto_gancho": a frase que fica grande na tela nos primeiros segundos, em CAIXA ALTA, 3 a 7 palavras, que deixa
+  curioso sem entregar o final. Ex.: "NEM ELE SABE COMO CONSEGUIU FAZER ISSO", "ELE NÃO ESPERAVA ESSA RESPOSTA".
+- "complemento": linha curta de piada ou contexto entre parênteses, em CAIXA ALTA (ex.: "(ESSE É O VIDEO GAME 2)",
+  "(O CHAT AVISOU)"); vazio se não tiver uma boa.
 "jogo": o nome oficial do jogo que aparece na tela (ex.: "Mario Party Jamboree", "Counter-Strike 2", "Minecraft"),
 como as pessoas buscam no YouTube; deixe vazio se não for jogo ou se não der para saber com certeza.
 Timestamps no formato MM:SS, relativos ao início DESTE vídeo. Textos em português do Brasil."""
@@ -115,6 +138,53 @@ def analisar_video(path, contexto):
     if not r or not r.text:
         raise RuntimeError("resposta vazia do Gemini")
     return Analise.model_validate_json(r.text), getattr(r, "model_version", None) or MODELOS[0]
+
+
+ENQUADRAMENTOS = ("dividido", "rosto", "jogo")
+
+
+def _partes(partes, a, b, dur):
+    """Pedaços da montagem em segundos do vídeo analisado: [(ini, fim, enquadramento)], em ordem, sem sobrepor,
+    cada um com 1 s ou mais, todos dentro de [a, b]. Sem partes válidas: o momento inteiro, dividido."""
+    out = []
+    for p in partes or []:
+        x, y = _seg(p.inicio), _seg(p.fim)
+        if x is None or y is None:
+            continue
+        x, y = max(a, x), min(b, y, dur)
+        enq = (p.enquadramento or "").strip().lower()
+        enq = enq if enq in ENQUADRAMENTOS else "dividido"
+        if out and x < out[-1][1]:
+            x = out[-1][1]                      # não volta no tempo nem repete pedaço
+        if y - x >= 1.0:
+            out.append([x, y, enq])
+    if not out or sum(y - x for x, y, _ in out) < 6:
+        return [[a, b, "dividido"]]
+    juntos = [out[0]]                           # pedaços colados com o mesmo enquadramento viram um só
+    for x, y, enq in out[1:]:
+        if enq == juntos[-1][2] and x - juntos[-1][1] < 0.3:
+            juntos[-1][1] = y
+        else:
+            juntos.append([x, y, enq])
+    total, limitados = 0.0, []                  # a montagem inteira cabe em 60 s
+    for x, y, enq in juntos:
+        if total + (y - x) > 60:
+            y = x + (60 - total)
+        if y - x >= 1.0:
+            limitados.append([x, y, enq])
+            total += y - x
+        if total >= 60:
+            break
+    return limitados
+
+
+def _limpa_gancho(t, parenteses=False):
+    t = re.sub(r"\s+", " ", str(t or "")).strip().strip('"“”').upper()
+    if not t:
+        return None
+    if parenteses:
+        t = "(" + t.strip("() ") + ")"
+    return t[:70]
 
 
 def _sobreposicao(a0, a1, b0, b1):
@@ -209,17 +279,23 @@ class Analisador:
             a, b = max(0.0, a), min(dur, b)
             if b - a < 6:
                 continue
-            if b - a > 60:
-                b = a + 60
+            if b - a > 60 and len(m.partes or []) <= 1:
+                b = a + 60  # trecho contínuo longo demais (com várias partes, quem limita é a soma delas)
             # termina colado no fim da janela e começa depois da emenda: a próxima análise pega ele inteiro
             if b >= dur - 2 and a >= JANELA - PASSO and fim - inicio >= JANELA - 1:
                 continue
             if m.nota < limiar:
                 continue
+            pedacos = _partes(m.partes, a, b, dur)
+            a, b = pedacos[0][0], pedacos[-1][1]
             ini_abs = inicio + max(0.0, a - 0.4)       # meio segundo antes: o gancho não começa cortado
             fim_abs = min(inicio + dur, inicio + b + 1.0)  # um respiro depois do desfecho
             if any(_sobreposicao(ini_abs, fim_abs, x0, x1) > 0.4 for x0, x1 in self.cortados):
                 continue
+            # pedaços no tempo do corte (0 = início do corte), com a mesma folga no começo e no fim
+            rel = [[round(inicio + p0 - ini_abs, 2), round(inicio + p1 - ini_abs, 2), enq] for p0, p1, enq in pedacos]
+            rel[0][0] = 0.0
+            rel[-1][1] = round(fim_abs - ini_abs, 2)
             self.cortados.append((ini_abs, fim_abs))
             aprovados.append(m)
             s.criar_corte(ini_abs, fim_abs, {
@@ -227,6 +303,9 @@ class Analisador:
                 "por_que": m.por_que, "titulo_ia": m.titulo, "pico_rel": min(3.0, (fim_abs - ini_abs) / 2),
                 "cena": (m.cena or "").strip().lower() or None,  # jogo → tela dividida; conversa → formato de sempre
                 "jogo": (analise.jogo or "").strip() or None,     # entra no título, hashtags e tags do YouTube
+                "partes": rel,                                    # montagem: cortes secos + enquadramento de cada pedaço
+                "texto_gancho": _limpa_gancho(m.texto_gancho),
+                "complemento": _limpa_gancho(m.complemento, parenteses=True),
             })
 
         melhor = max((m.nota for m in analise.momentos), default=0)

@@ -139,14 +139,28 @@ def pacote_youtube(clip, sug=None):
 
 
 def titulo_shorts(clip, titulo, jogo=None):
-    """Título do Short: sem hashtag, até 100 caracteres, e com o nome do streamer ou do jogo (é o que se busca)."""
+    """Título do Short no formato dos cortes que mais vendem (ex.: "Alan APRENDEU a tocar a OCARINA apenas
+    observando o Link #zelda #shorts #alanzoka"): a frase e, no fim, as hashtags do jogo, #shorts e do streamer,
+    até 100 caracteres. Se não couber hashtag nenhuma, garante o nome do streamer na frase."""
     t = re.sub(r"\s*#\w+", "", titulo or "").strip()
     canal = clip.get("canal") or ""
     jogo = jogo or clip.get("jogo") or ""
-    tem_nome = any(n and n.lower() in t.lower() for n in (canal, jogo, _tag(canal)))
-    if canal and not tem_nome and len(t) + len(canal) + 3 <= 70:
-        t = f"{t} | {canal}"
-    return t[:100]
+    # nome curto do jogo para a hashtag: "The Legend of Zelda: Ocarina of Time" -> "legendofzelda"
+    curto = re.split(r"[:\-–|]", jogo)[0].strip()
+    curto = re.sub(r"^(the|o|a)\s+", "", curto, flags=re.I)
+    h_jogo, h_canal = _hashtag(curto), _hashtag(canal)
+    # cabe o que der, nesta prioridade: streamer, jogo, #shorts; aparecem na ordem jogo, shorts, streamer
+    escolhidas, usado = set(), len(t)
+    for h in (h_canal, h_jogo, "shorts"):
+        if h and h not in escolhidas and usado + len(h) + 2 <= 100:
+            escolhidas.add(h)
+            usado += len(h) + 2
+    fim = "".join(f" #{h}" for h in (h_jogo, "shorts", h_canal) if h in escolhidas)
+    if not fim:
+        tem_nome = any(n and n.lower() in t.lower() for n in (canal, jogo, _tag(canal)))
+        if canal and not tem_nome and len(t) + len(canal) + 3 <= 100:
+            t = f"{t} | {canal}"
+    return (t + fim)[:100]
 
 
 # ------------------------------------------------------------------ sem IA (modelos prontos)
@@ -235,8 +249,9 @@ Regras gerais:
   "alanzoka rindo", "mario party jamboree engraçado"). Sem hashtag.
 
 Para cada plataforma:
-- "titulo": no Shorts, 40 a 70 caracteres, com o NOME DO STREAMER ou do JOGO escrito (é o que as pessoas buscam) e um gancho
-  de curiosidade. Nas outras, o mesmo estilo dos "titulos".
+- "titulo": no Shorts, 35 a 65 caracteres, no formato dos cortes com milhões de views: nome/apelido do streamer +
+  1 palavra forte em CAIXA ALTA + o que aconteceu, ex.: "Alan APRENDEU a tocar a OCARINA apenas observando o Link",
+  "Gaules NÃO ACREDITOU no que o time fez". Sem hashtag (elas entram depois). Nas outras, o mesmo estilo dos "titulos".
 - "legenda": 1 ou 2 linhas curtas que complementam o título sem repeti-lo. No Shorts, a primeira frase precisa ter o nome
   do streamer e o do jogo (se houver) e dizer o que acontece: ela é lida pela busca. Sem créditos, link ou hashtag
   (isso é adicionado depois).

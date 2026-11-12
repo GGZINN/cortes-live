@@ -462,8 +462,9 @@
     <input type="range" min="15" max="120" step="5" data-k="duracao_maxima"></div>
   <div class="field"><label>Intervalo mínimo entre cortes <span id="v_intervalo_minimo"></span></label>
     <input type="range" min="15" max="300" step="5" data-k="intervalo_minimo"></div>
-  <div class="field"><label>Legenda automática</label>
-    <select data-k="legenda"><option value="true">Ligada</option><option value="false">Desligada</option></select></div>
+  <div class="field"><label>Legenda das falas no vídeo</label>
+    <select data-k="legenda"><option value="false">Desligada (como os cortes que mais viralizam)</option><option value="true">Ligada (palavra por palavra)</option></select>
+    <small>O texto de gancho dos primeiros segundos aparece sempre. A fala continua sendo transcrita para a IA escrever títulos e hashtags.</small></div>
   <div class="field"><label>Formato do corte</label>
     <select data-k="formato_corte"><option value="auto">Automático: gameplay com câmera vira tela dividida</option><option value="padrao">Sempre a live inteira no meio</option></select>
     <small>No automático, a IA (Gemini) acha a câmera do streamer: ela vai para a parte de cima e o jogo para a de baixo, ocupando a tela toda. Conversa e cenas sem câmera separada ficam no formato de sempre.</small></div>
