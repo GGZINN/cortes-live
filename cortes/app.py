@@ -169,6 +169,7 @@ def yt_conectar():
 @app.post("/api/youtube/desconectar")
 def yt_desconectar():
     youtube.desconectar()
+    canal.esquecer()  # a cópia local dos dados do canal vai junto (política de privacidade)
     return youtube.status()
 
 

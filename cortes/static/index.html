@@ -310,6 +310,10 @@
   #cnDlg input[type=text],#cnDlg textarea,#cnDlg select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px}
   #cnDlg textarea{min-height:150px;resize:vertical}
   .nota{overflow-wrap:anywhere}
+  .avisoyt{margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.5}
+  .avisoyt a,.rodape a{color:var(--muted);text-decoration:underline}
+  .rodape{max-width:1400px;margin:30px auto 0;padding:16px 28px 28px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.6}
+  @media (max-width:600px){.rodape{padding:14px 16px 24px}}
   .nota a{color:var(--accent2)}
   @media (max-width:800px){.cnapr{grid-template-columns:1fr}}
   @media (max-width:600px){.views{overflow-x:auto;scrollbar-width:none;margin-left:-16px;margin-right:-16px;padding:0 16px}
@@ -384,6 +388,14 @@
   <div id="cbody"></div>
   </section>
 </main>
+<footer class="rodape">
+  O Cortes Live usa os <b>YouTube API Services</b> para enviar, agendar e editar vídeos e para ler os números do canal conectado.
+  Ao conectar um canal, você concorda com os <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">Termos de Serviço do YouTube</a>
+  e com a <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Política de Privacidade do Google</a>.<br>
+  <a href="https://github.com/GGZINN/cortes-live/blob/master/PRIVACY.md" target="_blank" rel="noopener">Política de privacidade</a> ·
+  <a href="https://github.com/GGZINN/cortes-live/blob/master/TERMS.md" target="_blank" rel="noopener">Termos de uso</a> ·
+  <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Revogar o acesso do app à sua conta Google</a>
+</footer>
 
 <dialog id="rtNovoDlg">
   <div class="pub-head"><h3>Novo roteiro</h3><button class="x" onclick="rtNovoDlg.close()" title="Fechar">✕</button></div>
@@ -973,8 +985,14 @@ function renderYT(){
       <p id="ytErr" class="err"></p>
       <div class="nota">Depois, peça a ${lk("auditoria","auditoria da API do YouTube")}. Sem ela, o Google deixa <b>privados</b> os vídeos enviados por apps novos. É grátis, mas leva alguns dias.</div>`;
   }
-  $("#ytBody").innerHTML = h;
+  $("#ytBody").innerHTML = h + AVISO_YT;
 }
+const LINK_PRIV = "https://github.com/GGZINN/cortes-live/blob/master/PRIVACY.md";
+const AVISO_YT = `<p class="avisoyt">Este app usa os <b>YouTube API Services</b>. Ao conectar o canal, você concorda com os
+  <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">Termos de Serviço do YouTube</a> e com a
+  <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Política de Privacidade do Google</a>.
+  <a href="${LINK_PRIV}" target="_blank" rel="noopener">Política de privacidade do Cortes Live</a> ·
+  <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">revogar o acesso</a></p>`;
 async function ytArquivo(inp){
   const f = inp.files[0]; if(!f) return;
   try{ ytSt = await api("/api/youtube/credencial", {method:"POST", body:JSON.stringify({texto: await f.text()})}); renderYT(); }
@@ -990,7 +1008,7 @@ async function ytConectar(){
   }, 1500);
 }
 async function ytDesconectar(){
-  if(!confirm("Desconectar o canal do YouTube deste app?")) return;
+  if(!confirm("Desconectar o canal do YouTube? A autorização e os dados do canal guardados neste computador serão apagados.")) return;
   ytSt = await api("/api/youtube/desconectar", {method:"POST"}); ytCarregar();
 }
 async function ytCategoria(v){ await api("/api/config", {method:"POST", body:JSON.stringify({youtube_categoria:v})}); ytSt.categoria = v; }
@@ -1825,7 +1843,8 @@ function cnRenderApr(s){
     ${s.aprendizado_ativo ? "· entra nos títulos e na escolha dos cortes" : "· desligado: não entra nas instruções da IA"}
     <button class="mini" onclick="cnAprender()" ${s.aprendendo ? "disabled" : ""}>↻ Analisar de novo</button></div>` : "";
   setHTML("#cnApr", `<div class="cnbox"><h3>🧠 Aprendizado</h3>
-    <div class="sub">Compara os vídeos publicados para descobrir o que funciona e ensina a IA a escrever os próximos títulos e escolher os cortes.</div>
+    <div class="sub">Compara os vídeos publicados para descobrir o que funciona e ensina a IA a escrever os próximos títulos e escolher os cortes.
+      As medianas e comparações desta seção são <b>calculadas pelo Cortes Live</b> a partir dos dados do YouTube; não são métricas fornecidas pelo YouTube.</div>
     ${ops}${corpo}${pe}</div>`);
 }
 

@@ -36,6 +36,9 @@ _dados = {}                     # {atualizado, canal, periodo, por_dia, videos, 
 _estado = {"atualizando": False, "aprendendo": False, "erro": None}
 
 
+VALIDADE = timedelta(days=30)  # política da API: dados guardados precisam ser atualizados ou apagados em 30 dias
+
+
 def _carregar():
     global _dados
     try:
@@ -43,6 +46,20 @@ def _carregar():
             _dados = json.load(f)
     except (OSError, ValueError):
         _dados = {}
+    ultimo = _dt(_dados.get("atualizado"))
+    if _dados and (not ultimo or datetime.now(timezone.utc) - ultimo > VALIDADE):
+        esquecer()
+
+
+def esquecer():
+    """Apaga a cópia local dos dados do canal (ao desconectar, ou se ficou 30 dias sem atualizar)."""
+    global _dados
+    with _lock:
+        _dados = {}
+        try:
+            os.remove(ARQ)
+        except OSError:
+            pass
 
 
 def _save():
