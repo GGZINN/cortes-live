@@ -25,7 +25,15 @@ Critérios que ela segue (do que mais segura gente em TikTok/Shorts/Reels):
 5. **12 a 60 s** (ideal 20 a 40).
 6. **Evita**: tela parada, menu, carregamento, anúncio, leitura de doações, conversa morna.
 
-Cada trecho recebe uma **nota de 0 a 10**. A **sensibilidade** define a partir de qual nota corta
+Cada trecho recebe uma **nota de 0 a 10**, que é a soma de critérios fixos:
+- abre uma lacuna de curiosidade: 0 a 3;
+- tem reação, conflito ou opinião forte: 0 a 2;
+- mostra algo específico (número, nome, jogada): 0 a 2;
+- entra direto: 0 a 1;
+- tem o desfecho dentro do corte: 0 a 1;
+- se entende sozinho: 0 a 1.
+
+Cortes da mesma live não repetem o mesmo texto de gancho. A **sensibilidade** define a partir de qual nota corta
 (5–6 → nota 7+). No card da live, cada barra é um trecho analisado: **verde virou corte**,
 amarela passou da nota mas já tinha sido cortada, cinza não valia.
 
@@ -50,6 +58,13 @@ de live do mesmo streamer. Sem a chave do Gemini, todos ficam no formato de semp
 **Selo da live**: um selo pequeno com o logo da plataforma (Kick, Twitch ou YouTube) e o link da live
 (ex.: `kick.com/coringa`) no meio do vídeo: na emenda entre a câmera e o jogo, ou logo acima da live no formato
 de sempre. Dá para esconder em ⚙ Configurações → **Selo da live**.
+
+**Ritmo:**
+- **Pausas cortadas.** A pausa entre frases acima de 0,3 s vira 0,2 s, o silêncio morto no meio da frase vira 0,25 s, e o corte entra direto na primeira palavra. Só sai o silêncio de verdade: risada, grito e som alto do jogo ficam, e o final com a reação também fica. No gameplay as pausas não são cortadas, porque nelas a jogada costuma estar acontecendo.
+- **Cortes com zoom.** A imagem do streamer alterna entre 100% e 110% a cada ~2,8 s e em cada emenda. É um jump cut seco, sem efeito, e sempre cai no começo de uma palavra. O jogo não muda de zoom.
+- **Volume.** Todo corte sai em −14 LUFS, o padrão dos Shorts, com o pico abaixo de −1,5 dB.
+
+Dá para desligar as pausas e o zoom em ⚙ Configurações.
 
 Os cortes divididos guardam também uma cópia 16:9 só da live (`live.mp4`, ~6 MB), usada nas thumbnails e nos
 compilados, porque o corte vertical não tem mais a live inteira.

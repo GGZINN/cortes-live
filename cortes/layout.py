@@ -191,11 +191,23 @@ def _fundo_gancho(entrada, y0, y1, ate):
             f"[gb0][gbl]overlay=0:{y0}:eof_action=pass[gch]")
 
 
-def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None, gancho_caixa=None):
+def _zoom(entrada, saida, w, h, zoom):
+    """Jump cut: nos trechos `zoom` a imagem (w x h) fica ZOOM_PLANO mais fechada, pelo centro."""
+    from .clipper import ZOOM_PLANO
+    if not zoom:
+        return f"[{entrada}]null[{saida}]"
+    zw, zh = int(w * ZOOM_PLANO) // 2 * 2, int(h * ZOOM_PLANO) // 2 * 2
+    return (f"[{entrada}]split=2[{saida}_0][{saida}_1];"
+            f"[{saida}_1]scale={zw}:{zh}:flags=lanczos,crop={w}:{h}[{saida}_z];"
+            f"[{saida}_0][{saida}_z]overlay=0:0:enable='{_enable(zoom)}'[{saida}]")
+
+
+def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None, gancho_caixa=None, zoom=None):
     """filter_complex do vídeo. Entrada 0 = live; entrada 1 = selo.png (se selo). Saída [v].
     camera: a parte da câmera que vai em cima; janela: a janela inteira dela (fica de fora do jogo).
     trocas (só na tela dividida): [(ini, fim, "rosto"|"jogo")] em segundos do corte: nesses trechos a tela
-    inteira vira só a câmera (reação) ou só o jogo (detalhe), como na edição dos canais grandes."""
+    inteira vira só a câmera (reação) ou só o jogo (detalhe), como na edição dos canais grandes.
+    zoom: [(ini, fim)] em que a imagem do streamer fica mais fechada (jump cuts; o jogo não muda)."""
     if modo == "dividido":
         x, y, w, h = camera
         jx, jy, jw, jh = recorte_jogo(janela or camera)
@@ -206,7 +218,8 @@ def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None, gancho_c
         corta_cam = f"crop=w='floor(iw*{w}/2)*2':h='floor(ih*{h}/2)*2':x='floor(iw*{x})':y='floor(ih*{y})'"
         g = (f"[0:v]setpts=PTS-STARTPTS,split={n}{saidas};"
              f"[a]{corta_cam},"
-             f"scale={W}:{ALT_CAM}:force_original_aspect_ratio=increase,crop={W}:{ALT_CAM},setsar=1[cam];"
+             f"scale={W}:{ALT_CAM}:force_original_aspect_ratio=increase,crop={W}:{ALT_CAM},setsar=1[cam0];"
+             + _zoom("cam0", "cam", W, ALT_CAM, zoom) + ";"
              f"[b]crop=w='floor(iw*{jw:.4f}/2)*2':h='floor(ih*{jh:.4f}/2)*2':x='floor(iw*{jx:.4f})':y='floor(ih*{jy:.4f})',"
              f"scale={W}:{ALT_JOGO}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{ALT_JOGO},setsar=1[jogo];"
              "[cam][jogo]vstack=inputs=2[base]")
@@ -224,8 +237,16 @@ def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None, gancho_c
         g = ("[0:v]setpts=PTS-STARTPTS,split=2[a][b];"
              f"[a]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
              "boxblur=30:2,eq=brightness=-0.10:saturation=1.2[bg];"
-             f"[b]scale={W}:-2[fg];"
-             "[bg][fg]overlay=(W-w)/2:(H-h)/2[base]")
+             f"[b]scale={W}:-2[fg];")
+        if zoom:  # jump cut: a imagem da live fica mais fechada, no mesmo lugar e do mesmo tamanho
+            from .clipper import ZOOM_PLANO
+            g += ("[fg]split=2[fg0][fg1];"
+                  f"[fg1]scale=trunc(iw*{ZOOM_PLANO}/2)*2:-2:flags=lanczos,"
+                  f"crop=trunc(iw/{ZOOM_PLANO}/2)*2:trunc(ih/{ZOOM_PLANO}/2)*2[fgz];"
+                  "[bg][fg0]overlay=(W-w)/2:(H-h)/2[base0];"
+                  f"[base0][fgz]overlay=(W-w)/2:(H-h)/2:enable='{_enable(zoom)}'[base]")
+        else:
+            g += "[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
         y_selo = f"{TOPO_LIVE - 22}-h"      # logo acima da imagem da live
     atual = "basef" if "[basef]" in g else "base"
     if gancho_caixa:  # (y0, y1, até quando): fundo desfocado atrás do texto de gancho

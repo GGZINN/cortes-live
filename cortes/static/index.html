@@ -471,6 +471,12 @@
   <div class="field"><label>Selo da live</label>
     <select data-k="selo_live"><option value="true">Mostrar</option><option value="false">Esconder</option></select>
     <small>Logo da plataforma (Kick, Twitch ou YouTube) e o link da live, pequeno, no meio do vídeo.</small></div>
+  <div class="field"><label>Pausas</label>
+    <select data-k="cortar_pausas"><option value="true">Cortar (pausa entre frases vira 0,2 s)</option><option value="false">Deixar como na live</option></select>
+    <small>Só tira silêncio de verdade: risada, grito e som do jogo ficam. No gameplay as pausas não são cortadas, porque nelas a jogada costuma estar acontecendo.</small></div>
+  <div class="field"><label>Cortes com zoom</label>
+    <select data-k="zoom_cortes"><option value="true">Ligado (a imagem do streamer muda de zoom a cada ~3 s)</option><option value="false">Desligado</option></select>
+    <small>Jump cut seco, sem efeito, como nos canais de cortes. O jogo não muda de zoom.</small></div>
   <div class="field"><label>Qualidade da legenda</label>
     <select data-k="modelo_whisper">
       <option value="base">Rápida (base)</option><option value="small">Equilibrada (small)</option><option value="medium">Precisa (medium, pesada)</option>

@@ -65,8 +65,17 @@ O que faz um corte reter (use como critério):
 Evite: tela parada, menu, carregamento, anúncio, tela de "já volto", conversa morna sem desfecho, leitura de doações/subs,
 momentos que só fazem sentido com o chat ou com contexto anterior.
 
-Seja MUITO exigente: a maior parte de uma live NÃO vira corte. Nota de 0 a 10 para o potencial de retenção:
-10 = vai viralizar com certeza; 8 = corte muito bom; 7 = bom; 5 = mediano; abaixo de 5 = não vale.
+Seja MUITO exigente: a maior parte de uma live NÃO vira corte. A "nota" (0 a 10) é a SOMA destes critérios
+(sem passar de 10), avaliados no começo e no fim do corte:
+- Abre uma lacuna de curiosidade (0-3): os primeiros segundos levantam uma pergunta ou tensão que só o resto do
+  corte responde ("ele não sabia que…", alguém prestes a fazer algo arriscado). Vale mais se não entrega a resposta de cara.
+- Reação, conflito ou opinião forte (0-2): grito, susto, risada de verdade, discussão, veredito, reclamação.
+- Algo específico (0-2): um número, um nome, uma jogada ou acontecimento concreto que dá para ver ou ouvir.
+- Entra direto (0-1): o 1º segundo já é o ponto. Sem "então, galera", "bom, vamos lá", "voltando", sem tela parada.
+- Payoff dentro do corte (0-1): o desfecho (resposta, resultado, punchline) chega antes do corte acabar.
+- Se entende sozinho (0-1): quem nunca viu a live entende em 5 segundos.
+Desconte se o corte promete algo que não cumpre, se depende de contexto anterior ou se é piada interna.
+Referência: 9-10 = gancho forte; 7-8 = bom; 6 = no limite; abaixo de 6 = não vale.
 Se nada no trecho valer a pena, devolva "momentos" vazio. Nunca invente o que não aconteceu.
 "cena" de cada momento (define o formato do vídeo): "jogo" se durante o momento a tela mostra principalmente um jogo
 sendo jogado; "conversa" se o streamer está falando com o chat/a câmera e a câmera ocupa a maior parte da tela (bate-papo,
@@ -83,6 +92,7 @@ MONTAGEM (como os canais de cortes que passam de 1 milhão de views editam):
   quebre uma parte em pedaços seguidos quando o enquadramento muda. Em conversa sem jogo, tudo "dividido".
 - "texto_gancho": a frase que fica grande na tela nos primeiros segundos, em CAIXA ALTA, 3 a 7 palavras, que deixa
   curioso sem entregar o final. Ex.: "NEM ELE SABE COMO CONSEGUIU FAZER ISSO", "ELE NÃO ESPERAVA ESSA RESPOSTA".
+  Não repita a ideia nem a estrutura de frase dos ganchos já usados nesta live (a lista vem no pedido, quando houver).
 - "complemento": linha curta de piada ou contexto entre parênteses, em CAIXA ALTA (ex.: "(ESSE É O VIDEO GAME 2)",
   "(O CHAT AVISOU)"); vazio se não tiver uma boa.
 "jogo": o nome oficial do jogo que aparece na tela (ex.: "Mario Party Jamboree", "Counter-Strike 2", "Minecraft"),
@@ -187,6 +197,14 @@ def _limpa_gancho(t, parenteses=False):
     return t[:70]
 
 
+def _parecido(a, b):
+    """Dois ganchos dizem quase a mesma coisa (ex.: "ELE NÃO ACREDITOU NISSO" e "ELE NÃO ACREDITOU NO QUE VIU")."""
+    from difflib import SequenceMatcher
+    limpa = lambda t: re.sub(r"[^\w ]", "", (t or "").upper()).strip()  # noqa: E731
+    a, b = limpa(a), limpa(b)
+    return bool(a and b) and SequenceMatcher(None, a, b).ratio() >= 0.8
+
+
 def _sobreposicao(a0, a1, b0, b1):
     inter = max(0.0, min(a1, b1) - max(a0, b0))
     return inter / max(1e-6, min(a1 - a0, b1 - b0))
@@ -200,6 +218,7 @@ class Analisador:
         self.status = "aguardando a live"
         self.analises = deque(maxlen=40)   # histórico para o painel
         self.cortados = deque(maxlen=200)  # (inicio, fim) já cortados
+        self.ganchos = deque(maxlen=12)    # textos de gancho dos últimos cortes desta live (para não repetir)
         self.proxima = JANELA              # instante da live em que roda a próxima análise
         self._stop = threading.Event()
         self.dir = os.path.join(stream.workdir, "ia")
@@ -266,6 +285,8 @@ class Analisador:
         s = self.stream
         contexto = (f"Live de {s.name} ({s.platform}). Título da live: {s.title or '-'}.\n"
                     f"Este vídeo tem {int(dur)} segundos. Encontre os momentos que viram cortes de alta retenção.")
+        if self.ganchos:
+            contexto += "\nGanchos já usados nesta live (não repita): " + " | ".join(self.ganchos)
         t0 = time.time()
         analise, modelo = analisar_video(leve, contexto)
         gasto = time.time() - t0
@@ -292,6 +313,11 @@ class Analisador:
             fim_abs = min(inicio + dur, inicio + b + 1.0)  # um respiro depois do desfecho
             if any(_sobreposicao(ini_abs, fim_abs, x0, x1) > 0.4 for x0, x1 in self.cortados):
                 continue
+            texto_gancho = _limpa_gancho(m.texto_gancho)
+            if texto_gancho and any(_parecido(texto_gancho, g) for g in self.ganchos):
+                continue  # mesmo gancho de um corte recente: a ordem é por nota, então o melhor dos dois já passou
+            if texto_gancho:
+                self.ganchos.append(texto_gancho)
             # pedaços no tempo do corte (0 = início do corte), com a mesma folga no começo e no fim
             rel = [[round(inicio + p0 - ini_abs, 2), round(inicio + p1 - ini_abs, 2), enq] for p0, p1, enq in pedacos]
             rel[0][0] = 0.0
@@ -304,7 +330,7 @@ class Analisador:
                 "cena": (m.cena or "").strip().lower() or None,  # jogo → tela dividida; conversa → formato de sempre
                 "jogo": (analise.jogo or "").strip() or None,     # entra no título, hashtags e tags do YouTube
                 "partes": rel,                                    # montagem: cortes secos + enquadramento de cada pedaço
-                "texto_gancho": _limpa_gancho(m.texto_gancho),
+                "texto_gancho": texto_gancho,
                 "complemento": _limpa_gancho(m.complemento, parenteses=True),
             })
 

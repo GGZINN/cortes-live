@@ -415,20 +415,146 @@ def _esperar_disco(cid):
         time.sleep(30)
 
 
-def _montar(d, offset, partes):
-    """Junta os pedaços escolhidos pela IA (cortes secos) num vídeo só. partes: [(ini, fim, enquadramento)] em
+def _montar(d, offset, partes, fonte="bruto.ts", saida="montado.mp4"):
+    """Junta os pedaços escolhidos (cortes secos) num vídeo só. partes: [(ini, fim, enquadramento)] em
     segundos do corte. Devolve (arquivo, duração, trocas no tempo do vídeo montado)."""
     entradas, filtro, trocas, t = [], "", [], 0.0
     for i, (x, y, enq) in enumerate(partes):
-        entradas += ["-ss", f"{offset + x:.2f}", "-t", f"{y - x:.2f}", "-i", "bruto.ts"]
+        entradas += ["-ss", f"{offset + x:.3f}", "-t", f"{y - x:.3f}", "-i", fonte]
         filtro += f"[{i}:v:0]setpts=PTS-STARTPTS[v{i}];[{i}:a:0]asetpts=PTS-STARTPTS,aresample=async=1[a{i}];"
-        trocas.append((round(t, 2), round(t + y - x, 2), enq))
+        trocas.append((round(t, 3), round(t + y - x, 3), enq))
         t += y - x
     filtro += "".join(f"[v{i}][a{i}]" for i in range(len(partes))) + f"concat=n={len(partes)}:v=1:a=1[v][a]"
     run_ffmpeg([*entradas, "-filter_complex", filtro, "-map", "[v]", "-map", "[a]",
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", "-c:a", "aac", "-b:a", "192k",
-                "montado.mp4"], cwd=d)
-    return "montado.mp4", round(t, 2), trocas
+                saida], cwd=d)
+    return saida, round(t, 3), trocas
+
+
+# ------------------------------------------------------------------ Ritmo: pausas e jump cuts
+# Princípio dos cortes de referência: pausa entre frases acima de 0,3 s vira 0,2 s (pausa dentro da frase fica,
+# a não ser que seja silêncio morto) e o plano muda de zoom a cada ~2,8 s, num corte seco, sempre no começo
+# de uma palavra. Nada da fala é tirado: só o silêncio.
+FIM_FRASE = re.compile(r"[.!?…]$")
+PAUSA_FRASE, FICA_FRASE = 0.3, 0.2   # entre frases: acima de 0,3 s vira 0,2 s
+PAUSA_MORTA, FICA_MORTA = 0.7, 0.25  # dentro da frase: só silêncio longo
+ZOOM_PLANO = 1.10                    # os planos ímpares ficam 10% mais fechados (jump cut)
+PLANO_S = 2.8
+
+
+def _rms_db(audio, a, b, sr=16000):
+    import numpy as np
+    x = audio[max(0, int(a * sr)):max(0, int(b * sr))]
+    if len(x) < sr * 0.05:
+        return None
+    return float(20 * np.log10(np.sqrt(np.mean(np.square(x))) + 1e-9))
+
+
+def trechos_sem_pausa(words, dur, audio):
+    """Trechos [(ini, fim)] do corte que ficam depois de tirar as pausas, ou None se não vale a pena.
+    Só corta onde o áudio está mesmo baixo (12 dB abaixo da fala): risada, grito sem palavra, som do jogo
+    e música alta não são pausa, mesmo sem nada transcrito."""
+    if len(words) < 3:
+        return None
+    fala = sorted(x for x in (_rms_db(audio, w["s"], w["e"]) for w in words if w["e"] - w["s"] >= 0.08)
+                  if x is not None)
+    if not fala:
+        return None
+    limite = fala[len(fala) // 2] - 12
+
+    def quieto(a, b):
+        r = _rms_db(audio, a, b)
+        return r is not None and r < limite
+
+    tirar = []
+    w0 = words[0]["s"]
+    if w0 > 0.6 and quieto(0.0, w0 - 0.05):        # começo morto: o corte entra direto na 1ª palavra
+        tirar.append((0.0, w0 - FICA_FRASE))
+    for p, q in zip(words, words[1:]):
+        vao = q["s"] - p["e"]
+        if FIM_FRASE.search(p["w"].strip()) and vao > PAUSA_FRASE:
+            fica = FICA_FRASE
+        elif vao > PAUSA_MORTA:
+            fica = FICA_MORTA
+        else:
+            continue
+        a, b = p["e"] + fica / 2, q["s"] - fica / 2
+        if b - a >= 0.1 and quieto(p["e"] + 0.03, q["s"] - 0.03):
+            tirar.append((a, b))
+    if sum(b - a for a, b in tirar) < 0.4:
+        return None
+    ficam, cur = [], 0.0
+    for a, b in tirar:
+        if a <= 0.01:          # o começo morto
+            cur = b
+            continue
+        if a - cur < 0.25:     # sobraria um pedacinho: não corta esta pausa
+            continue
+        ficam.append((cur, a))
+        cur = b
+    ficam.append((cur, dur))
+    return [(round(a, 3), round(b, 3)) for a, b in ficam if b - a > 0.05]
+
+
+def _novo_tempo(ficam):
+    """Função que leva um instante do corte original para o corte sem as pausas."""
+    mapa, t = [], 0.0
+    for a, b in ficam:
+        mapa.append((a, b, t))
+        t += b - a
+
+    def f(x):
+        for a, b, o in mapa:
+            if x < a:
+                return o
+            if x <= b:
+                return o + x - a
+        return t
+    return f
+
+
+def _pedacos(ficam, trocas):
+    """Cruza os trechos que ficam com o enquadramento de cada parte (rosto, jogo, dividido)."""
+    pts = sorted({a for a, _ in ficam} | {b for _, b in ficam} | {x for x, _, _ in trocas} | {y for _, y, _ in trocas})
+    out = []
+    for a, b in ficam:
+        for x, y in zip(pts, pts[1:]):
+            i, j = max(a, x), min(b, y)
+            if j - i <= 0.02:
+                continue
+            m = (i + j) / 2
+            enq = next((e for p0, p1, e in trocas if p0 <= m < p1), "dividido")
+            if out and out[-1][2] == enq and abs(out[-1][1] - i) < 0.001:
+                out[-1][1] = j
+            else:
+                out.append([i, j, enq])
+    return out
+
+
+def planos_zoom(words, emendas, dur, cada=PLANO_S):
+    """Trechos [(ini, fim)] em que a imagem do streamer fica mais fechada: os planos se alternam entre 100% e
+    ZOOM_PLANO a cada ~`cada` segundos e em cada emenda (pausa tirada ou pedaço da montagem). A troca cai no
+    começo de uma palavra ou fora da fala, nunca no meio de uma palavra."""
+    inicios = [w["s"] for w in words]
+
+    def livre(t):
+        return not any(w["s"] < t < w["e"] for w in words)
+
+    pontos = [0.0] + sorted(t for t in set(emendas) if 0.3 < t < dur - 0.3) + [dur]
+    cortes = []
+    for a, b in zip(pontos, pontos[1:]):
+        cur = a
+        while b - cur > cada * 1.5:
+            alvo = cur + cada
+            cand = [t for t in inicios if cur + 1.2 < t < b - 1.0] + ([alvo] if livre(alvo) else [])
+            if not cand:
+                break
+            cur = min(cand, key=lambda t: abs(t - alvo))
+            cortes.append(cur)
+        if b < dur:
+            cortes.append(b)
+    bordas = [0.0] + sorted(set(round(t, 3) for t in cortes)) + [dur]
+    return [(bordas[i], bordas[i + 1]) for i in range(1, len(bordas) - 1, 2)]
 
 
 def _process(cid, raw, offset, dur):
@@ -448,15 +574,35 @@ def _process(cid, raw, offset, dur):
             update_clip(cid, duracao=round(dur, 1))
         else:          # trecho contínuo: só as trocas de enquadramento
             trocas = [(p[0], min(p[1], dur), p[2]) for p in partes]
+    emendas = [a for a, _, _ in trocas[1:]] if fonte == "montado.mp4" else []
     gancho = clip.get("texto_gancho")
-    ate = duracao_gancho(dur) if gancho else 0.0
     # a fala é sempre transcrita: alimenta títulos, hashtags, curadoria e capas.
     # A opção "legenda" só decide se ela aparece escrita no vídeo.
     update_clip(cid, status="transcrevendo")
     run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", fonte,
                 "-vn", "-ac", "1", "-ar", "16000", "-f", "s16le", "audio.pcm"], cwd=d)
     words = transcribe(os.path.join(d, "audio.pcm"))
+
+    # pausas: só fora do gameplay (no jogo, o silêncio da fala costuma ser a jogada acontecendo na tela)
+    if config.get("cortar_pausas") and clip.get("cena") != "jogo":
+        import numpy as np
+        audio = np.fromfile(os.path.join(d, "audio.pcm"), dtype=np.int16).astype(np.float32) / 32768.0
+        ficam = trechos_sem_pausa(words, dur, audio)
+        del audio
+        if ficam:
+            update_clip(cid, status="cortando as pausas")
+            fonte, novo, trocas = _montar(d, offset, _pedacos(ficam, trocas), fonte, "enxuto.mp4")
+            f = _novo_tempo(ficam)
+            words = [dict(w, s=round(f(w["s"]), 3), e=round(max(f(w["e"]), f(w["s"]) + 0.05), 3)) for w in words]
+            emendas = [a for a, _, _ in trocas[1:]]
+            mudou = {"duracao": round(novo, 1), "pausas_tiradas": round(dur - novo, 1)}
+            if clip.get("pico_rel") is not None:
+                mudou["pico_rel"] = round(f(float(clip["pico_rel"])), 2)
+            update_clip(cid, **mudou)
+            offset, dur = 0.0, novo
+    ate = duracao_gancho(dur) if gancho else 0.0
     words_video = words if config.get("legenda") else []
+    zoom = planos_zoom(words, emendas, dur) if config.get("zoom_cortes") else None
 
     update_clip(cid, status="renderizando")
     clip = get_clip(cid) or {}
@@ -473,8 +619,9 @@ def _process(cid, raw, offset, dur):
     if gancho and has_subs:  # área do desfoque atrás do texto de gancho
         lg = layout_gancho(gancho, clip.get("complemento"), lay["modo"])
         caixa = (lg["y0"], lg["y1"], ate)
-    vf = "[0:a:0]asetpts=PTS-STARTPTS[aud];" + layout.filtro_video(lay["modo"], lay["camera"], selo, has_subs,
-                                                                   lay.get("janela"), trocas_div, caixa)
+    # volume: −14 LUFS e pico abaixo de −1,5 dBTP (o padrão dos Shorts; as lives variam muito de volume)
+    vf = ("[0:a:0]asetpts=PTS-STARTPTS,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[aud];"
+          + layout.filtro_video(lay["modo"], lay["camera"], selo, has_subs, lay.get("janela"), trocas_div, caixa, zoom))
     run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", fonte, *(["-i", "selo.png"] if selo else []),
                 "-filter_complex", vf, "-map", "[v]", "-map", "[aud]",
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
@@ -491,7 +638,7 @@ def _process(cid, raw, offset, dur):
     clip = get_clip(cid) or {}
     pico = clip.get("pico_rel", dur * 0.7)
     frase = " ".join(w["w"] for w in words if pico - 6 <= w["s"] <= pico + 3)
-    for f in ("bruto.ts", "audio.pcm", "montado.mp4"):
+    for f in ("bruto.ts", "audio.pcm", "montado.mp4", "enxuto.mp4"):
         try:
             os.remove(os.path.join(d, f))
         except OSError:
