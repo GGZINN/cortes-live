@@ -63,6 +63,8 @@
   .clip .acts a.dl{background:var(--accent);border-color:var(--accent);font-weight:600}
   .empty{color:var(--muted);padding:28px;border:1px dashed var(--line);border-radius:14px;text-align:center}
   .err{color:#ff8ea2;font-size:12px}
+  .disco{margin:0 0 16px;padding:12px 16px;border:1px solid rgba(255,59,92,.5);background:rgba(255,59,92,.1);border-radius:12px;font-size:13px}
+  .disco b{color:#ff8ea2}
   dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:24px;width:min(520px,92vw)}
   dialog::backdrop{background:rgba(0,0,0,.6)}
   .field{margin:14px 0}
@@ -133,8 +135,193 @@
   .nota{font-size:12.5px;color:var(--muted);background:var(--panel2);border-radius:10px;padding:10px 12px;border-left:3px solid var(--accent2)}
   .fonte{font-size:11.5px;padding:3px 8px;border-radius:6px;background:var(--panel2);color:var(--muted)}
   .fonte.ia{background:rgba(145,70,255,.18);color:#c9a8ff}
+  /* ---------- YouTube ---------- */
+  #ytBtn.on{border-color:rgba(255,46,46,.6)}
+  #ytBtn img{width:18px;height:18px;border-radius:50%;vertical-align:-4px;margin-right:6px}
+  dialog#ytdlg{width:min(600px,94vw)}
+  .ytcanal{display:flex;align-items:center;gap:12px;background:var(--panel2);border-radius:12px;padding:12px}
+  .ytcanal img{width:48px;height:48px;border-radius:50%}
+  .ytcanal div{flex:1}
+  .ytcanal b{display:block;font-size:15px}
+  .ytcanal small{color:var(--muted)}
+  ol.setup{padding-left:20px;display:flex;flex-direction:column;gap:8px;margin:10px 0}
+  ol.setup a,.nota a,.ytres a{color:var(--accent2)}
+  .ytform{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
+  .ytform input[type=datetime-local]{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:8px;border-radius:8px;font:inherit;color-scheme:dark}
+  .ytform button{grid-column:1/-1;background:var(--youtube);border-color:var(--youtube);color:#fff;font-weight:700;padding:11px}
+  .barra{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:8px 0}
+  .barra i{display:block;height:100%;background:var(--youtube);transition:width .4s}
+  .ytres{font-size:13.5px;display:flex;flex-direction:column;gap:6px}
+  .ytres .ok{color:var(--ok);font-weight:600}
+  .clip .yt{font-size:12px;font-weight:600;color:#ff8080}
+  .clip .yt a{color:inherit}
+  /* ---------- Abas principais + Agenda ---------- */
+  .views{display:flex;gap:6px;margin-bottom:20px}
+  .views button{border-radius:999px;padding:9px 18px;font-weight:700}
+  .views button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+  .views button span{font-weight:600;font-size:12px;margin-left:4px;color:var(--youtube)}
+  .agcfg{display:grid;grid-template-columns:1.3fr 1.2fr 1fr 1fr auto;gap:16px;align-items:end;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .agf label{display:flex;gap:6px;align-items:center;font-weight:600;font-size:13px;margin-bottom:6px}
+  .agf small{display:block;color:var(--muted);font-size:11.5px;margin-top:5px}
+  .agf input[type=text]{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:9px 10px;border-radius:8px;font:inherit}
+  .agf select{width:auto}
+  .agdias{display:flex;gap:4px;flex-wrap:wrap}
+  .agdias button{padding:6px 8px;font-size:12px;border-radius:7px;color:var(--muted)}
+  .agdias button.on{background:rgba(255,46,46,.18);border-color:rgba(255,46,46,.6);color:var(--text)}
+  .agtop{display:flex;align-items:center;gap:12px;margin:22px 0 4px}
+  .agtop .sp{flex:1}
+  .agdia{margin-top:16px}
+  .agdia>b{display:block;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .agrow{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}
+  .agrow.livre{background:none;border-style:dashed;color:var(--muted)}
+  .aghora{font-weight:800;font-size:16px;width:52px;flex:none}
+  .agrow img,.agrow .noimg{width:40px;height:71px;object-fit:cover;border-radius:6px;background:#000;flex:none}
+  .agtxt{flex:1;min-width:0}
+  .agtxt b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .agtxt small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+  .agtxt small a{color:var(--accent2)}
+  .agtxt .st-erro,.agtxt .st-travado{color:#ff8ea2}
+  .agtxt .st-agendado,.agtxt .st-publicado{color:var(--ok)}
+  .agtxt .st-enviando{color:var(--accent2)}
+  .agacts{display:flex;gap:6px;flex:none}
+  .agacts button{padding:6px 10px;font-size:12.5px;border-radius:8px}
+  .agpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:60vh;overflow:auto;margin-top:12px}
+  .agpick button{display:flex;flex-direction:column;gap:6px;text-align:left;padding:8px;border-radius:12px}
+  .agpick img,.agpick .noimg{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#000}
+  .agpick b{font-size:12.5px;line-height:1.3}
+  .agpick small{color:var(--muted);font-size:11.5px}
+  dialog#agPickDlg{width:min(860px,96vw)}
+  /* ---------- Roteiros ---------- */
+  .rtop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .rtop .sp{flex:1}
+  .rwrap{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+  .rlista{display:flex;flex-direction:column;gap:8px;position:sticky;top:90px;max-height:calc(100vh - 110px);overflow:auto}
+  .ritem{text-align:left;display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:12px;background:var(--panel)}
+  .ritem.on{border-color:var(--accent2);background:rgba(255,176,32,.06)}
+  .ritem b{font-size:13.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ritem small{color:var(--muted);font-size:12px}
+  .rtipo{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--panel2);color:var(--muted)}
+  .rtipo.short{background:rgba(255,46,77,.16);color:#ff8ea2}.rtipo.compilado{background:rgba(255,176,32,.16);color:var(--accent2)}.rtipo.original{background:rgba(46,230,255,.14);color:#7deeff}
+  .reditor{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;min-width:0}
+  .rhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .rhead .sp{flex:1}
+  .rf{margin:14px 0}
+  .rf>label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
+  .rf input[type=text],.rf textarea,.rsec input[type=text],.rsec textarea,#rtNovoDlg textarea,#rtNovoDlg input[type=text]{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;resize:vertical}
+  .rf textarea{min-height:70px}
+  .rchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .rchips button{font-size:12.5px;padding:5px 10px;border-radius:8px;text-align:left}
+  .rsec{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+  .rsec .rs1{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .rsec .rs1 b{color:var(--accent2);width:28px;flex:none}
+  .rsec .rs1 input[type=text]{flex:1;font-weight:700;background:var(--panel)}
+  .rsec .rs1 input[type=number]{width:70px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+  .rsec .rs1 button{padding:6px 9px;font-size:12px;border-radius:8px;background:var(--panel)}
+  .rsec textarea{min-height:64px;background:var(--panel)}
+  .rsec input.nt{margin-top:6px;background:var(--panel);font-size:13px;color:var(--muted)}
+  .rsec .rclip{display:flex;gap:10px;align-items:center;margin-bottom:8px;font-size:12.5px;color:var(--muted)}
+  .rsec .rclip img{width:34px;height:60px;object-fit:cover;border-radius:6px;background:#000}
+  .rvideo{border-top:1px solid var(--line);margin-top:20px;padding-top:16px}
+  .rvideo video{width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;display:block}
+  .rvideo .rthumb{width:100%;max-width:360px;border-radius:10px;display:block}
+  .rvgrid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;align-items:start}
+  dialog#rtNovoDlg{width:min(860px,96vw);max-height:94vh;overflow:auto}
+  .rtipos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px}
+  .rtipos button{text-align:left;padding:12px;border-radius:12px;display:flex;flex-direction:column;gap:4px}
+  .rtipos button b{font-size:14px}
+  .rtipos button small{color:var(--muted);font-size:12px}
+  .rtipos button.on{border-color:var(--accent2);background:rgba(255,176,32,.08)}
+  .rcortes{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:46vh;overflow:auto;margin-top:8px}
+  .rcortes label{display:flex;flex-direction:column;gap:4px;background:var(--panel2);border:2px solid var(--line);border-radius:10px;padding:6px;cursor:pointer;font-size:12px}
+  .rcortes label.on{border-color:var(--accent2)}
+  .rcortes img,.rcortes .noimg{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;background:#000}
+  .rcortes input{display:none}
+  .rcortes small{color:var(--muted)}
+  @media (max-width:900px){.rwrap{grid-template-columns:1fr}.rlista{position:static;max-height:none}.rvgrid{grid-template-columns:1fr}.rtipos{grid-template-columns:1fr}}
+
+  /* ---------- Thumbnails ---------- */
+  dialog#thDlg{width:min(1100px,96vw);max-height:94vh;overflow:auto}
+  #thDlg .pub-head{flex-wrap:wrap}
+  .thvars{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px}
+  .thvar{padding:0;border-radius:12px;overflow:hidden;border:2px solid var(--line);background:#000;position:relative}
+  .thvar img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
+  .thvar.v img{aspect-ratio:9/16}
+  .thvar.on{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(255,176,32,.35)}
+  .thvar span{position:absolute;left:8px;top:8px;font-size:11px;font-weight:700;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:6px}
+  .thvars.v{grid-template-columns:repeat(auto-fill,minmax(min(150px,40%),1fr))}
+  .thquadros{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+  .thquadros button{padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;flex:none;background:#000}
+  .thquadros button.on{border-color:var(--accent2)}
+  .thquadros img{width:128px;aspect-ratio:16/9;object-fit:cover;display:block}
+  .thedit{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;margin-top:10px}
+  .thedit input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:10px 12px;border-radius:10px;font:inherit;font-weight:700;text-transform:uppercase}
+  .thcores{display:flex;gap:6px}
+  .thcores button{width:28px;height:28px;border-radius:50%;padding:0;border:2px solid var(--line)}
+  .thcores button.on{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.3)}
+  .thedit select{width:auto}
+  .thedit>*{min-width:0}
+
+  /* ---------- Painel do canal ---------- */
+  :root{--serie1:#3987e5;--grade:#272b34}  /* azul da série validado para fundo escuro */
+  .cntopo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+  .cntopo img{width:48px;height:48px;border-radius:50%;background:#000;flex:none}
+  .cntopo b{font-size:17px}
+  .cntopo small{display:block;color:var(--muted);font-size:12.5px}
+  .cntopo .sp{flex:1}
+  .cntopo a{color:var(--text);text-decoration:none;border:1px solid var(--line);background:var(--panel2);padding:8px 14px;border-radius:10px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .kpi small{display:block;color:var(--muted);font-size:12px}
+  .kpi b{display:block;font-size:24px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+  .kpi i{font-style:normal;font-size:12px;color:var(--muted)}
+  .cnbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:14px}
+  .cnbox h3{margin:0 0 2px;font-size:15px}
+  .cnbox .sub{color:var(--muted);font-size:12px;margin-bottom:10px}
+  .cnbox details{margin-top:8px;font-size:12.5px;color:var(--muted)}
+  .cnbox table{border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
+  .cnbox td,.cnbox th{padding:3px 14px 3px 0;text-align:left;font-weight:500}
+  .grafico{position:relative}
+  .grafico svg{display:block;width:100%;height:190px}
+  .grafico text{fill:var(--muted);font-size:11px}
+  .grafico .tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px;white-space:nowrap;transform:translate(-50%,calc(-100% - 8px));display:none;z-index:2}
+  .grafico .tip b{display:block;font-size:13px}
+  .cnapr{display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+  .cnapr ul{margin:6px 0 0;padding-left:18px}
+  .cnapr li{margin:5px 0;font-size:13.5px}
+  .cnapr h4{margin:12px 0 0;font-size:13px;color:var(--muted);font-weight:600}
+  .cnapr h4:first-child{margin-top:0}
+  .cnapr .top li{font-size:13px}
+  .cnapr .top i{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+  .cnapr-ops{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px}
+  .cnapr-ops label{display:flex;gap:6px;align-items:center}
+  .cnapr-pe{margin-top:10px;font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .cnvid{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}
+  .cnvid img,.cnvid .noimg{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;background:#000;flex:none}
+  .cnvid .t{flex:1;min-width:0}
+  .cnvid .t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cnvid .t small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .cnnums{display:flex;gap:14px;flex:none;font-variant-numeric:tabular-nums;font-size:13.5px;font-weight:700}
+  .cnnums span{display:flex;flex-direction:column;align-items:flex-end;min-width:52px}
+  .cnnums span i{font-style:normal;color:var(--muted);font-size:11px;font-weight:500}
+  .vis{font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:5px;background:var(--panel2);color:var(--muted);margin-right:4px}
+  .vis.public{color:var(--ok)}
+  .daqui{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,176,32,.12);color:var(--accent2);margin-right:4px}
+  #cnDlg{width:min(620px,94vw)}
+  #cnDlg input[type=text],#cnDlg textarea,#cnDlg select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px}
+  #cnDlg textarea{min-height:150px;resize:vertical}
+  .nota{overflow-wrap:anywhere}
+  .nota a{color:var(--accent2)}
+  @media (max-width:800px){.cnapr{grid-template-columns:1fr}}
+  @media (max-width:600px){.views{overflow-x:auto;scrollbar-width:none;margin-left:-16px;margin-right:-16px;padding:0 16px}
+    .views button{white-space:nowrap;flex:none}}
+  @media (max-width:700px){.cnvid{flex-wrap:wrap}.cnnums{order:3;width:100%;justify-content:flex-start}.cnvid .agacts{order:4;width:100%;justify-content:flex-end}}
+  @media (max-width:700px){.thedit{grid-template-columns:1fr}dialog#thDlg{padding:16px}#thDlg .seg{margin-left:0!important;order:3;width:100%}#thDlg .seg button{flex:1}}
+  @media (max-width:900px){.agcfg{grid-template-columns:1fr 1fr}}
+  @media (max-width:600px){.agcfg{grid-template-columns:1fr}.agrow{flex-wrap:wrap}.agacts{width:100%;justify-content:flex-end}}
   @media (max-width:760px){.pub-wrap{grid-template-columns:1fr}.pub-side video{max-height:45vh;width:auto;margin:0 auto}.pub-main{max-height:none;overflow:visible}dialog#pub{overflow:auto}}
-  @media (max-width:600px){header,main{padding-left:16px;padding-right:16px}.lives{grid-template-columns:1fr}}
+  @media (max-width:600px){header,main{padding-left:16px;padding-right:16px}.lives{grid-template-columns:1fr}
+    header{flex-wrap:wrap;gap:8px;padding-top:12px;padding-bottom:12px}header .sp{flex-basis:100%;height:0}header .chip{font-size:11px}
+    header button{padding:7px 10px;font-size:13px}.views button{padding:8px 12px;font-size:13px}}
 </style>
 </head>
 <body>
@@ -143,9 +330,46 @@
   <span class="chip" id="fila">fila: 0</span>
   <div class="sp"></div>
   <button class="ghost" onclick="abrirPasta()">📁 Abrir pasta</button>
+  <button id="ytBtn" onclick="abrirYT()">▶ Conectar YouTube</button>
   <button onclick="abrirConfig()">⚙ Configurações</button>
 </header>
 <main>
+  <div class="disco" id="discoAviso" hidden></div>
+  <nav class="views">
+    <button data-view="painel">🎬 Lives e cortes</button>
+    <button data-view="agenda">📅 Agenda do YouTube<span id="agCount"></span></button>
+    <button data-view="roteiros">📝 Roteiros</button>
+    <button data-view="canal">📊 Canal</button>
+  </nav>
+  <section id="v_canal" hidden>
+    <div id="cnTopo"></div>
+    <div id="cnAviso"></div>
+    <div id="cnKpis"></div>
+    <div id="cnGrafico"></div>
+    <div id="cnApr"></div>
+    <div class="agtop"><h2 style="margin:0">Vídeos do canal</h2><span class="sp"></span>
+      <div class="seg" id="cnOrdem">
+        <button data-o="recentes">Recentes</button><button data-o="views">Mais vistos</button><button data-o="retencao">Retenção</button>
+      </div>
+    </div>
+    <div id="cnVideos"></div>
+  </section>
+  <section id="v_roteiros" hidden>
+    <div class="rtop"><h2 style="margin:0">Roteiros</h2><span class="sp"></span><button class="primary" onclick="rtNovo()">+ Novo roteiro</button></div>
+    <div class="rwrap">
+      <div class="rlista" id="rtLista"></div>
+      <div class="reditor" id="rtEditor"><div class="empty">Escolha um roteiro ao lado ou crie um novo.</div></div>
+    </div>
+  </section>
+  <section id="v_agenda" hidden>
+    <div id="agCfg"></div>
+    <div id="agAviso"></div>
+    <div class="agtop"><h2 style="margin:0">Próximos 7 dias</h2><span class="sp"></span><button class="primary" onclick="agEscolher(null)">+ Adicionar corte</button></div>
+    <div id="agLista"></div>
+    <h2>Publicados recentemente</h2>
+    <div id="agPub"></div>
+  </section>
+  <section id="v_painel">
   <form class="add" onsubmit="addLive(event)">
     <input id="url" placeholder="Cole o link do canal: twitch.tv/canal · youtube.com/@canal/live · kick.com/canal" autocomplete="off">
     <button class="primary">Monitorar</button>
@@ -158,7 +382,61 @@
   <div class="ctabs" id="ctabs"></div>
   <div class="csub" id="csub"></div>
   <div id="cbody"></div>
+  </section>
 </main>
+
+<dialog id="rtNovoDlg">
+  <div class="pub-head"><h3>Novo roteiro</h3><button class="x" onclick="rtNovoDlg.close()" title="Fechar">✕</button></div>
+  <div class="rtipos">
+    <button data-rtipo="short"><b>📱 Short</b><small>Roteiro de até 60 s para gravar: gancho, blocos e chamada final.</small></button>
+    <button data-rtipo="compilado"><b>🎬 Compilado</b><small>Junta vários cortes num vídeo 16:9 com capítulos. O app monta o vídeo.</small></button>
+    <button data-rtipo="original"><b>🎙 Vídeo original</b><small>Roteiro completo de um vídeo longo sobre um tema, pronto para ler.</small></button>
+  </div>
+  <div id="rtNovoCampos"></div>
+  <p id="rtNovoErr" class="err"></p>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+    <button class="ghost" onclick="rtNovoDlg.close()">Cancelar</button>
+    <button class="primary" id="rtCriarBtn" onclick="rtCriar()">✨ Escrever roteiro</button>
+  </div>
+</dialog>
+
+<dialog id="thDlg">
+  <div class="pub-head"><h3>Thumbnail</h3><span class="fonte" id="thFonte"></span>
+    <div class="seg" style="margin-left:auto"><button id="thFmtH" onclick="thFmt='h';renderTh(true)">YouTube 16:9</button><button id="thFmtV" onclick="thFmt='v';renderTh(true)">Capa vertical 9:16</button></div>
+    <button class="x" onclick="thDlg.close()" title="Fechar">✕</button></div>
+  <div id="thBody"></div>
+</dialog>
+
+<dialog id="agPickDlg">
+  <div class="pub-head"><h3 id="agPickTit">Escolher corte</h3><button class="x" onclick="agPickDlg.close()" title="Fechar">✕</button></div>
+  <div class="m" style="color:var(--muted);font-size:12.5px">Cortes prontos que ainda não foram para o YouTube. Os ⭐ escolhidos aparecem primeiro.</div>
+  <div class="agpick" id="agPick"></div>
+</dialog>
+
+<dialog id="cnDlg">
+  <div class="pub-head"><h3>Editar vídeo no YouTube</h3><button class="x" onclick="cnDlg.close()" title="Fechar">✕</button></div>
+  <div class="field"><label>Título <span id="cnTitN"></span></label><input type="text" id="cnTit" maxlength="100" oninput="cnConta()"></div>
+  <div class="field"><label>Descrição</label><textarea id="cnDesc" maxlength="5000"></textarea></div>
+  <div class="field"><label>Tags</label><input type="text" id="cnTags"><small>Separadas por vírgula.</small></div>
+  <div class="field"><label>Visibilidade</label>
+    <select id="cnVis"><option value="public">Público</option><option value="unlisted">Não listado</option><option value="private">Privado</option></select>
+    <small id="cnVisNota"></small></div>
+  <p id="cnErr" class="err"></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap">
+    <small style="flex:1;min-width:200px;color:var(--muted);font-size:12px">Salvar gasta 51 das 10.000 unidades da cota diária do YouTube.</small>
+    <button class="primary" id="cnSalvarBtn" onclick="cnSalvar()">Salvar no YouTube</button>
+  </div>
+</dialog>
+
+<dialog id="agMoverDlg">
+  <div class="pub-head"><h3>Mudar horário</h3><button class="x" onclick="agMoverDlg.close()" title="Fechar">✕</button></div>
+  <div class="field"><label>Novo horário</label><input type="datetime-local" id="agMoverQ" style="width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:9px;border-radius:8px;font:inherit;color-scheme:dark"></div>
+  <p id="agMoverErr" class="err"></p>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button onclick="agMoverOk(true)">Próximo horário livre</button>
+    <button class="primary" onclick="agMoverOk(false)">Salvar</button>
+  </div>
+</dialog>
 
 <dialog id="cfg">
   <h3 style="margin-top:0">Configurações</h3>
@@ -174,6 +452,12 @@
     <input type="range" min="15" max="300" step="5" data-k="intervalo_minimo"></div>
   <div class="field"><label>Legenda automática</label>
     <select data-k="legenda"><option value="true">Ligada</option><option value="false">Desligada</option></select></div>
+  <div class="field"><label>Formato do corte</label>
+    <select data-k="formato_corte"><option value="auto">Automático: gameplay com câmera vira tela dividida</option><option value="padrao">Sempre a live inteira no meio</option></select>
+    <small>No automático, a IA (Gemini) acha a câmera do streamer: ela vai para a parte de cima e o jogo para a de baixo, ocupando a tela toda. Conversa e cenas sem câmera separada ficam no formato de sempre.</small></div>
+  <div class="field"><label>Selo da live</label>
+    <select data-k="selo_live"><option value="true">Mostrar</option><option value="false">Esconder</option></select>
+    <small>Logo da plataforma (Kick, Twitch ou YouTube) e o link da live, pequeno, no meio do vídeo.</small></div>
   <div class="field"><label>Qualidade da legenda</label>
     <select data-k="modelo_whisper">
       <option value="base">Rápida (base)</option><option value="small">Equilibrada (small)</option><option value="medium">Precisa (medium, pesada)</option>
@@ -194,11 +478,17 @@
   </div>
 </dialog>
 
+<dialog id="ytdlg">
+  <div class="pub-head"><h3>YouTube</h3><button class="x" onclick="ytdlg.close()" title="Fechar">✕</button></div>
+  <div id="ytBody"></div>
+</dialog>
+
 <dialog id="pub">
   <div class="pub-wrap">
     <div class="pub-side">
       <video id="pubVideo" controls playsinline></video>
       <div class="m" id="pubInfo" style="font-size:12px;color:var(--muted)"></div>
+      <div id="pubThumb"></div>
     </div>
     <div class="pub-main">
       <div class="pub-head">
@@ -214,7 +504,7 @@
 
 <script>
 const $ = s => document.querySelector(s);
-const statusTxt = {gravando:"ao vivo · gravando", offline:"offline · aguardando", conectando:"conectando…", reconectando:"reconectando…", erro:"erro"};
+const statusTxt = {gravando:"ao vivo · gravando", offline:"offline · aguardando", conectando:"conectando…", reconectando:"reconectando…", erro:"erro", "disco cheio":"⚠ disco cheio · pausado"};
 const clipCache = {};
 
 async function api(path, opts={}){
@@ -230,6 +520,10 @@ async function addLive(e){
   tick();
 }
 async function delLive(id){ if(confirm("Parar de monitorar essa live?")){ await api("/api/lives/"+id,{method:"DELETE"}); tick(); } }
+async function refazerClip(id){
+  try{ await api("/api/cortes/"+id+"/reprocessar",{method:"POST"}); tick(); }
+  catch(e){ alert(erroTxt(e)); }
+}
 async function delClip(id){ if(confirm("Apagar esse corte?")){ await api("/api/cortes/"+id,{method:"DELETE"}); delete clipCache[id]; document.getElementById("c_"+id)?.remove(); } }
 function abrirPasta(){ api("/api/abrir-pasta",{method:"POST"}); }
 
@@ -313,12 +607,12 @@ function clipHTML(c){
   else vid = `<div class="proc"><div class="spinner"></div>${esc(c.status)}…</div>`;
   const star = c.escolhido ? `<div class="star">⭐ Escolhido para postar</div>${c.motivo_escolha?`<div class="pq">${esc(c.motivo_escolha)}</div>`:""}` : "";
   return `<div class="vid">${vid}</div><div class="info">
-    ${star}
+    ${star}<div class="ytl"></div>
     <div class="t">${esc(c.titulo || c.motivo)}</div>
     <div class="m">${esc(c.canal)} · ${when} · ${c.duracao}s</div>
     <div class="m">${motivo}</div>
     ${tags}
-    <div class="acts">${c.status==="pronto" ? `<button class="pub" onclick="abrirPublicar('${c.id}')">Publicar</button><a href="${c.arquivo}" download="${slug(c.titulo)||"corte-"+c.id}.mp4">Baixar</a>`:""}<button onclick="delClip('${c.id}')">Apagar</button></div>
+    <div class="acts">${c.status==="pronto" ? `<button class="pub" onclick="abrirPublicar('${c.id}')">Publicar</button><a href="${c.arquivo}" download="${slug(c.titulo)||"corte-"+c.id}.mp4">Baixar</a>`:""}${c.status==="erro" ? `<button onclick="refazerClip('${c.id}')">↻ Tentar de novo</button>`:""}<button onclick="delClip('${c.id}')">Apagar</button></div>
   </div>`;
 }
 /* ---------- cortes: uma aba por streamer, "Para postar" / "Todos" por lote ---------- */
@@ -334,6 +628,8 @@ function cardDe(c){
   if(!el){ el = document.createElement("div"); el.className="clip"; el.id="c_"+c.id; }
   const key = [c.status, c.titulo, c.escolhido, c.motivo_escolha].join("|");
   if(clipCache[c.id] !== key){ el.innerHTML = clipHTML(c); clipCache[c.id] = key; }
+  const yl = el.querySelector(".ytl"), yh = ytLinha(c);  // separado: o progresso do envio não reinicia o vídeo
+  if(yl && yl.innerHTML !== yh) yl.innerHTML = yh;
   el.classList.toggle("desc", c.escolhido === false);
   el.classList.toggle("esc", c.escolhido === true);
   return el;
@@ -419,7 +715,17 @@ async function tick(){
     const s = await api("/api/estado");
     s.cortes.forEach(c => clipsById[c.id] = c);
     renderLives(s.lives); renderClips(s.cortes, s.lotes||{}, s.tam_lote||10);
+    if(pub.open && pubClip && clipsById[pubClip.id]){
+      pubClip.youtube = clipsById[pubClip.id].youtube; pubClip.agenda = clipsById[pubClip.id].agenda;
+      pubClip.thumbs = clipsById[pubClip.id].thumbs; renderYtBox(); renderPubThumb();
+    }
+    if(thDlg.open) renderTh();
     $("#fila").textContent = "fila de processamento: " + s.fila;
+    const dv = $("#discoAviso"), livre = s.disco_livre_mb;
+    dv.hidden = !(livre < (s.disco_min_mb || 1024) * 2);
+    if(!dv.hidden) setHTML("#discoAviso", `<b>⚠ Disco quase cheio: ${livre < 1024 ? livre + " MB" : (livre/1024).toFixed(1) + " GB"} livres.</b> ` +
+      (livre < (s.disco_min_mb || 1024) ? "Novos cortes estão pausados até liberar espaço (a gravação para abaixo de 512 MB). " : "Abaixo de 1 GB os cortes novos param. ") +
+      "Libere espaço no disco ou apague cortes que não vai usar.");
   }catch(e){ $("#fila").textContent = "servidor desconectado"; }
 }
 
@@ -509,7 +815,7 @@ let pubClip = null, pubPlat = "tiktok", pubSel = 0, pubCustom = null;
 
 function abrirPublicar(id){
   pubClip = clipsById[id]; if(!pubClip) return;
-  pubSel = 0; pubCustom = null;
+  pubSel = 0; pubCustom = null; ytForcar = false; ytQuando = "";
   const v = $("#pubVideo"); v.src = pubClip.arquivo; v.poster = pubClip.capa || "";
   $("#pubInfo").innerHTML = `${esc(pubClip.canal)} · ${pubClip.duracao}s<br>${pubClip.por_que ? "🧠 "+esc(pubClip.por_que) : "⚡ "+esc(pubClip.motivo)}`;
   renderPub();
@@ -569,6 +875,7 @@ function renderPub(){
       <div class="row"><small>${s.aviso ? esc(s.aviso) : (s.fonte==="ia" ? "Clique em um título para usar." : "Clique em um título para usar. Para títulos escritos por IA, coloque a chave grátis do Gemini em ⚙ Configurações.")}</small>
       <button onclick="gerarDeNovo()">↻ Gerar de novo</button></div></div>
     ${campoTexto}
+    ${pubPlat === "shorts" ? `<div class="sec" id="ytBox"></div>` : ""}
     <div class="sec bigacts">
       <a href="${pubClip.arquivo}" download="${slug(titulo)||"corte-"+pubClip.id}.mp4">⬇ Baixar vídeo</a>
       ${abrir}
@@ -577,6 +884,7 @@ function renderPub(){
     <div class="sec"><b>Dicas</b><ul class="dicas">${P.dicas.map(x=>`<li>${x}</li>`).join("")}</ul></div>
     <div class="nota">⚠ Antes de postar, confira se o streamer permite cortes do conteúdo dele. A maioria permite com crédito, que já vai na legenda, mas sem autorização o vídeo pode tomar strike de direitos autorais.</div>`;
   if(tituloLimite) contar();
+  renderYtBox(true); renderPubThumb(true);
 }
 function contar(){
   const el = $("#fTitulo"), c = $("#cnt"); if(!el||!c) return;
@@ -589,7 +897,979 @@ async function copiar(id, btn){
   const t = btn.textContent; btn.textContent = "✓ Copiado!"; setTimeout(()=>btn.textContent=t, 1400);
 }
 
-tick(); setInterval(tick, 1500);
+/* ===================== YouTube ===================== */
+const ytdlg = $("#ytdlg");
+let ytSt = {configurado:false, conectado:false, login:{}};
+let ytVis = "agenda", ytQuando = "", ytForcar = false, ytBoxKey = "";
+function erroTxt(e){ try{ return JSON.parse(e.message).detail || e.message; }catch(_){ return e.message; } }
+function dataBR(iso){ return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}); }
+function localISO(d){ const p = n => String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+function proximoHorario(){ const d = new Date(Date.now() + 30*60*1000); d.setMinutes(0,0,0); d.setHours(d.getHours()+1); return localISO(d); }
+
+async function ytCarregar(recarregar){
+  try{ ytSt = await api("/api/youtube/status" + (recarregar ? "?recarregar=true" : "")); }catch(e){}
+  const b = $("#ytBtn");
+  b.classList.toggle("on", !!ytSt.conectado);
+  b.innerHTML = ytSt.conectado
+    ? `${ytSt.canal.foto ? `<img src="${esc(ytSt.canal.foto)}" alt="">` : "▶ "}${esc(ytSt.canal.titulo)}`
+    : "▶ Conectar YouTube";
+  if(ytdlg.open) renderYT();
+  if(pub.open) renderYtBox(true);
+}
+function abrirYT(){ renderYT(); ytdlg.showModal(); ytCarregar(true); }
+
+const LINKS = {
+  projeto:"https://console.cloud.google.com/projectcreate",
+  api:"https://console.cloud.google.com/apis/library/youtube.googleapis.com",
+  analytics:"https://console.cloud.google.com/apis/library/youtubeanalytics.googleapis.com",
+  marca:"https://console.cloud.google.com/auth/branding",
+  publico:"https://console.cloud.google.com/auth/audience",
+  clientes:"https://console.cloud.google.com/auth/clients",
+  auditoria:"https://support.google.com/youtube/contact/yt_api_form",
+};
+const lk = (k, t) => `<a href="${LINKS[k]}" target="_blank" rel="noopener">${t}</a>`;
+
+function renderYT(){
+  const s = ytSt, L = s.login || {};
+  let h;
+  if(s.conectado){
+    const c = s.canal;
+    h = `<div class="ytcanal">${c.foto ? `<img src="${esc(c.foto)}" alt="">` : ""}<div><b>${esc(c.titulo)}</b>
+        <small>${Number(c.inscritos||0).toLocaleString("pt-BR")} inscritos · ${Number(c.videos||0).toLocaleString("pt-BR")} vídeos</small></div>
+        <a href="${esc(c.url)}" target="_blank" rel="noopener"><button>Abrir canal</button></a></div>
+      <div class="field"><label>Categoria dos vídeos enviados</label>
+        <select onchange="ytCategoria(this.value)">${Object.entries(s.categorias||{}).map(([k,v]) => `<option value="${k}" ${k===s.categoria?"selected":""}>${v}</option>`).join("")}</select></div>
+      <div class="field"><label>Thumbnail ao enviar</label>
+        <select onchange="ytCfg('thumb_automatica', this.value==='true')">
+          <option value="true" ${s.thumb_automatica ? "selected" : ""}>Enviar a escolhida (gera sozinho se o corte não tiver)</option>
+          <option value="false" ${s.thumb_automatica ? "" : "selected"}>Não enviar (o YouTube escolhe um quadro)</option>
+        </select><small>Thumbnail personalizada exige o canal verificado por telefone (youtube.com/verify).</small></div>
+      <p class="m" style="color:var(--muted)">Para enviar: no corte, clique em <b>Publicar</b> → aba <b>YouTube Shorts</b> → <b>Enviar ao YouTube</b>.</p>
+      <div class="nota">Enquanto o projeto do Google Cloud não passar na ${lk("auditoria","auditoria da API do YouTube")}, os vídeos enviados pelo app ficam <b>privados</b>. Peça a auditoria assim que puder: o Google leva alguns dias para responder.</div>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="ghost" onclick="ytDesconectar()">Desconectar canal</button></div>`;
+  } else if(L.status === "aguardando"){
+    h = `<div style="text-align:center;padding:20px"><div class="spinner"></div>Uma janela do Google abriu no navegador.<br>Escolha a conta e o canal e permita o acesso.
+      <p style="color:var(--muted);font-size:12.5px">Se aparecer “O Google não verificou este app”, clique em <b>Avançado</b> → <b>Acessar Cortes Live (não seguro)</b>. O app é seu, pode seguir.</p>
+      ${L.url ? `<p><a href="${esc(L.url)}" target="_blank" rel="noopener" style="color:var(--accent2)">A janela não abriu? Clique aqui.</a></p>` : ""}</div>`;
+  } else if(s.configurado){
+    h = `<p style="margin-top:0">Credencial salva. Agora conecte o canal onde os vídeos vão ser postados.</p>
+      ${L.erro ? `<p class="err">${esc(L.erro)}</p>` : ""}${s.erro ? `<p class="err">${esc(s.erro)}</p>` : ""}
+      <div class="bigacts"><button class="go" style="background:var(--youtube)" onclick="ytConectar()">▶ Conectar canal</button></div>
+      <p id="ytErr" class="err"></p>
+      <p style="color:var(--muted);font-size:12.5px;margin-top:14px">Credencial errada?
+        <label style="color:var(--accent2);cursor:pointer;text-decoration:underline">enviar outra<input type="file" accept=".json,application/json" hidden onchange="ytArquivo(this)"></label></p>`;
+  } else {
+    h = `<p style="margin-top:0">Para postar e agendar direto daqui, o Google pede uma credencial sua. É grátis, leva uns 10 minutos e só precisa ser feito uma vez:</p>
+      <ol class="setup">
+        <li>${lk("projeto","Crie um projeto")} no Google Cloud (ex.: <i>Cortes Live</i>).</li>
+        <li>Ative a ${lk("api","YouTube Data API v3")} e a ${lk("analytics","YouTube Analytics API")} (botão <b>Ativar</b> em cada uma).</li>
+        <li>Em ${lk("marca","Google Auth Platform → Branding")}, clique em <b>Começar</b>: nome do app <i>Cortes Live</i>, seu e-mail e público <b>Externo</b>.</li>
+        <li>Em ${lk("publico","Público-alvo")}, clique em <b>Publicar app</b> (senão o login expira a cada 7 dias).</li>
+        <li>Em ${lk("clientes","Clientes")} → <b>Criar cliente</b> → tipo <b>App para computador</b> → <b>Criar</b> → <b>Baixar JSON</b>.</li>
+        <li>Envie aqui o arquivo baixado:</li>
+      </ol>
+      <label class="bigacts"><span class="go" style="background:var(--youtube);flex:1;text-align:center;padding:11px;border-radius:10px;font-weight:600;cursor:pointer">📄 Escolher o arquivo client_secret…json</span>
+        <input type="file" accept=".json,application/json" hidden onchange="ytArquivo(this)"></label>
+      <p id="ytErr" class="err"></p>
+      <div class="nota">Depois, peça a ${lk("auditoria","auditoria da API do YouTube")}. Sem ela, o Google deixa <b>privados</b> os vídeos enviados por apps novos. É grátis, mas leva alguns dias.</div>`;
+  }
+  $("#ytBody").innerHTML = h;
+}
+async function ytArquivo(inp){
+  const f = inp.files[0]; if(!f) return;
+  try{ ytSt = await api("/api/youtube/credencial", {method:"POST", body:JSON.stringify({texto: await f.text()})}); renderYT(); }
+  catch(e){ const el = $("#ytErr"); if(el) el.textContent = erroTxt(e); else alert(erroTxt(e)); }
+}
+async function ytConectar(){
+  try{ ytSt = await api("/api/youtube/conectar", {method:"POST"}); }
+  catch(e){ alert(erroTxt(e)); }
+  renderYT();
+  const t = setInterval(async () => {
+    await ytCarregar();
+    if((ytSt.login||{}).status !== "aguardando") clearInterval(t);
+  }, 1500);
+}
+async function ytDesconectar(){
+  if(!confirm("Desconectar o canal do YouTube deste app?")) return;
+  ytSt = await api("/api/youtube/desconectar", {method:"POST"}); ytCarregar();
+}
+async function ytCategoria(v){ await api("/api/config", {method:"POST", body:JSON.stringify({youtube_categoria:v})}); ytSt.categoria = v; }
+async function ytCfg(k, v){ await api("/api/config", {method:"POST", body:JSON.stringify({[k]:v})}); ytSt[k] = v; }
+
+/* linha no card do corte */
+function ytLinha(c){
+  const y = c.youtube;
+  if(!y && c.agenda) return `<div class="yt">📅 na agenda · ${dataBR(c.agenda.quando)}</div>`;
+  if(!y) return "";
+  if(y.status === "na fila") return `<div class="yt">⏳ na fila para o YouTube</div>`;
+  if(y.status === "enviando") return `<div class="yt">⬆ enviando ao YouTube ${Math.round((y.progresso||0)*100)}%</div>`;
+  if(y.status === "erro") return `<div class="yt">⚠ o envio ao YouTube falhou</div>`;
+  if(y.aviso) return `<div class="yt">⚠ <a href="${esc(y.studio)}" target="_blank" rel="noopener">no YouTube, mas com aviso</a></div>`;
+  if(y.publicar_em && new Date(y.publicar_em) > new Date()) return `<div class="yt">📅 <a href="${esc(y.studio)}" target="_blank" rel="noopener">agendado no YouTube · ${dataBR(y.publicar_em)}</a></div>`;
+  return `<div class="yt">▶ <a href="${esc(y.url)}" target="_blank" rel="noopener">no YouTube</a></div>`;
+}
+
+/* caixa "Enviar direto ao YouTube" no Publicar (aba Shorts) */
+function ytFormHTML(){
+  if(!ytQuando) ytQuando = proximoHorario();
+  const dica = {public:"Vai ao ar assim que o YouTube processar.", unlisted:"Só quem tiver o link vê.", private:"Só você vê.",
+                agenda:"Entra no próximo horário livre da agenda."}[ytVis];
+  return `<div class="ytform">
+      <select onchange="ytVis=this.value;renderYtBox(true)">
+        <option value="agenda" ${ytVis==="agenda"?"selected":""}>📅 Próximo horário da agenda</option>
+        <option value="public" ${ytVis==="public"?"selected":""}>Público agora</option>
+        <option value="agendar" ${ytVis==="agendar"?"selected":""}>Agendar</option>
+        <option value="unlisted" ${ytVis==="unlisted"?"selected":""}>Não listado</option>
+        <option value="private" ${ytVis==="private"?"selected":""}>Privado</option>
+      </select>
+      ${ytVis === "agendar"
+        ? `<input type="datetime-local" value="${ytQuando}" min="${localISO(new Date())}" onchange="ytQuando=this.value">`
+        : `<span style="color:var(--muted);font-size:12px">${dica}</span>`}
+      <button id="ytGo" onclick="ytEnviar()">${ytVis === "agenda" ? "📅 Pôr na agenda" : "⬆ Enviar ao YouTube"}</button>
+    </div>
+    <small style="color:var(--muted);display:block;margin-top:6px;font-size:12px">Usa o título e a descrição acima. No agendado, o próprio YouTube publica na hora marcada, mesmo com o PC desligado.</small>`;
+}
+function renderYtBox(forcar){
+  const box = $("#ytBox"); if(!box || !pubClip) return;
+  const y = pubClip.youtube || null;
+  const key = JSON.stringify([ytSt.conectado, y, ytForcar, pubClip.agenda]);
+  if(!forcar && key === ytBoxKey) return;
+  ytBoxKey = key;
+  let h = `<b>Enviar direto ao YouTube</b>`;
+  if(pubClip.agenda && !(y && y.status === "enviado")){
+    const ag = agSt ? agSt.config.enviar_antes_horas : 3;
+    h += `<div class="ytres"><span class="ok">📅 Na agenda para ${dataBR(pubClip.agenda.quando)}</span>
+      <small style="color:var(--muted)">Sobe ao YouTube ${ag} h antes do horário. Até lá dá para mudar o título e o horário na aba Agenda.</small>
+      <div class="row"><button class="mini" onclick="pub.close();mostrarView('agenda')">Ver agenda</button><button class="mini" onclick="agTirar('${pubClip.agenda.id}')">Tirar da agenda</button></div></div>`;
+  } else if(!ytSt.conectado){
+    h += `<div class="nota">Conecte seu canal para enviar e agendar daqui, sem precisar baixar o vídeo. <button class="mini" onclick="abrirYT()">▶ Conectar YouTube</button></div>`;
+  } else if(y && (y.status === "na fila" || y.status === "enviando")){
+    const p = Math.round((y.progresso||0)*100);
+    h += `<div class="ytres"><span>${y.status === "na fila" ? "Na fila…" : "Enviando… " + p + "%"}</span><div class="barra"><i style="width:${p}%"></i></div></div>`;
+  } else if(y && y.status === "enviado" && !ytForcar){
+    const ag = y.publicar_em && new Date(y.publicar_em) > new Date();
+    const vis = {public:"público", unlisted:"não listado", private:"privado"}[y.privacidade_real || y.privacidade] || "";
+    h += `<div class="ytres"><span class="ok">✓ ${ag ? "Agendado para " + dataBR(y.publicar_em) : "Enviado (" + vis + ")"}</span>
+      ${y.aviso ? `<div class="nota">${esc(y.aviso)}</div>` : ""}
+      ${y.thumb_ok ? `<small style="color:var(--muted)">🖼 thumbnail enviada junto</small>` : ""}
+      ${y.thumb_erro ? `<div class="nota">🖼 ${esc(y.thumb_erro)}</div>` : ""}
+      <div class="row"><a href="${esc(y.url)}" target="_blank" rel="noopener">Ver o Short</a> · <a href="${esc(y.studio)}" target="_blank" rel="noopener">Editar no YouTube Studio</a>
+        <span style="flex:1"></span><button class="mini" onclick="ytAtualizar()">↻ Atualizar</button><button class="mini" onclick="ytReenviar()">Enviar de novo</button></div></div>`;
+  } else {
+    h += (y && y.status === "erro" ? `<p class="err">${esc(y.erro)}</p>` : "") + ytFormHTML();
+  }
+  box.innerHTML = h;
+}
+function ytReenviar(){
+  if(!confirm("Enviar este corte de novo? Isso cria outro vídeo no canal.")) return;
+  ytForcar = true; renderYtBox(true);
+}
+async function ytEnviar(){
+  const titulo = ($("#fTitulo") || {}).value || tituloAtual();
+  const descricao = ($("#fTexto") || {}).value || "";
+  if(titulo.length > 100){ alert("O título passou de 100 caracteres."); return; }
+  if(ytVis === "agenda"){
+    try{
+      const it = await api("/api/agenda", {method:"POST", body:JSON.stringify({cid: pubClip.id, titulo, descricao})});
+      pubClip.agenda = {id: it.id, quando: it.quando}; renderYtBox(true); agCarregar();
+    }catch(e){ alert(erroTxt(e)); }
+    return;
+  }
+  const tags = [...(pubClip.sugestoes?.plataformas?.shorts?.hashtags || []), pubClip.canal].filter(Boolean);
+  const body = {titulo, descricao, tags, privacidade: ytVis === "agendar" ? "private" : ytVis, forcar: ytForcar};
+  if(ytVis === "agendar"){
+    const d = new Date(ytQuando);
+    if(isNaN(d) || d < new Date(Date.now() + 10*60*1000)){ alert("Escolha um horário pelo menos 10 minutos no futuro."); return; }
+    body.publicar_em = d.toISOString();
+  }
+  const b = $("#ytGo"); if(b){ b.disabled = true; b.textContent = "Enviando…"; }
+  try{
+    pubClip.youtube = await api(`/api/cortes/${pubClip.id}/youtube`, {method:"POST", body:JSON.stringify(body)});
+    ytForcar = false; renderYtBox(true);
+  }catch(e){ alert(erroTxt(e)); if(b){ b.disabled = false; b.textContent = "⬆ Enviar ao YouTube"; } }
+}
+async function ytAtualizar(){
+  try{ const c = await api(`/api/cortes/${pubClip.id}/youtube/atualizar`, {method:"POST"}); pubClip.youtube = c.youtube; renderYtBox(true); }
+  catch(e){ alert(erroTxt(e)); }
+}
+
+/* ===================== Thumbnails ===================== */
+const thDlg = $("#thDlg");
+const CORES_TH = {amarelo:"#FFE600", branco:"#FFFFFF", vermelho:"#FF2E4D", verde:"#3DFF6E", ciano:"#2EE6FF"};
+const LAYOUTS_TH = {lateral:"Texto ao lado", faixa:"Texto embaixo", topo:"Texto em cima"};
+let thCid = null, thFmt = "h", thEd = null, thKey = "", pubThumbKey = "";
+
+function renderPubThumb(forcar){
+  const el = $("#pubThumb"); if(!el || !pubClip) return;
+  const t = pubClip.thumbs || {}, v = (t.variacoes || [])[t.escolhida || 0];
+  const key = JSON.stringify([t.status, v && v.img]);
+  if(!forcar && key === pubThumbKey) return;
+  pubThumbKey = key;
+  el.innerHTML = t.status === "gerando"
+    ? `<div style="color:var(--muted);font-size:12px;text-align:center;padding:8px"><div class="spinner"></div>Montando a thumbnail…</div>`
+    : v ? `<button class="thvar on" style="width:100%" onclick="abrirTh('${pubClip.id}')"><img src="${esc(v.img)}" alt=""><span>🖼 thumbnail</span></button>
+           <button style="width:100%;margin-top:6px" onclick="abrirTh('${pubClip.id}')">Editar thumbnail</button>`
+      : `<button style="width:100%" onclick="abrirTh('${pubClip.id}')">🖼 Criar thumbnail</button>`;
+}
+
+function abrirTh(cid){
+  thCid = cid; thEd = null; thFmt = "h";
+  renderTh(true); thDlg.showModal();
+  const t = (clipsById[cid] || {}).thumbs || {};
+  if(t.status !== "pronto" && t.status !== "gerando") thGerar();
+}
+async function thGerar(){
+  try{ clipsById[thCid].thumbs = await api(`/api/cortes/${thCid}/thumbs/gerar`, {method:"POST"}); thEd = null; renderTh(true); }
+  catch(e){ alert(erroTxt(e)); }
+}
+function thAtualiza(t){
+  clipsById[thCid].thumbs = t;
+  if(pubClip && pubClip.id === thCid){ pubClip.thumbs = t; renderPubThumb(true); }
+  renderTh(true);
+}
+
+function renderTh(forcar){
+  const c = clipsById[thCid]; if(!c) return;
+  const t = c.thumbs || {};
+  const key = JSON.stringify([t, thFmt]);
+  if(!forcar && key === thKey) return;
+  thKey = key;
+  $("#thFmtH").classList.toggle("on", thFmt === "h"); $("#thFmtV").classList.toggle("on", thFmt === "v");
+  const fonte = $("#thFonte");
+  fonte.className = "fonte" + (t.fonte === "ia" ? " ia" : "");
+  fonte.textContent = t.status === "pronto" ? (t.fonte === "ia" ? "✨ quadros e textos escolhidos pela IA" : "escolha automática") : "";
+  const body = $("#thBody");
+  if(!t.status || t.status === "gerando"){
+    body.innerHTML = `<div style="text-align:center;padding:50px;color:var(--muted)"><div class="spinner"></div>Tirando quadros do corte e montando as thumbnails…</div>`;
+    return;
+  }
+  if(t.status === "erro"){
+    body.innerHTML = `<p class="err">Não deu para montar as thumbnails: ${esc(t.erro)}</p><button class="primary" onclick="thGerar()">↻ Tentar de novo</button>`;
+    return;
+  }
+  const vs = t.variacoes || [], esc_i = t.escolhida || 0, v = vs[esc_i] || vs[0];
+  if(!thEd) thEd = {quadro:v.quadro, texto:v.texto, cor:v.cor, layout:v.layout};
+  const vert = thFmt === "v";
+  const y = c.youtube || {};
+  body.innerHTML = `
+    <div class="sec"><b>Escolha uma</b>
+      <div class="thvars ${vert ? "v" : ""}">${vs.map((x, i) =>
+        `<button class="thvar ${vert ? "v" : ""} ${i === esc_i ? "on" : ""}" data-thv="${i}"><img src="${esc(vert ? x.img_v : x.img)}" alt="" loading="lazy">
+          <span>${i === esc_i ? "✓ escolhida" : x.personalizada ? "personalizada" : "opção " + (i + 1)}</span></button>`).join("")}</div>
+      ${t.aviso ? `<div class="nota" style="margin-top:8px">${esc(t.aviso)}</div>` : ""}</div>
+    <div class="sec"><b>Personalizar</b>
+      <div class="thquadros">${(t.quadros || []).map(q =>
+        `<button class="${q.arq === thEd.quadro ? "on" : ""}" data-thq="${esc(q.arq)}" title="segundo ${q.t}"><img src="${esc(q.img)}" alt="" loading="lazy"></button>`).join("")}</div>
+      <div class="thedit">
+        <input type="text" id="thTexto" value="${esc(thEd.texto)}" maxlength="40" oninput="thEd.texto=this.value" placeholder="TEXTO DA THUMBNAIL">
+        <div class="thcores">${Object.entries(CORES_TH).map(([k, hex]) =>
+          `<button style="background:${hex}" class="${k === thEd.cor ? "on" : ""}" data-thc="${k}" title="${k}"></button>`).join("")}</div>
+        <select onchange="thEd.layout=this.value">${Object.entries(LAYOUTS_TH).map(([k, n]) =>
+          `<option value="${k}" ${k === thEd.layout ? "selected" : ""}>${n}</option>`).join("")}</select>
+        <button class="primary" id="thMontar" onclick="thAplicar()">Montar</button>
+      </div>
+      <div class="row"><small>Sugestões: ${(t.textos || []).map(x => `<button class="mini" data-tht="${esc(x)}">${esc(x)}</button>`).join("")}</small></div>
+    </div>
+    <div class="sec bigacts">
+      <a href="${esc(v.img)}" download="thumb-${slug(c.titulo) || c.id}.jpg">⬇ Baixar 16:9</a>
+      <a href="${esc(v.img_v)}" download="capa-${slug(c.titulo) || c.id}.jpg">⬇ Baixar capa 9:16</a>
+      ${y.id ? `<button class="go" style="background:var(--youtube)" id="thYt" onclick="thYoutube()">▶ Pôr no vídeo do YouTube</button>` : ""}
+      <button onclick="thGerar()">↻ Gerar de novo</button>
+    </div>
+    ${y.thumb_ok ? `<p style="color:var(--ok);font-size:13px">✓ A thumbnail já está no vídeo do YouTube.</p>` : ""}
+    ${y.thumb_erro ? `<p class="err">${esc(y.thumb_erro)}</p>` : ""}
+    <div class="nota">A 16:9 é a thumbnail do YouTube: ${ytSt.thumb_automatica ? "ela vai junto quando o corte é enviado." : "o envio automático está desligado em ▶ YouTube."}
+      No Shorts ela aparece no seu canal e na busca; no feed de Shorts o YouTube mostra o próprio vídeo.
+      A capa 9:16 é para subir no TikTok, Reels e Kwai.</div>`;
+}
+thDlg.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-thv],[data-thq],[data-thc],[data-tht]"); if(!b) return;
+  if(b.dataset.thv !== undefined){
+    try{ thAtualiza(await api(`/api/cortes/${thCid}/thumbs/escolher`, {method:"POST", body:JSON.stringify({indice:Number(b.dataset.thv)})})); }
+    catch(e){ alert(erroTxt(e)); }
+    return;
+  }
+  if(b.dataset.thq) thEd.quadro = b.dataset.thq;
+  if(b.dataset.thc) thEd.cor = b.dataset.thc;
+  if(b.dataset.tht) thEd.texto = b.dataset.tht;
+  renderTh(true);
+});
+async function thAplicar(){
+  const b = $("#thMontar"); b.disabled = true; b.textContent = "Montando…";
+  try{ thAtualiza(await api(`/api/cortes/${thCid}/thumbs/personalizar`, {method:"POST", body:JSON.stringify(thEd)})); }
+  catch(e){ alert(erroTxt(e)); b.disabled = false; b.textContent = "Montar"; }
+}
+async function thYoutube(){
+  const b = $("#thYt"); b.disabled = true; b.textContent = "Enviando…";
+  try{ const c = await api(`/api/cortes/${thCid}/thumbs/youtube`, {method:"POST"}); clipsById[thCid].youtube = c.youtube; renderTh(true); }
+  catch(e){ alert(erroTxt(e)); b.disabled = false; b.textContent = "▶ Pôr no vídeo do YouTube"; }
+}
+
+/* ===================== Roteiros ===================== */
+const rtNovoDlg = $("#rtNovoDlg");
+const RT_TIPO = {short:"Short", compilado:"Compilado", original:"Vídeo original"};
+let rtLista = [], rtCortes = [], rtAtual = null, rtSujo = false, rtSelId = lsGet("roteiro");
+let rtNovoTipo = "compilado", rtSel = new Set(), rtFiltroCanal = "", rtSoEsc = true, rtVis = "public", rtQuando = "";
+
+async function rtCarregar(){
+  try{ const d = await api("/api/roteiros"); rtLista = d.roteiros; rtCortes = d.cortes; }catch(e){ return; }
+  rtRenderLista();
+  if(rtSelId && (!rtAtual || rtAtual.id !== rtSelId) && rtLista.some(r => r.id === rtSelId)) rtAbrir(rtSelId);
+}
+function rtRenderLista(){
+  setHTML("#rtLista", rtLista.length ? rtLista.map(r => `<button class="ritem ${rtAtual && r.id === rtAtual.id ? "on" : ""}" data-rt="${r.id}">
+      <span><span class="rtipo ${r.tipo}">${RT_TIPO[r.tipo]}</span></span>
+      <b>${esc(r.titulo || r.tema || "Escrevendo…")}</b>
+      <small>${new Date(r.criado).toLocaleDateString("pt-BR")} · ${r.status === "gerando" ? "✨ escrevendo…" : r.status === "erro" ? "⚠ erro" : r.n_secoes + " partes"}${r.montado ? " · 🎬 montado" : ""}${r.no_youtube ? " · ▶ no YouTube" : ""}</small>
+    </button>`).join("") : `<div class="empty">Nenhum roteiro ainda.</div>`);
+}
+$("#rtLista").addEventListener("click", ev => { const b = ev.target.closest("[data-rt]"); if(b) rtAbrir(b.dataset.rt); });
+
+async function rtAbrir(id){
+  if(rtSujo && rtAtual && rtAtual.id !== id && !confirm("Você tem mudanças não salvas neste roteiro. Sair sem salvar?")) return;
+  try{ rtAtual = await api(`/api/roteiros/${id}`); }catch(e){ alert(erroTxt(e)); return; }
+  rtSelId = id; lsSet("roteiro", id); rtSujo = false; rtVis = "public"; rtQuando = "";
+  rtRenderLista(); rtRender();
+}
+const corteDe = cid => rtCortes.find(c => c.id === cid) || clipsById[cid] || null;
+
+function rtRender(){
+  const r = rtAtual, ed = $("#rtEditor");
+  if(!r){ ed.innerHTML = `<div class="empty">Escolha um roteiro ao lado ou crie um novo.</div>`; return; }
+  const cab = `<div class="rhead"><span class="rtipo ${r.tipo}">${RT_TIPO[r.tipo]}</span>
+      ${r.status === "pronto" ? `<span class="fonte ${r.fonte === "ia" ? "ia" : ""}">${r.fonte === "ia" ? "✨ escrito por IA (" + esc(r.provedor || "IA") + ")" : "modelo para preencher"}</span>` : ""}
+      <span class="sp"></span>
+      ${r.status === "pronto" ? `<button class="primary" id="rtSalvarBtn" onclick="rtSalvar()">Salvar</button>
+        <button onclick="rtCopiar(this)">Copiar texto</button><button onclick="rtBaixar()">⬇ .txt</button>` : ""}
+      <button onclick="rtRegerar()">↻ Gerar de novo</button><button class="ghost" onclick="rtApagar()">Apagar</button></div>`;
+  if(r.status === "gerando"){
+    ed.innerHTML = cab + `<div style="text-align:center;padding:60px;color:var(--muted)"><div class="spinner"></div>A IA está escrevendo o roteiro…</div>`;
+    return;
+  }
+  if(r.status === "erro"){ ed.innerHTML = cab + `<p class="err">Não deu para escrever o roteiro: ${esc(r.erro)}</p>`; return; }
+  const total = (r.secoes || []).reduce((a, s) => a + (Number(s.duracao_s) || 0), 0);
+  const secoes = (r.secoes || []).map((s, i) => {
+    const c = s.cid ? corteDe(s.cid) : null;
+    return `<div class="rsec">
+      <div class="rs1"><b>${i + 1}.</b><input type="text" value="${esc(s.titulo)}" data-rs="${i}" data-k="titulo" placeholder="Nome da parte">
+        <input type="number" min="0" value="${Number(s.duracao_s) || 0}" data-rs="${i}" data-k="duracao_s" title="duração em segundos">
+        <button data-rsm="${i}" data-d="-1" title="Subir">↑</button><button data-rsm="${i}" data-d="1" title="Descer">↓</button>
+        <button data-rsx="${i}" title="Remover">✕</button></div>
+      ${c ? `<div class="rclip">${capa(c.capa)}<span>🎬 <b>${esc(c.titulo || "")}</b><br>${esc(c.canal || "")} · ${Math.round(c.duracao || 0)} s</span></div>` : ""}
+      <textarea data-rs="${i}" data-k="fala" placeholder="${r.tipo === "compilado" ? "Narração de ponte antes do corte (opcional)" : "Fala"}">${esc(s.fala)}</textarea>
+      <input type="text" class="nt" value="${esc(s.na_tela)}" data-rs="${i}" data-k="na_tela" placeholder="Na tela: imagem, texto, efeito…">
+    </div>`;
+  }).join("");
+  ed.innerHTML = cab + `
+    ${r.aviso ? `<div class="nota">${esc(r.aviso)}</div>` : ""}
+    ${r.pedido && r.pedido.tema ? `<p style="color:var(--muted);font-size:13px;margin:8px 0 0">Tema: ${esc(r.pedido.tema)}</p>` : ""}
+    <div class="rf"><label>Título <span id="rtCnt">${(r.titulo || "").length}/100</span></label>
+      <input type="text" id="rtTitulo" value="${esc(r.titulo)}" maxlength="100" data-rk="titulo">
+      <div class="rchips">${(r.titulos || []).map(t => `<button data-rtt="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>
+    <div class="rf"><label>Texto da thumbnail</label><input type="text" value="${esc(r.thumb_texto)}" data-rk="thumb_texto" style="text-transform:uppercase;font-weight:700"></div>
+    <div class="rf"><label>Gancho (primeira fala)</label><textarea data-rk="gancho">${esc(r.gancho)}</textarea></div>
+    <div class="rf"><label>Partes <span>${(r.secoes || []).length} partes · ≈ ${fmtTime(total)}</span></label>${secoes}
+      ${r.tipo !== "compilado" ? `<button onclick="rtAddSecao()">+ Adicionar parte</button>` : ""}</div>
+    <div class="rf"><label>Encerramento</label><textarea data-rk="encerramento">${esc(r.encerramento)}</textarea></div>
+    <div class="rf"><label>Descrição</label><textarea data-rk="descricao">${esc(r.descricao)}</textarea></div>
+    <div class="rf"><label>Tags</label><input type="text" value="${esc((r.tags || []).join(", "))}" data-rk="tags"></div>
+    ${r.tipo === "compilado" ? `<div class="rvideo" id="rtVideo"></div>` : ""}`;
+  rtRenderVideo(true);
+}
+
+let rtVideoKey = "";
+function rtRenderVideo(forcar){
+  const box = $("#rtVideo"), r = rtAtual; if(!box || !r) return;
+  const m = r.montagem || {}, y = r.youtube || {};
+  const key = JSON.stringify([m, y, ytSt.conectado, rtVis]);
+  if(!forcar && key === rtVideoKey) return;
+  rtVideoKey = key;
+  let h = `<h2 style="margin-top:0">🎬 Vídeo do compilado</h2>`;
+  if(m.status === "montando"){
+    const p = Math.round((m.progresso || 0) * 100);
+    h += `<div class="ytres"><span>Montando… ${p}% · ${esc(m.etapa || "")}</span><div class="barra"><i style="width:${p}%"></i></div>
+      <small style="color:var(--muted)">Cada corte é convertido para 16:9 com cartela de capítulo. Pode levar alguns minutos.</small></div>`;
+  } else if(m.status !== "pronto"){
+    h += `${m.status === "erro" ? `<p class="err">A montagem falhou: ${esc(m.erro)}</p>` : ""}
+      <p style="color:var(--muted);font-size:13px;margin-top:0">O app junta os cortes na ordem das partes, em 16:9: cartela de abertura com o título, uma cartela por capítulo, o corte e uma cartela final. Os capítulos entram sozinhos na descrição.</p>
+      <div class="bigacts"><button class="go" style="background:var(--accent)" onclick="rtMontar()">🎬 Montar vídeo</button></div>`;
+  } else {
+    h += `${m.desatualizada ? `<div class="nota" style="margin-bottom:10px">Você mudou o roteiro depois de montar. <button class="mini" onclick="rtMontar()">Montar de novo</button></div>` : ""}
+      <div class="rvgrid"><div><video src="${esc(m.arquivo)}" controls preload="metadata"></video>
+        <div class="row"><small>${fmtTime(m.duracao || 0)} · montado em ${dataBR(m.montado_em)}</small>
+          <a href="${esc(m.arquivo)}" download="${slug(r.titulo) || "compilado"}.mp4"><button class="mini">⬇ Baixar vídeo</button></a>
+          <button class="mini" onclick="rtMontar()">Montar de novo</button></div></div>
+      <div>${m.thumb ? `<img class="rthumb" src="${esc(m.thumb)}" alt="">` : ""}
+        <div class="row"><small>Usa o texto da thumbnail acima.</small><button class="mini" onclick="rtThumb()">↻ Refazer thumbnail</button>
+          ${m.thumb ? `<a href="${esc(m.thumb)}" download="thumb-${slug(r.titulo) || "compilado"}.jpg"><button class="mini">⬇</button></a>` : ""}</div></div></div>
+      <div class="rf"><label>Descrição completa (com capítulos e créditos)</label><textarea id="rtDescFull" style="min-height:150px">${esc(r.descricao_completa || "")}</textarea>
+        <div class="row"><small>É o texto que vai para o YouTube. Pode editar antes de enviar.</small><button class="mini" onclick="copiar('rtDescFull', this)">Copiar</button></div></div>
+      <div class="sec" id="rtYt">${rtYtHTML(r)}</div>`;
+  }
+  box.innerHTML = h;
+}
+function rtYtHTML(r){
+  const y = r.youtube || {};
+  let h = `<b>Enviar ao YouTube</b>`;
+  if(!ytSt.conectado) return h + `<div class="nota">Conecte seu canal para enviar daqui. <button class="mini" onclick="abrirYT()">▶ Conectar YouTube</button></div>`;
+  if(y.status === "enviando"){
+    const p = Math.round((y.progresso || 0) * 100);
+    return h + `<div class="ytres"><span>Enviando… ${p}%</span><div class="barra"><i style="width:${p}%"></i></div></div>`;
+  }
+  if(y.status === "enviado"){
+    const ag = y.publicar_em && new Date(y.publicar_em) > new Date();
+    return h + `<div class="ytres"><span class="ok">✓ ${ag ? "Agendado para " + dataBR(y.publicar_em) : "Enviado"}</span>
+      ${y.aviso ? `<div class="nota">${esc(y.aviso)}</div>` : ""}${y.thumb_ok ? `<small style="color:var(--muted)">🖼 thumbnail enviada junto</small>` : ""}
+      ${y.thumb_erro ? `<div class="nota">🖼 ${esc(y.thumb_erro)}</div>` : ""}
+      <div class="row"><a href="${esc(y.url)}" target="_blank" rel="noopener">Ver o vídeo</a> · <a href="${esc(y.studio)}" target="_blank" rel="noopener">Editar no YouTube Studio</a></div></div>`;
+  }
+  if(!rtQuando) rtQuando = proximoHorario();
+  return h + (y.status === "erro" ? `<p class="err">${esc(y.erro)}</p>` : "") + `<div class="ytform">
+      <select onchange="rtVis=this.value;rtRenderVideo(true)">
+        <option value="public" ${rtVis === "public" ? "selected" : ""}>Público agora</option>
+        <option value="agendar" ${rtVis === "agendar" ? "selected" : ""}>Agendar</option>
+        <option value="unlisted" ${rtVis === "unlisted" ? "selected" : ""}>Não listado</option>
+        <option value="private" ${rtVis === "private" ? "selected" : ""}>Privado</option>
+      </select>
+      ${rtVis === "agendar" ? `<input type="datetime-local" value="${rtQuando}" min="${localISO(new Date())}" onchange="rtQuando=this.value">` : `<span style="color:var(--muted);font-size:12px">Usa o título e a descrição completa acima.</span>`}
+      <button id="rtYtGo" onclick="rtEnviar()">⬆ Enviar ao YouTube</button></div>`;
+}
+
+/* edição */
+const rtEd = $("#rtEditor");
+rtEd.addEventListener("input", ev => {
+  const el = ev.target, r = rtAtual; if(!r) return;
+  if(el.dataset.rk){
+    r[el.dataset.rk] = el.dataset.rk === "tags" ? el.value.split(",").map(x => x.trim()).filter(Boolean) : el.value;
+    if(el.dataset.rk === "titulo") $("#rtCnt").textContent = `${el.value.length}/100`;
+  } else if(el.dataset.rs !== undefined){
+    const s = r.secoes[Number(el.dataset.rs)];
+    s[el.dataset.k] = el.dataset.k === "duracao_s" ? Number(el.value) || 0 : el.value;
+  } else return;
+  rtMarcaSujo(true);
+});
+rtEd.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-rtt],[data-rsm],[data-rsx]"); if(!b || !rtAtual) return;
+  const ss = rtAtual.secoes;
+  if(b.dataset.rtt){ rtAtual.titulo = b.dataset.rtt; }
+  else if(b.dataset.rsm !== undefined){
+    const i = Number(b.dataset.rsm), j = i + Number(b.dataset.d);
+    if(j < 0 || j >= ss.length) return;
+    [ss[i], ss[j]] = [ss[j], ss[i]];
+  } else if(b.dataset.rsx !== undefined){
+    if(!confirm("Remover esta parte do roteiro?")) return;
+    ss.splice(Number(b.dataset.rsx), 1);
+  }
+  rtMarcaSujo(true); rtRender();
+});
+function rtMarcaSujo(v){
+  rtSujo = v;
+  const b = $("#rtSalvarBtn"); if(b) b.textContent = v ? "Salvar •" : "Salvo ✓";
+}
+function rtAddSecao(){ rtAtual.secoes.push({titulo:"", fala:"", na_tela:"", cid:null, duracao_s:0}); rtMarcaSujo(true); rtRender(); }
+async function rtSalvar(){
+  const r = rtAtual, body = {};
+  ["titulo","titulos","thumb_texto","gancho","secoes","encerramento","descricao","tags"].forEach(k => body[k] = r[k]);
+  try{
+    const novo = await api(`/api/roteiros/${r.id}`, {method:"PUT", body:JSON.stringify(body)});
+    rtAtual.montagem = novo.montagem; rtAtual.descricao_completa = novo.descricao_completa;
+    rtMarcaSujo(false); rtRenderVideo(true); rtCarregar();
+    return true;
+  }catch(e){ alert(erroTxt(e)); return false; }
+}
+async function rtRegerar(){
+  if(!confirm("Gerar o roteiro de novo? O texto atual (e o que você editou) será substituído.")) return;
+  try{ rtAtual = await api(`/api/roteiros/${rtAtual.id}/gerar`, {method:"POST"}); rtSujo = false; rtRender(); rtCarregar(); }
+  catch(e){ alert(erroTxt(e)); }
+}
+async function rtApagar(){
+  if(!confirm("Apagar este roteiro? O vídeo montado (se houver) também é apagado deste PC. Isso não mexe no YouTube.")) return;
+  try{ await api(`/api/roteiros/${rtAtual.id}`, {method:"DELETE"}); rtAtual = null; rtSelId = null; lsSet("roteiro", ""); rtSujo = false; rtRender(); rtCarregar(); }
+  catch(e){ alert(erroTxt(e)); }
+}
+function rtTexto(){
+  const r = rtAtual, L = [];
+  L.push(`TÍTULO: ${r.titulo}`);
+  if((r.titulos || []).length > 1) L.push(`Outras opções: ${r.titulos.filter(t => t !== r.titulo).join(" | ")}`);
+  L.push(`TEXTO DA THUMB: ${r.thumb_texto}`, "", "GANCHO", r.gancho, "");
+  (r.secoes || []).forEach((s, i) => {
+    const c = s.cid ? corteDe(s.cid) : null;
+    L.push(`${i + 1}. ${s.titulo}${s.duracao_s ? ` (≈ ${s.duracao_s} s)` : ""}`);
+    if(c) L.push(`[CORTE: ${c.titulo || ""} — ${c.canal || ""}]`);
+    if(s.fala) L.push(`FALA: ${s.fala}`);
+    if(s.na_tela) L.push(`NA TELA: ${s.na_tela}`);
+    L.push("");
+  });
+  L.push("ENCERRAMENTO", r.encerramento, "", "DESCRIÇÃO", r.descricao, "", `TAGS: ${(r.tags || []).join(", ")}`);
+  return L.join("\n");
+}
+async function rtCopiar(btn){
+  try{ await navigator.clipboard.writeText(rtTexto()); const t = btn.textContent; btn.textContent = "✓ Copiado!"; setTimeout(() => btn.textContent = t, 1400); }
+  catch(e){ alert("Não deu para copiar."); }
+}
+function rtBaixar(){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([rtTexto()], {type:"text/plain;charset=utf-8"}));
+  a.download = `roteiro-${slug(rtAtual.titulo) || rtAtual.id}.txt`; a.click(); URL.revokeObjectURL(a.href);
+}
+async function rtMontar(){
+  if(rtSujo && !(await rtSalvar())) return;
+  try{ const r = await api(`/api/roteiros/${rtAtual.id}/montar`, {method:"POST"}); rtAtual.montagem = r.montagem; rtRenderVideo(true); }
+  catch(e){ alert(erroTxt(e)); }
+}
+async function rtThumb(){
+  if(rtSujo && !(await rtSalvar())) return;
+  try{ const r = await api(`/api/roteiros/${rtAtual.id}/thumb`, {method:"POST"}); rtAtual.montagem = r.montagem; rtRenderVideo(true); }
+  catch(e){ alert(erroTxt(e)); }
+}
+async function rtEnviar(){
+  if(rtSujo && !(await rtSalvar())) return;
+  const titulo = rtAtual.titulo || "";
+  if(!titulo.trim() || titulo.length > 100){ alert("O título precisa ter de 1 a 100 caracteres."); return; }
+  const body = {titulo, descricao: ($("#rtDescFull") || {}).value || "", privacidade: rtVis === "agendar" ? "private" : rtVis};
+  if(rtVis === "agendar"){
+    const d = new Date(rtQuando);
+    if(isNaN(d) || d < new Date(Date.now() + 10*60*1000)){ alert("Escolha um horário pelo menos 10 minutos no futuro."); return; }
+    body.publicar_em = d.toISOString();
+  }
+  const b = $("#rtYtGo"); if(b){ b.disabled = true; b.textContent = "Enviando…"; }
+  try{ const r = await api(`/api/roteiros/${rtAtual.id}/youtube`, {method:"POST", body:JSON.stringify(body)}); rtAtual.youtube = r.youtube; rtRenderVideo(true); }
+  catch(e){ alert(erroTxt(e)); if(b){ b.disabled = false; b.textContent = "⬆ Enviar ao YouTube"; } }
+}
+
+/* acompanha a IA, a montagem e o envio */
+setInterval(async () => {
+  const r = rtAtual;
+  if(viewAtual !== "roteiros" || !r) return;
+  const ocupado = r.status === "gerando" || (r.montagem || {}).status === "montando" || (r.youtube || {}).status === "enviando";
+  if(!ocupado) return;
+  let n; try{ n = await api(`/api/roteiros/${r.id}`); }catch(e){ return; }
+  if(!rtAtual || rtAtual.id !== n.id) return;
+  if(r.status === "gerando" && n.status !== "gerando"){ rtAtual = n; rtSujo = false; rtRender(); rtCarregar(); return; }
+  rtAtual.montagem = n.montagem; rtAtual.youtube = n.youtube; rtAtual.descricao_completa = n.descricao_completa;
+  rtRenderVideo();
+  if((n.montagem || {}).status !== "montando" && (n.youtube || {}).status !== "enviando") rtCarregar();
+}, 2000);
+
+/* novo roteiro */
+function rtNovo(){
+  rtSel = new Set(); $("#rtNovoErr").textContent = "";
+  rtNovoDlg.showModal(); rtCarregar().then(rtRenderNovo); rtRenderNovo();
+}
+function rtRenderNovo(){
+  document.querySelectorAll("[data-rtipo]").forEach(b => b.classList.toggle("on", b.dataset.rtipo === rtNovoTipo));
+  const canais = [...new Set(rtCortes.map(c => c.canal).filter(Boolean))].sort();
+  let h;
+  if(rtNovoTipo === "compilado"){
+    const lista = rtCortes.filter(c => (!rtFiltroCanal || c.canal === rtFiltroCanal) && (!rtSoEsc || c.escolhido));
+    h = `<div class="ytform" style="grid-template-columns:1fr auto">
+        <select id="rtFCanal"><option value="">Todos os streamers</option>${canais.map(c => `<option ${c === rtFiltroCanal ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="rtFEsc" ${rtSoEsc ? "checked" : ""}> Só os ⭐ escolhidos</label></div>
+      <div class="row"><small id="rtSelCnt">${rtSel.size} selecionados (de 2 a 20)</small>
+        <button class="mini" onclick="rtSelTodos(true)">Marcar todos</button><button class="mini" onclick="rtSelTodos(false)">Limpar</button></div>
+      <div class="rcortes" id="rtCortesBox">${lista.length ? lista.map(c => `<label class="${rtSel.has(c.id) ? "on" : ""}"><input type="checkbox" value="${c.id}" ${rtSel.has(c.id) ? "checked" : ""}>
+          ${capa(c.capa)}<b>${c.escolhido ? "⭐ " : ""}${esc(c.titulo || "")}</b><small>${esc(c.canal || "")} · ${Math.round(c.duracao || 0)} s</small></label>`).join("")
+        : `<div class="empty" style="grid-column:1/-1">Nenhum corte ${rtSoEsc ? "⭐ escolhido " : ""}pronto${rtFiltroCanal ? " de " + esc(rtFiltroCanal) : ""}.${rtSoEsc ? " Desmarque “Só os ⭐ escolhidos” para ver todos." : ""}</div>`}</div>
+      <div class="field"><label>Ideia do compilado (opcional)</label><input type="text" id="rtTema" placeholder="Ex.: os rages mais engraçados da semana"></div>`;
+  } else {
+    const durs = rtNovoTipo === "short" ? [[30,"30 s"],[45,"45 s"],[60,"60 s"]] : [[3,"3 min"],[5,"5 min"],[8,"8 min"],[12,"12 min"],[15,"15 min"]];
+    h = `<div class="field"><label>Tema</label><textarea id="rtTema" rows="3" placeholder="${rtNovoTipo === "short" ? "Ex.: a reação do alanzoka ao final de Elden Ring" : "Ex.: a história do Gaules: do CS ao maior streamer do Brasil"}"></textarea></div>
+      <div class="ytform"><div class="field" style="margin:0"><label>Streamer / assunto (opcional)</label><input type="text" id="rtCanal" list="rtCanais"><datalist id="rtCanais">${canais.map(c => `<option value="${esc(c)}">`).join("")}</datalist></div>
+        <div class="field" style="margin:0"><label>Duração</label><select id="rtDur">${durs.map(([v, n], i) => `<option value="${v}" ${i === 1 ? "selected" : ""}>${n}</option>`).join("")}</select></div></div>
+      <div class="field"><label>Público e estilo (opcional)</label><input type="text" id="rtEstilo" placeholder="Ex.: engraçado, ritmo rápido, para quem não conhece o streamer"></div>
+      <div class="nota">A IA não assiste vídeos nem pesquisa na internet aqui: ela escreve a partir do tema. Onde precisar de um fato que você deve conferir, ela deixa [entre colchetes].</div>`;
+  }
+  $("#rtNovoCampos").innerHTML = h;
+}
+rtNovoDlg.addEventListener("click", ev => {
+  const t = ev.target.closest("[data-rtipo]");
+  if(t){ rtNovoTipo = t.dataset.rtipo; rtRenderNovo(); }
+});
+rtNovoDlg.addEventListener("change", ev => {
+  const el = ev.target;
+  if(el.id === "rtFCanal"){ rtFiltroCanal = el.value; rtRenderNovo(); }
+  else if(el.id === "rtFEsc"){ rtSoEsc = el.checked; rtRenderNovo(); }
+  else if(el.closest("#rtCortesBox") && el.type === "checkbox"){
+    el.checked ? rtSel.add(el.value) : rtSel.delete(el.value);
+    el.closest("label").classList.toggle("on", el.checked);
+    $("#rtSelCnt").textContent = `${rtSel.size} selecionados (de 2 a 20)`;
+  }
+});
+function rtSelTodos(v){
+  document.querySelectorAll("#rtCortesBox input").forEach(i => { if(v && rtSel.size >= 20) return; v ? rtSel.add(i.value) : rtSel.delete(i.value); });
+  rtRenderNovo();
+}
+async function rtCriar(){
+  const body = {tipo: rtNovoTipo, tema: ($("#rtTema") || {}).value || ""};
+  if(rtNovoTipo === "compilado") body.cortes = [...rtSel];
+  else { body.canal = $("#rtCanal").value; body.duracao = Number($("#rtDur").value); body.estilo = $("#rtEstilo").value; }
+  const b = $("#rtCriarBtn"); b.disabled = true;
+  try{
+    const r = await api("/api/roteiros", {method:"POST", body:JSON.stringify(body)});
+    rtNovoDlg.close(); rtSujo = false; rtAtual = r; rtSelId = r.id; lsSet("roteiro", r.id); rtRender(); rtCarregar();
+  }catch(e){ $("#rtNovoErr").textContent = erroTxt(e); }
+  b.disabled = false;
+}
+
+/* ===================== Agenda do YouTube ===================== */
+const DIAS = ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"];
+const agPickDlg = $("#agPickDlg"), agMoverDlg = $("#agMoverDlg");
+let agSt = null, agCfgSujo = false, agMoverId = null, agPickQuando = null, viewAtual = lsGet("view") || "painel";
+
+function mostrarView(v){
+  viewAtual = v; lsSet("view", v);
+  document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === v));
+  ["painel", "agenda", "roteiros", "canal"].forEach(x => $("#v_" + x).hidden = v !== x);
+  if(v === "agenda") agCarregar();
+  if(v === "roteiros") rtCarregar();
+  if(v === "canal") cnCarregar();
+}
+document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => mostrarView(b.dataset.view));
+
+async function agCarregar(){
+  try{ agSt = await api("/api/agenda"); }catch(e){ return; }
+  const futuros = agSt.itens.filter(i => i.status !== "publicado").length + agSt.manuais.length;
+  $("#agCount").textContent = futuros ? ` ${futuros}` : "";
+  if(viewAtual !== "agenda") return;
+  if(!agCfgSujo) agRenderCfg(agSt.config);
+  agRender(agSt);
+}
+
+function agRenderCfg(c){
+  const op = (vals, sel, suf) => vals.map(v => `<option value="${v}" ${v == sel ? "selected" : ""}>${v}${suf}</option>`).join("");
+  setHTML("#agCfg", `<div class="agcfg">
+    <div class="agf"><label>Horários de postagem</label><input type="text" id="agHor" value="${esc(c.horarios.join(", "))}" oninput="agCfgSujo=true">
+      <small>Separados por vírgula, no horário deste PC.</small></div>
+    <div class="agf"><label>Dias da semana</label><div class="agdias">${DIAS.map((d, i) =>
+      `<button type="button" class="${c.dias.includes(i) ? "on" : ""}" data-dia="${i}" onclick="this.classList.toggle('on');agCfgSujo=true">${d}</button>`).join("")}</div></div>
+    <div class="agf"><label><input type="checkbox" id="agAuto" ${c.auto ? "checked" : ""} onchange="agCfgSujo=true"> Preencher sozinho</label>
+      <small>com os ⭐ escolhidos, até <select id="agDiasAuto" onchange="agCfgSujo=true">${op([1,2,3,5,7], c.dias_auto, "")}</select> dias à frente</small></div>
+    <div class="agf"><label>Subir ao YouTube</label><select id="agAntes" onchange="agCfgSujo=true">${op([1,2,3,6,12,24], c.enviar_antes_horas, " h antes")}</select>
+      <small>Até subir, dá para trocar o vídeo, o título e o horário.</small></div>
+    <button class="primary" onclick="agSalvarCfg()">Salvar</button>
+  </div>`);
+}
+async function agSalvarCfg(){
+  const body = {
+    horarios: $("#agHor").value.split(/[,;\s]+/).filter(Boolean),
+    dias: [...document.querySelectorAll("[data-dia].on")].map(b => Number(b.dataset.dia)),
+    auto: $("#agAuto").checked, dias_auto: Number($("#agDiasAuto").value), enviar_antes_horas: Number($("#agAntes").value),
+  };
+  try{
+    await api("/api/agenda/config", {method:"POST", body:JSON.stringify(body)});
+    agCfgSujo = false; _html["#agCfg"] = null; agCarregar();
+  }catch(e){ alert(erroTxt(e)); }
+}
+
+const hora = iso => new Date(iso).toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+const capa = src => src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<div class="noimg"></div>`;
+const agLinha = (t, inner, cls = "") => `<div class="agrow ${cls}"><div class="aghora">${hora(t)}</div>${inner}</div>`;
+const AG_ST = {
+  planejado: i => {
+    const sobe = new Date(i.quando) - agSt.config.enviar_antes_horas * 3600e3;
+    return `📝 planejado · ${sobe <= Date.now() ? "sobe ao YouTube em instantes" : "sobe ao YouTube " + dataBR(new Date(sobe).toISOString())}${i.remarcado ? " · remarcado (o horário anterior passou)" : ""}`;
+  },
+  aguardando_cota: i => `⏸ esperando a cota do YouTube voltar${agSt.pausa_ate ? " (" + dataBR(agSt.pausa_ate) + ")" : ""}`,
+  enviando: i => `⬆ subindo ao YouTube ${Math.round((i.progresso || 0) * 100)}%`,
+  agendado: i => `✅ agendado no YouTube · <a href="${esc(i.studio)}" target="_blank" rel="noopener">ver no Studio</a>`,
+  travado: i => `⚠ subiu, mas ficou privado (falta a auditoria) · <a href="${esc(i.studio)}" target="_blank" rel="noopener">publicar pelo Studio</a>`,
+  publicado: i => `▶ publicado em ${dataBR(i.quando)} · <a href="${esc(i.url)}" target="_blank" rel="noopener">ver o Short</a>`,
+  erro: i => `⚠ ${esc(i.erro || "erro")}`,
+};
+function agItemHTML(i){
+  const acts = [];
+  if(["planejado","erro","aguardando_cota"].includes(i.status)) acts.push(`<button data-ag="titulo" data-id="${i.id}" title="Mudar título">✎ Título</button>`);
+  if(i.status === "erro") acts.push(`<button data-ag="retry" data-id="${i.id}">↻ Tentar de novo</button>`);
+  if(["planejado","erro","aguardando_cota","agendado"].includes(i.status)) acts.push(`<button data-ag="mover" data-id="${i.id}" data-q="${i.quando}">🕑 Horário</button>`);
+  if(!["enviando","publicado"].includes(i.status)) acts.push(`<button data-ag="remover" data-id="${i.id}" data-st="${i.status}" title="Tirar da agenda">✕</button>`);
+  return agLinha(i.quando, `${capa(i.capa)}<div class="agtxt"><b>${esc(i.titulo)}</b>
+    <small>${esc(i.canal || "")}${i.origem === "auto" ? " · ⭐ colocado automaticamente" : ""}</small>
+    <small class="st-${i.status}">${AG_ST[i.status] ? AG_ST[i.status](i) : esc(i.status)}</small></div><div class="agacts">${acts.join("")}</div>`);
+}
+const agManualHTML = m => agLinha(m.quando, `${capa(m.capa)}<div class="agtxt"><b>${esc(m.titulo)}</b><small>${esc(m.canal || "")} · agendado pelo Publicar</small>
+  <small class="st-agendado">✅ agendado no YouTube · <a href="${esc(m.studio)}" target="_blank" rel="noopener">ver no Studio</a></small></div>`);
+const agLivreHTML = q => agLinha(q, `<div class="agtxt">Horário livre</div><div class="agacts"><button data-ag="escolher" data-q="${q}">+ Escolher corte</button></div>`, "livre");
+
+function agRender(s){
+  let aviso = "";
+  if(!s.conectado) aviso = `<div class="nota" style="margin-top:14px">O YouTube não está conectado: a agenda monta a fila, mas nada sobe até você conectar. <button class="mini" onclick="abrirYT()">▶ Conectar YouTube</button></div>`;
+  else if(s.pausa_ate) aviso = `<div class="nota" style="margin-top:14px">⏸ A cota diária da API do YouTube acabou. Os envios voltam sozinhos em ${dataBR(s.pausa_ate)}.</div>`;
+  const sug = (s.sugestao && s.sugestao.horarios) || [];
+  if(sug.length && sug.join(",") !== s.config.horarios.join(","))
+    aviso += `<div class="nota" style="margin-top:14px">📈 No seu canal, os vídeos postados às ${sug.join(", ")} tiveram mais views (aba 📊 Canal).
+      <button class="mini" onclick='cnUsarHorarios(${JSON.stringify(sug)})'>Usar estes horários</button></div>`;
+  setHTML("#agAviso", aviso);
+
+  const linhas = [
+    ...s.itens.filter(i => i.status !== "publicado").map(i => ({t:i.quando, h:agItemHTML(i)})),
+    ...s.manuais.map(m => ({t:m.quando, h:agManualHTML(m)})),
+    ...s.livres.map(q => ({t:q, h:agLivreHTML(q)})),
+  ].sort((a, b) => new Date(a.t) - new Date(b.t));
+  const dias = {};
+  linhas.forEach(l => { const k = new Date(l.t).toDateString(); (dias[k] = dias[k] || []).push(l); });
+  const hoje = new Date().toDateString(), amanha = new Date(Date.now() + 864e5).toDateString();
+  const html = Object.entries(dias).map(([k, ls]) => {
+    const d = new Date(k);
+    const nome = k === hoje ? "Hoje" : k === amanha ? "Amanhã" : d.toLocaleDateString("pt-BR", {weekday:"long"});
+    return `<div class="agdia"><b>${nome} · ${d.toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"})}</b>${ls.map(l => l.h).join("")}</div>`;
+  }).join("");
+  setHTML("#agLista", html || `<div class="empty">Nenhum horário nos próximos 7 dias. Configure os horários e os dias acima.</div>`);
+  const pubs = s.itens.filter(i => i.status === "publicado").reverse().slice(0, 10);
+  setHTML("#agPub", pubs.length ? pubs.map(agItemHTML).join("") : `<div class="empty">Nada publicado pela agenda ainda.</div>`);
+}
+
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-ag]"); if(!b) return;
+  const id = b.dataset.id, acao = b.dataset.ag;
+  try{
+    if(acao === "escolher") return agEscolher(b.dataset.q);
+    if(acao === "mover"){
+      agMoverId = id; $("#agMoverQ").value = localISO(new Date(b.dataset.q)); $("#agMoverErr").textContent = "";
+      agMoverDlg.showModal(); return;
+    }
+    if(acao === "retry") await api(`/api/agenda/${id}/mover`, {method:"POST", body:"{}"});
+    if(acao === "titulo"){
+      const it = agSt.itens.find(i => i.id === id);
+      const t = prompt("Título do vídeo (até 100 caracteres):", it ? it.titulo : ""); if(t === null) return;
+      await api(`/api/agenda/${id}/editar`, {method:"POST", body:JSON.stringify({titulo:t})});
+    }
+    if(acao === "remover"){
+      const msg = b.dataset.st === "agendado"
+        ? "Tirar da agenda? O vídeo já está no YouTube: ele continua no canal, mas como privado e sem data para publicar."
+        : "Tirar este corte da agenda?";
+      if(!confirm(msg)) return;
+      b.disabled = true;
+      await api(`/api/agenda/${id}`, {method:"DELETE"});
+    }
+    agCarregar();
+  }catch(e){ b.disabled = false; alert(erroTxt(e)); }
+});
+async function agMoverOk(proximo){
+  const body = {};
+  if(!proximo){
+    const d = new Date($("#agMoverQ").value);
+    if(isNaN(d)){ $("#agMoverErr").textContent = "Escolha a data e a hora."; return; }
+    body.quando = d.toISOString();
+  }
+  try{ await api(`/api/agenda/${agMoverId}/mover`, {method:"POST", body:JSON.stringify(body)}); agMoverDlg.close(); agCarregar(); }
+  catch(e){ $("#agMoverErr").textContent = erroTxt(e); }
+}
+function agEscolher(q){
+  agPickQuando = q;
+  $("#agPickTit").textContent = q ? `Escolher corte para ${dataBR(q)}` : "Adicionar corte no próximo horário livre";
+  const cs = (agSt && agSt.candidatos) || [];
+  $("#agPick").innerHTML = cs.length
+    ? cs.map(c => `<button data-pick="${c.id}">${capa(c.capa)}<b>${c.escolhido ? "⭐ " : ""}${esc(c.titulo)}</b><small>${esc(c.canal || "")} · ${c.duracao}s</small></button>`).join("")
+    : `<div class="empty" style="grid-column:1/-1">Nenhum corte disponível. Aqui aparecem os cortes prontos que ainda não foram para o YouTube.</div>`;
+  agPickDlg.showModal();
+}
+$("#agPick").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-pick]"); if(!b) return;
+  try{
+    await api("/api/agenda", {method:"POST", body:JSON.stringify({cid:b.dataset.pick, quando:agPickQuando})});
+    agPickDlg.close(); agCarregar();
+  }catch(e){ alert(erroTxt(e)); }
+});
+async function agTirar(id){
+  if(!confirm("Tirar este corte da agenda?")) return;
+  try{ await api(`/api/agenda/${id}`, {method:"DELETE"}); pubClip.agenda = null; renderYtBox(true); agCarregar(); }
+  catch(e){ alert(erroTxt(e)); }
+}
+
+/* ---------- Painel do canal ---------- */
+const cnDlg = $("#cnDlg");
+let cnSt = null, cnOrdem = lsGet("cn_ordem") || "recentes", cnTimer = null, cnVid = null;
+const num = n => n == null ? "–" : n >= 1e6 ? (n / 1e6).toFixed(1).replace(".", ",") + " mi"
+  : n >= 1e4 ? Math.round(n / 1e3) + " mil" : n >= 1e3 ? (n / 1e3).toFixed(1).replace(".", ",") + " mil" : String(Math.round(n));
+const dur = s => s == null ? "–" : s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : `${s}s`;
+const pct = p => p == null ? "–" : Math.round(p) + "%";
+function tempoAtras(iso){
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  return m < 1 ? "agora" : m < 60 ? `há ${m} min` : m < 1440 ? `há ${Math.round(m / 60)} h` : `há ${Math.round(m / 1440)} dias`;
+}
+const diaBR = d => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"});
+
+async function cnCarregar(){
+  clearTimeout(cnTimer);
+  try{ cnSt = await api("/api/canal"); }catch(e){ return; }
+  if(viewAtual !== "canal") return;
+  cnRender(cnSt);
+  if(cnSt.atualizando || cnSt.aprendendo) cnTimer = setTimeout(cnCarregar, 2000);
+}
+async function cnAtualizar(){
+  try{ cnSt = await api("/api/canal/atualizar", {method:"POST"}); cnRender(cnSt); cnTimer = setTimeout(cnCarregar, 1500); }
+  catch(e){ alert(erroTxt(e)); }
+}
+async function cnAprender(){
+  try{ cnSt = await api("/api/canal/aprender", {method:"POST"}); cnRender(cnSt); cnTimer = setTimeout(cnCarregar, 1500); }
+  catch(e){ alert(erroTxt(e)); }
+}
+async function cnCfg(k, v, reaprender){
+  try{ await api("/api/config", {method:"POST", body:JSON.stringify({[k]: v})}); }catch(e){ return alert(erroTxt(e)); }
+  if(reaprender) cnAprender(); else cnCarregar();
+}
+async function cnUsarHorarios(h){
+  if(!confirm(`Trocar os horários da agenda para ${h.join(", ")}?`)) return;
+  try{ await api("/api/agenda/config", {method:"POST", body:JSON.stringify({horarios: h})}); _html["#agCfg"] = null; agCarregar(); cnRender(cnSt); alert("Horários da agenda atualizados."); }
+  catch(e){ alert(erroTxt(e)); }
+}
+
+function cnRender(s){
+  ["#cnAviso", "#cnKpis", "#cnGrafico", "#cnApr", "#cnVideos"].forEach(k => { if(!s.canal) setHTML(k, ""); });
+  $("#cnOrdem").parentElement.style.display = s.canal ? "" : "none";
+  if(!s.conectado) return setHTML("#cnTopo", `<div class="empty">Conecte o canal do YouTube para ver os números dele aqui.
+    <button class="mini" onclick="abrirYT()">▶ Conectar YouTube</button></div>`);
+  if(!s.canal) return setHTML("#cnTopo", `<div class="empty">${s.atualizando ? "Buscando os dados do canal…"
+    : `Os dados do canal ainda não foram buscados. <button class="mini" onclick="cnAtualizar()">↻ Buscar agora</button>`}
+    ${s.erro ? `<p class="err">${esc(s.erro)}</p>` : ""}</div>`);
+  const c = s.canal;
+  setHTML("#cnTopo", `<div class="cntopo">${c.foto ? `<img src="${esc(c.foto)}" alt="">` : ""}
+    <div><b>${esc(c.titulo)}</b><small>${c.inscritos_ocultos ? "inscritos ocultos" : num(c.inscritos) + " inscritos"} · ${num(c.views)} views no total · ${c.videos} vídeos públicos</small></div>
+    <span class="sp"></span><small>${s.atualizando ? "atualizando…" : "atualizado " + tempoAtras(s.atualizado)}</small>
+    <button onclick="cnAtualizar()" ${s.atualizando ? "disabled" : ""}>↻ Atualizar</button>
+    <a href="${esc(c.url)}" target="_blank" rel="noopener">Abrir canal ↗</a></div>`);
+  const link = t => esc(t).replace(/((?:console\.cloud\.google\.com|youtube\.com)\/[^\s<]+)/g, '<a href="https://$1" target="_blank" rel="noopener">$1</a>');
+  setHTML("#cnAviso", [s.erro, s.erro_analytics].filter(Boolean).map(t => `<div class="nota" style="margin-top:12px">⚠ ${link(t)}</div>`).join(""));
+
+  const vids = s.videos || [];
+  const p = s.periodo;
+  const k = (rot, val, sub = "") => `<div class="kpi"><small>${rot}</small><b>${val}</b>${sub ? `<i>${sub}</i>` : ""}</div>`;
+  if(p) setHTML("#cnKpis", `<div class="kpis">
+      ${k("Views · 28 dias", num(p.views))}
+      ${k("Horas assistidas", num(p.minutos / 60))}
+      ${k("Inscritos", (p.inscritos_ganhos - p.inscritos_perdidos >= 0 ? "+" : "") + num(p.inscritos_ganhos - p.inscritos_perdidos), `+${p.inscritos_ganhos} / −${p.inscritos_perdidos}`)}
+      ${k("Retenção média", pct(p.retencao), p.media_s != null ? `${dur(p.media_s)} por view` : "")}
+      ${k("Likes", num(p.likes), `${num(p.comentarios)} comentários · ${num(p.compartilhamentos)} compart.`)}
+    </div>`);
+  else {
+    const soma = f => vids.reduce((t, v) => t + (v[f] || 0), 0);
+    setHTML("#cnKpis", `<div class="kpis">
+      ${k("Views dos vídeos", num(soma("views")), `somando os ${vids.length} vídeos`)}
+      ${k("Likes", num(soma("likes")))}${k("Comentários", num(soma("comentarios")))}
+      ${k("Retenção", "–", "precisa da Analytics API")}</div>`);
+  }
+  setHTML("#cnGrafico", s.por_dia && s.por_dia.length ? `<div class="cnbox"><h3>Views por dia</h3>
+    <div class="sub">Últimos ${s.por_dia.length} dias. O YouTube Analytics leva 2 a 3 dias para fechar os números, então os últimos dias aparecem baixos.</div>
+    <div class="grafico" id="cnG"></div>
+    <details><summary>Ver em tabela</summary><table><tr><th>Dia</th><th>Views</th><th>Inscritos</th></tr>
+      ${s.por_dia.map(d => `<tr><td>${diaBR(d.dia)}</td><td>${d.views}</td><td>${d.inscritos > 0 ? "+" : ""}${d.inscritos}</td></tr>`).join("")}</table></details></div>` : "");
+  if(s.por_dia && s.por_dia.length) cnDesenhar(s.por_dia);
+  cnRenderApr(s);
+  cnRenderVideos(vids);
+}
+
+function cnDesenhar(dias){
+  const box = $("#cnG"); if(!box) return;
+  const W = Math.max(280, box.clientWidth || 600), H = 190, pt = 8, pb = 22, pr = 40;
+  const max = Math.max(...dias.map(d => d.views), 1);
+  const passo = Math.pow(10, Math.floor(Math.log10(max)));
+  const topo = Math.ceil(max / passo) * passo;
+  const y = v => pt + (H - pt - pb) * (1 - v / topo), base = y(0);
+  const slot = (W - pr) / dias.length, bw = Math.max(2, Math.min(24, slot - 2));
+  let g = "";
+  [0, topo / 2, topo].forEach(v => g += `<line x1="0" x2="${W - pr + 4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grade)" stroke-width="1"/>
+    <text x="${W - pr + 8}" y="${y(v) + 4}">${num(v)}</text>`);
+  dias.forEach((d, i) => {
+    const x = i * slot + (slot - bw) / 2, h = base - y(d.views);
+    if(h > 0){
+      const r = Math.min(4, bw / 2, h);  // ponta arredondada, base reta
+      g += `<path d="M${x},${base}V${base - h + r}Q${x},${base - h} ${x + r},${base - h}H${x + bw - r}Q${x + bw},${base - h} ${x + bw},${base - h + r}V${base}Z" fill="var(--serie1)"/>`;
+    }
+    g += `<rect x="${i * slot}" y="${pt}" width="${slot}" height="${H - pt}" fill="transparent" data-i="${i}"/>`;
+  });
+  [0, Math.floor(dias.length / 2), dias.length - 1].forEach(i =>
+    g += `<text x="${i * slot + slot / 2}" y="${H - 6}" text-anchor="middle">${diaBR(dias[i].dia)}</text>`);
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Views por dia nos últimos ${dias.length} dias; máximo de ${max} views">${g}</svg><div class="tip"></div>`;
+  const tip = box.querySelector(".tip");
+  box.querySelectorAll("rect[data-i]").forEach(r => {
+    r.onmouseenter = () => {
+      const d = dias[+r.dataset.i], sem = new Date(d.dia + "T12:00:00").toLocaleDateString("pt-BR", {weekday:"short"});
+      tip.innerHTML = `<b>${d.views.toLocaleString("pt-BR")} views</b>${diaBR(d.dia)} (${sem})${d.inscritos ? ` · ${d.inscritos > 0 ? "+" : ""}${d.inscritos} inscritos` : ""}`;
+      tip.style.left = (+r.dataset.i * slot + slot / 2) + "px"; tip.style.top = y(d.views) + "px"; tip.style.display = "block";
+    };
+    r.onmouseleave = () => tip.style.display = "none";
+  });
+}
+window.addEventListener("resize", () => { if(viewAtual === "canal" && cnSt && cnSt.por_dia && cnSt.por_dia.length) cnDesenhar(cnSt.por_dia); });
+
+function cnRenderApr(s){
+  const a = s.aprendizado, base = s.aprendizado_base === "canal" ? "canal" : "cortes";
+  const ops = `<div class="cnapr-ops">
+    <span style="color:var(--muted)">Aprender com:</span>
+    <div class="seg"><button class="${base === "cortes" ? "on" : ""}" onclick="cnCfg('aprendizado_base','cortes',true)">Vídeos do Cortes Live</button>
+      <button class="${base === "canal" ? "on" : ""}" onclick="cnCfg('aprendizado_base','canal',true)">Todos os vídeos do canal</button></div>
+    <label><input type="checkbox" ${s.aprendizado_ativo ? "checked" : ""} onchange="cnCfg('aprendizado_ativo',this.checked)"> Usar nas instruções da IA</label></div>`;
+  let corpo;
+  if(s.aprendendo) corpo = `<p style="color:var(--muted)">Analisando os vídeos…</p>`;
+  else if(!a) corpo = `<p style="color:var(--muted)">Ainda não analisado.</p>`;
+  else if(a.status === "poucos_dados") corpo = `<p style="color:var(--muted)">Precisa de pelo menos ${a.min} vídeos públicos com 2 dias ou mais
+    ${a.base === "canal" ? "no canal" : "postados pelo Cortes Live"}. Agora ${a.n === 1 ? "há 1" : "são " + a.n}.
+    ${a.base !== "canal" ? "Se este canal só posta cortes, dá para aprender com todos os vídeos dele." : ""}</p>`;
+  else {
+    const regras = a.licoes && a.licoes.length ? a.licoes : a.padroes;
+    const sug = a.sugestao_horarios || [];
+    const agHor = agSt ? agSt.config.horarios.join(",") : "";
+    corpo = `<div class="cnapr"><div>
+        ${a.resumo ? `<p style="margin:0 0 6px">${esc(a.resumo)}</p>` : ""}
+        <h4>O que repetir</h4>${regras && regras.length ? `<ul>${regras.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p style="color:var(--muted);margin:4px 0">Nenhum padrão claro ainda.</p>`}
+        ${a.evitar && a.evitar.length ? `<h4>O que evitar</h4><ul>${a.evitar.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      </div><div>
+        <h4>Mais vistos</h4><ul class="top">${a.top.map(v => `<li>${esc(v.titulo)} <i>· ${num(v.views)} views</i></li>`).join("")}</ul>
+        <h4>Melhores horários para postar</h4>${sug.length ? `<p style="margin:4px 0;font-size:13.5px">${sug.join(", ")}
+          ${sug.join(",") !== agHor ? `<button class="mini" onclick='cnUsarHorarios(${JSON.stringify(sug)})'>Usar na agenda</button>` : `<i style="color:var(--muted);font-style:normal">· já são os da agenda</i>`}</p>`
+          : `<p style="color:var(--muted);margin:4px 0;font-size:13px">Ainda sem sugestão: precisa de pelo menos 4 horários com 2 vídeos ou mais cada, para dar para comparar.</p>`}
+      </div></div>
+      ${a.aviso ? `<p class="err">${esc(a.aviso)}</p>` : ""}`;
+  }
+  const pe = a && a.status === "ok" ? `<div class="cnapr-pe">Com base em ${a.n} vídeos públicos · ${a.fonte === "ia" ? "lições escritas pela IA a partir dos números" : "padrões tirados dos números"} · ${tempoAtras(a.gerado_em)}
+    ${s.aprendizado_ativo ? "· entra nos títulos e na escolha dos cortes" : "· desligado: não entra nas instruções da IA"}
+    <button class="mini" onclick="cnAprender()" ${s.aprendendo ? "disabled" : ""}>↻ Analisar de novo</button></div>` : "";
+  setHTML("#cnApr", `<div class="cnbox"><h3>🧠 Aprendizado</h3>
+    <div class="sub">Compara os vídeos publicados para descobrir o que funciona e ensina a IA a escrever os próximos títulos e escolher os cortes.</div>
+    ${ops}${corpo}${pe}</div>`);
+}
+
+function cnRenderVideos(vids){
+  document.querySelectorAll("#cnOrdem button").forEach(b => b.classList.toggle("on", b.dataset.o === cnOrdem));
+  const ord = [...vids].sort((a, b) => cnOrdem === "views" ? (b.views || 0) - (a.views || 0)
+    : cnOrdem === "retencao" ? (b.retencao ?? -1) - (a.retencao ?? -1) : new Date(b.publicado) - new Date(a.publicado));
+  const VIS = {public: "público", unlisted: "não listado", private: "privado"};
+  setHTML("#cnVideos", ord.length ? ord.map(v => {
+    const o = v.origem;
+    const quando = v.agendado_para ? `⏰ agendado para ${dataBR(v.agendado_para)}` : dataBR(v.publicado);
+    return `<div class="cnvid">${v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
+      <div class="t"><b title="${esc(v.titulo)}">${esc(v.titulo)}</b>
+        <small><span class="vis ${v.privacidade}">${VIS[v.privacidade] || v.privacidade}</span>${o ? `<span class="daqui">${o.tipo === "corte" ? "corte · " + esc(o.streamer || "") : "roteiro"}</span>` : ""}${quando} · ${dur(v.duracao)}</small></div>
+      <div class="cnnums"><span>${num(v.views)}<i>views</i></span><span>${num(v.likes)}<i>likes</i></span><span>${pct(v.retencao)}<i>retenção</i></span></div>
+      <div class="agacts"><button onclick="cnAbrir('${v.id}')">✎ Editar</button><a class="mini" style="text-decoration:none;color:var(--text);border:1px solid var(--line);background:var(--panel2);padding:6px 10px;border-radius:8px;font-size:12.5px" href="${esc(v.url)}" target="_blank" rel="noopener">Ver ↗</a></div>
+    </div>`;
+  }).join("") : `<div class="empty">Nenhum vídeo no canal ainda.</div>`);
+}
+document.querySelectorAll("#cnOrdem button").forEach(b => b.onclick = () => { cnOrdem = b.dataset.o; lsSet("cn_ordem", cnOrdem); if(cnSt) cnRenderVideos(cnSt.videos || []); });
+
+function cnConta(){ $("#cnTitN").textContent = $("#cnTit").value.length + "/100"; }
+async function cnAbrir(vid){
+  let v; try{ v = await api("/api/canal/videos/" + vid); }catch(e){ return alert(erroTxt(e)); }
+  cnVid = v;
+  $("#cnTit").value = v.titulo; $("#cnDesc").value = v.descricao || ""; $("#cnTags").value = (v.tags || []).join(", ");
+  $("#cnVis").value = v.privacidade; cnConta(); $("#cnErr").textContent = "";
+  $("#cnVisNota").textContent = v.agendado_para ? `Agendado para ${dataBR(v.agendado_para)}. Mudar a visibilidade tira o agendamento.` : "";
+  $("#cnSalvarBtn").disabled = false; cnDlg.showModal();
+}
+async function cnSalvar(){
+  const btn = $("#cnSalvarBtn"); btn.disabled = true; $("#cnErr").textContent = "";
+  const body = {titulo: $("#cnTit").value, descricao: $("#cnDesc").value, privacidade: $("#cnVis").value,
+                tags: $("#cnTags").value.split(",").map(t => t.trim()).filter(Boolean)};
+  try{
+    const r = await api("/api/canal/videos/" + cnVid.id, {method:"POST", body:JSON.stringify(body)});
+    cnDlg.close(); cnCarregar();
+    if(r.aviso) alert(r.aviso);
+  }catch(e){ $("#cnErr").textContent = erroTxt(e); btn.disabled = false; }
+}
+
+tick(); setInterval(tick, 1500); ytCarregar();
+mostrarView(viewAtual); agCarregar();
+setInterval(() => { if(viewAtual === "agenda" || Date.now() % 30000 < 3000) agCarregar(); }, 3000);
 </script>
 </body>
 </html>

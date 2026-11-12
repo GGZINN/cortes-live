@@ -111,6 +111,10 @@ class Stream:
         segs = self.recorder.segments_between(start, end)
         if not segs:
             return None
+        livre = config.disco_livre_mb()
+        if livre < config.DISCO_MIN_CORTES_MB:  # cada corte guarda o vídeo bruto até terminar: não deixa o disco encher
+            print(f"[{self.name}] corte pulado: só {livre} MB livres no disco", flush=True)
+            return None
         with self._lock:
             cid = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:4]
             self.clip_count += 1
@@ -131,6 +135,7 @@ class Stream:
             "criado": datetime.datetime.now().isoformat(timespec="seconds"),
             "duracao": round(dur, 1), "status": "na fila", "url_live": self.url,
             "motivo": "Corte", "pontuacao": 0, "pico_rel": min(3.0, dur / 2),
+            "bruto_offset": round(offset, 3),  # onde o trecho começa no bruto.ts (para refazer o corte)
         }
         clip.update(meta)
         clipper.add_clip(clip)

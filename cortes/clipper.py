@@ -1,4 +1,5 @@
 """Transforma um trecho da live em corte vertical 9:16 com legenda animada."""
+import gc
 import json
 import os
 import queue
@@ -9,27 +10,46 @@ import threading
 import time
 import traceback
 
-from . import config, curadoria, titulos
+from . import config, curadoria, layout, titulos
 
 FLAGS = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
 INDEX = os.path.join(config.CLIPS_DIR, "cortes.json")
 
+ERRO_GPU = re.compile(r"cublas|cudnn|cuda", re.I)  # falhas da placa de vídeo: o corte pode ser refeito
+
+
+def _bruto(cid):
+    return os.path.join(config.CLIPS_DIR, cid, "bruto.ts")
+
+
+FECHADO = "programa foi fechado durante o processamento"
 _lock = threading.Lock()
 clips = []  # lista de dicts (mais novo primeiro)
+_retomar = []  # cortes interrompidos que ainda têm o vídeo bruto: voltam para a fila ao abrir o programa
+_sem_titulo = []  # interrompidos depois do vídeo pronto (só faltava o título): viram "pronto" e o título é escrito
 if os.path.exists(INDEX):
     try:
         with open(INDEX, encoding="utf-8") as f:
             clips = json.load(f)
-        for c in clips:  # trabalhos interrompidos ao fechar o programa
-            if c["status"] not in ("pronto", "erro"):
-                c["status"], c["erro"] = "erro", "programa foi fechado durante o processamento"
+        for c in clips:
+            interrompido = c["status"] not in ("pronto", "erro") or (c["status"] == "erro" and c.get("erro") == FECHADO)
+            falha_gpu = c["status"] == "erro" and ERRO_GPU.search(str(c.get("erro") or ""))
+            if not (interrompido or falha_gpu):
+                continue
+            if os.path.exists(_bruto(c["id"])):
+                c["status"], c["erro"] = "na fila", None
+                _retomar.append(c["id"])
+            elif interrompido and c.get("arquivo") and os.path.exists(os.path.join(config.CLIPS_DIR, c["id"], "corte.mp4")):
+                c["status"], c["erro"] = "pronto", None
+                _sem_titulo.append(c["id"])
+            elif interrompido:
+                c["status"], c["erro"] = "erro", FECHADO
     except Exception:
         clips = []
 
 
 def _save():
-    with open(INDEX, "w", encoding="utf-8") as f:
-        json.dump(clips, f, indent=1, ensure_ascii=False)
+    config.salvar_json(INDEX, clips, indent=1)
 
 
 if curadoria.preencher_lotes_antigos(clips):  # cortes de antes dos lotes existirem
@@ -83,46 +103,73 @@ def run_ffmpeg(args, cwd=None):
 # ------------------------------------------------------------------ Whisper
 _model = None
 _model_name = None
+_model_dev = None
+_sem_gpu = False  # a placa já falhou uma vez (ex.: faltam as DLLs do CUDA): só processador até fechar o programa
 _model_lock = threading.Lock()
 
 
 def _whisper():
-    global _model, _model_name
+    """Devolve (modelo, "cuda"|"cpu"). Usa a placa de vídeo NVIDIA se der, senão o processador."""
+    global _model, _model_name, _model_dev
     name = config.get("modelo_whisper")
     with _model_lock:
         if _model is None or _model_name != name:
             from faster_whisper import WhisperModel
-            try:
-                import ctranslate2
-                gpu = ctranslate2.get_cuda_device_count() > 0
-            except Exception:
-                gpu = False
+            _model = None
+            gpu = False
+            if not _sem_gpu:
+                try:
+                    import ctranslate2
+                    gpu = ctranslate2.get_cuda_device_count() > 0
+                except Exception:
+                    gpu = False
             if gpu:
                 try:
-                    _model = WhisperModel(name, device="cuda", compute_type="float16")
+                    _model, _model_dev = WhisperModel(name, device="cuda", compute_type="float16"), "cuda"
                 except Exception:
-                    _model = WhisperModel(name, device="cpu", compute_type="int8")
-            else:
-                _model = WhisperModel(name, device="cpu", compute_type="int8")
+                    _model = None
+            if _model is None:
+                _model, _model_dev = WhisperModel(name, device="cpu", compute_type="int8"), "cpu"
             _model_name = name
-        return _model
+        return _model, _model_dev
 
 
-def transcribe(pcm_path):
-    import numpy as np
-    audio = np.fromfile(pcm_path, dtype=np.int16).astype(np.float32) / 32768.0
-    lang = config.get("idioma")
-    segs, _ = _whisper().transcribe(
+def _palavras(modelo, audio, lang):
+    segs, _ = modelo.transcribe(
         audio, language=None if lang == "auto" else lang, word_timestamps=True,
         vad_filter=True, beam_size=1,
     )
     words = []
-    for s in segs:
+    for s in segs:  # a transcrição roda aqui (é um gerador): erro da placa só aparece neste ponto
         for w in s.words or []:
             txt = w.word.strip()
             if txt:
                 words.append({"w": txt, "s": float(w.start), "e": float(w.end)})
     return words
+
+
+def transcribe(pcm_path):
+    global _model, _sem_gpu
+    import numpy as np
+    audio = np.fromfile(pcm_path, dtype=np.int16).astype(np.float32) / 32768.0
+    lang = config.get("idioma")
+    modelo, dev = _whisper()
+    try:
+        return _palavras(modelo, audio, lang)
+    except Exception as e:
+        if dev != "cuda":
+            raise
+        erro = str(e)
+    # A placa é detectada, mas o modelo só usa as bibliotecas do CUDA (cuBLAS/cuDNN) na hora de
+    # transcrever: se elas não estiverem instaladas, a falha só aparece aqui. Passa para o processador.
+    # (fora do except: o traceback segurava o modelo da placa na memória junto com o novo)
+    print(f"[legenda] a placa de vídeo falhou ({erro}); usando o processador daqui em diante", flush=True)
+    del modelo
+    with _model_lock:
+        _sem_gpu, _model = True, None
+    gc.collect()
+    modelo, _ = _whisper()
+    return _palavras(modelo, audio, lang)
 
 
 # ------------------------------------------------------------------ Legenda (ASS)
@@ -237,9 +284,66 @@ def enqueue(clip_id, raw_path, offset, duration):
     jobs.put((clip_id, raw_path, offset, duration))
 
 
+LIVE_CROP = "crop=1080:608:0:656"  # a imagem da live dentro do corte no formato padrão
+
+
+def fonte_16x9(cid):
+    """(vídeo, filtro) para tirar a imagem 16:9 da live de um corte: o live.mp4 dos cortes divididos,
+    ou o recorte do meio do corte.mp4 no formato padrão. O filtro já vem com vírgula no fim (ou vazio)."""
+    d = os.path.join(config.CLIPS_DIR, cid)
+    live = os.path.join(d, "live.mp4")
+    if os.path.exists(live):
+        return live, ""
+    return os.path.join(d, "corte.mp4"), LIVE_CROP + ","
+
+
+def duracao(caminho):
+    """Duração de um vídeo em segundos (0.0 se não der para ler)."""
+    p = subprocess.run([config.ffmpeg(), "-hide_banner", "-i", caminho], capture_output=True, creationflags=FLAGS)
+    m = re.search(rb"Duration: (\d+):(\d+):(\d+(?:\.\d+)?)", p.stderr)
+    return int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3]) if m else 0.0
+
+
+def _offset_estimado(raw, dur):
+    """Cortes antigos não guardavam onde o trecho começa dentro do bruto.ts. O bruto são os pedaços de 4 s
+    da gravação que cobrem o trecho, então a sobra (antes + depois) é o que passa da duração: metade de cada lado."""
+    total = duracao(raw)
+    return max(0.0, (total - dur) / 2) if total else 0.0
+
+
+def _enfileirar(c):
+    enqueue(c["id"], _bruto(c["id"]), c.get("bruto_offset"), float(c["duracao"]))
+
+
+def reprocessar(cid):
+    """Tenta de novo um corte que falhou, a partir do vídeo bruto guardado."""
+    c = get_clip(cid)
+    if not c:
+        raise ValueError("corte não encontrado")
+    if c["status"] != "erro":
+        raise ValueError("só dá para tentar de novo um corte que falhou")
+    if not os.path.exists(_bruto(cid)):
+        raise ValueError("o vídeo bruto deste corte já foi apagado; não dá para refazer")
+    update_clip(cid, status="na fila", erro=None)
+    _enfileirar(c)
+    return get_clip(cid)
+
+
+def _esperar_disco(cid):
+    """Com o disco quase cheio, o corte espera na fila em vez de falhar no meio."""
+    avisou = False
+    while config.disco_livre_mb() < config.DISCO_MIN_PROCESSAR_MB:
+        if not avisou:
+            update_clip(cid, status="esperando espaço no disco")
+            avisou = True
+        time.sleep(30)
+
+
 def _process(cid, raw, offset, dur):
     d = os.path.dirname(raw)
     t0 = time.time()
+    if offset is None:
+        offset = _offset_estimado(raw, dur)
     words = []
     has_subs = False
     if config.get("legenda"):
@@ -252,17 +356,21 @@ def _process(cid, raw, offset, dur):
             has_subs = True
 
     update_clip(cid, status="renderizando")
-    vf = ("[0:a:0]asetpts=PTS-STARTPTS[aud];"
-          "[0:v]setpts=PTS-STARTPTS,split=2[a][b];"
-          "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-          "boxblur=30:2,eq=brightness=-0.10:saturation=1.2[bg];"
-          "[b]scale=1080:-2[fg];"
-          "[bg][fg]overlay=(W-w)/2:(H-h)/2" + (",ass=legenda.ass" if has_subs else "") +
-          ",format=yuv420p[v]")
-    run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", "bruto.ts",
+    clip = get_clip(cid) or {}
+    # formato: gameplay com a câmera do streamer vira tela dividida (a IA acha a câmera num quadro do pico)
+    t_quadro = offset + min(float(clip.get("pico_rel") or dur * 0.5), max(dur - 0.5, 0))
+    lay = layout.decidir(clip, layout.quadro(raw, t_quadro, config.ffmpeg()))
+    selo = bool(config.get("selo_live")) and layout.criar_selo(clip, os.path.join(d, "selo.png"))
+    vf = "[0:a:0]asetpts=PTS-STARTPTS[aud];" + layout.filtro_video(lay["modo"], lay["camera"], selo, has_subs, lay.get("janela"))
+    run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", "bruto.ts", *(["-i", "selo.png"] if selo else []),
                 "-filter_complex", vf, "-map", "[v]", "-map", "[aud]",
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
                 "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "corte.mp4"], cwd=d)
+    if lay["modo"] == "dividido":  # cópia 16:9 só da live, para thumbnails e compilados (o corte não tem mais a live inteira)
+        run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", "bruto.ts", "-vf", "scale=1280:-2,format=yuv420p",
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", "-c:a", "aac", "-b:a", "128k",
+                    "-movflags", "+faststart", "live.mp4"], cwd=d)
+    update_clip(cid, layout=lay)
     run_ffmpeg(["-ss", f"{min(dur / 2, 8):.2f}", "-i", "corte.mp4", "-frames:v", "1",
                 "-vf", "scale=360:-2:out_range=full,format=yuvj420p", "capa.jpg"], cwd=d)
 
@@ -297,6 +405,9 @@ def _worker():
     while True:
         cid, raw, offset, dur = jobs.get()
         try:
+            if not get_clip(cid):
+                continue  # apagado enquanto esperava na fila
+            _esperar_disco(cid)
             _process(cid, raw, offset, dur)
         except Exception as e:  # noqa
             traceback.print_exc()
@@ -308,3 +419,19 @@ def _worker():
 
 
 threading.Thread(target=_worker, daemon=True).start()
+for _cid in reversed(_retomar):  # do mais antigo para o mais novo
+    _c = get_clip(_cid)
+    if _c:
+        _enfileirar(_c)
+
+
+def _titulos_pendentes(ids):
+    for cid in ids:
+        try:
+            regenerate_suggestions(cid)
+        except Exception:  # noqa
+            traceback.print_exc()
+
+
+if _sem_titulo:
+    threading.Thread(target=_titulos_pendentes, args=(list(_sem_titulo),), daemon=True).start()

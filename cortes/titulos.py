@@ -145,7 +145,21 @@ Regras:
 - TikTok: tom mais jovem e direto. Shorts: título que funcione em busca. Reels: tom de conversa, convida a marcar alguém. Kwai: bem popular e direto."""
 
 
+def _aprendizado():
+    """O que já funcionou no canal do YouTube (painel do canal). Import aqui dentro: canal → youtube → clipper → titulos."""
+    try:
+        from . import canal
+        txt = canal.contexto_ia()
+        return f"\n\n{txt}" if txt else ""
+    except Exception:  # noqa
+        return ""
+
+
 def _contexto(clip):
+    return _contexto_corte(clip) + _aprendizado()
+
+
+def _contexto_corte(clip):
     return (
         f"Canal: {clip.get('canal')} ({clip.get('plataforma')})\n"
         f"Título da live: {clip.get('titulo_live') or '-'}\n"

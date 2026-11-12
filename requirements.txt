@@ -8,3 +8,6 @@ websockets
 httpx
 google-genai
 anthropic
+google-api-python-client
+google-auth-oauthlib
+Pillow

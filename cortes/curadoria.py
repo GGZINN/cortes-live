@@ -30,8 +30,7 @@ if os.path.exists(ARQ):
 
 
 def _salvar():
-    with open(ARQ, "w", encoding="utf-8") as f:
-        json.dump(_lotes, f, indent=1, ensure_ascii=False)
+    config.salvar_json(ARQ, _lotes, indent=1)
 
 
 def canal_key(clip):
@@ -137,12 +136,12 @@ def _por_ia(prontos, k):
     from google import genai
     from google.genai import types
     from .analisador import chave_gemini
-    from .titulos import MODELOS_GEMINI, _schema_sem_refs, gemini_gerar
+    from .titulos import MODELOS_GEMINI, _aprendizado, _schema_sem_refs, gemini_gerar
     if not chave_gemini():
         return None, None
     cliente = genai.Client(api_key=chave_gemini())
     texto = (f"Streamer: {prontos[0].get('canal')}. Escolha exatamente {k} corte(s) deste lote de {len(prontos)}.\n\n"
-             + "\n\n".join(_descricao(c) for c in prontos))
+             + "\n\n".join(_descricao(c) for c in prontos) + _aprendizado())
     cfg = types.GenerateContentConfig(system_instruction=SISTEMA, response_mime_type="application/json",
                                       response_json_schema=_schema_sem_refs(Escolha))
     r = gemini_gerar(cliente, MODELOS_GEMINI, texto, cfg)

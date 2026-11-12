@@ -26,6 +26,12 @@ DEFAULTS = {
     "buffer_minutos": 6,       # quanto da live fica guardado em disco
     "chave_gemini": "",        # opcional e grátis: títulos gerados por IA (Gemini)
     "chave_claude": "",        # opcional: títulos gerados por IA (Claude)
+    "youtube_categoria": "20", # categoria dos vídeos enviados ao YouTube (20 = Jogos)
+    "thumb_automatica": True,  # ao enviar ao YouTube, manda junto a thumbnail escolhida (gera se não tiver)
+    "aprendizado_ativo": True, # o que funcionou no canal entra nas instruções da IA (títulos e escolha dos cortes)
+    "aprendizado_base": "cortes",  # aprender com: "cortes" (só vídeos postados pelo app) ou "canal" (todos os vídeos)
+    "formato_corte": "auto",   # "auto": gameplay com câmera vira tela dividida (câmera em cima, jogo embaixo); "padrao": sempre o de antes
+    "selo_live": True,         # logo da plataforma + link da live, pequeno, no meio do vídeo
 }
 
 SECRET_KEYS = {"chave_gemini", "chave_claude"}
@@ -33,6 +39,37 @@ SECRET_KEYS = {"chave_gemini", "chave_claude"}
 
 def _mask(v):
     return ("••••••" + v[-4:]) if v else ""
+
+
+DISCO_MIN_CORTES_MB = 1024   # abaixo disso não cria cortes novos (cada um guarda ~20-40 MB de vídeo bruto)
+DISCO_MIN_GRAVAR_MB = 512    # abaixo disso a gravação da live espera (o buffer ocupa ~300 MB)
+DISCO_MIN_PROCESSAR_MB = 200 # abaixo disso a fila de cortes espera em vez de falhar
+
+
+def disco_livre_mb():
+    try:
+        return shutil.disk_usage(ROOT).free // (1024 * 1024)
+    except OSError:
+        return 10 ** 9
+
+
+def salvar_json(caminho, dados, **kw):
+    """Grava num arquivo temporário e só então troca pelo de verdade: se o disco estiver cheio,
+    o arquivo antigo fica intacto (gravar direto por cima deixava o arquivo zerado). Não levanta erro:
+    os dados continuam na memória e vão para o disco no próximo salvamento."""
+    tmp = caminho + ".tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(dados, f, ensure_ascii=False, **kw)
+        os.replace(tmp, caminho)
+        return True
+    except OSError as e:
+        print(f"[salvar] não deu para gravar {os.path.basename(caminho)}: {e}", flush=True)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        return False
 
 _lock = threading.Lock()
 _settings = dict(DEFAULTS)
@@ -73,8 +110,7 @@ def update(new: dict):
             else:
                 v = str(v).strip()
             _settings[k] = v
-        with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
-            json.dump(_settings, f, indent=2, ensure_ascii=False)
+        salvar_json(SETTINGS_FILE, _settings, indent=2)
     return all_settings()
 
 

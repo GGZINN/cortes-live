@@ -3,7 +3,7 @@ chcp 65001 >nul
 title Cortes Live
 cd /d "%~dp0"
 
-python -c "import fastapi, faster_whisper, yt_dlp, streamlink, google.genai" 2>nul
+python -c "import fastapi, faster_whisper, yt_dlp, streamlink, google.genai, googleapiclient, google_auth_oauthlib, PIL" 2>nul
 if errorlevel 1 (
   echo Instalando dependencias...
   python -m pip install -r requirements.txt

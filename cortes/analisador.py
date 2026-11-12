@@ -29,6 +29,7 @@ class Momento(BaseModel):
     gancho: str          # o que acontece nos primeiros segundos do corte
     por_que: str         # por que segura a pessoa até o fim
     titulo: str          # sugestão de título curto
+    cena: str            # "jogo" (gameplay na tela) | "conversa" (falando com o chat, câmera na tela) | "outro"
 
 
 class Analise(BaseModel):
@@ -57,6 +58,9 @@ momentos que só fazem sentido com o chat ou com contexto anterior.
 Seja MUITO exigente: a maior parte de uma live NÃO vira corte. Nota de 0 a 10 para o potencial de retenção:
 10 = vai viralizar com certeza; 8 = corte muito bom; 7 = bom; 5 = mediano; abaixo de 5 = não vale.
 Se nada no trecho valer a pena, devolva "momentos" vazio. Nunca invente o que não aconteceu.
+"cena" de cada momento (define o formato do vídeo): "jogo" se durante o momento a tela mostra principalmente um jogo
+sendo jogado; "conversa" se o streamer está falando com o chat/a câmera e a câmera ocupa a maior parte da tela (bate-papo,
+reação a algo fora do jogo, IRL); "outro" para o resto (vídeo, navegador, tela de espera).
 Timestamps no formato MM:SS, relativos ao início DESTE vídeo. Textos em português do Brasil."""
 
 
@@ -218,6 +222,7 @@ class Analisador:
             s.criar_corte(ini_abs, fim_abs, {
                 "motivo": f"IA: {m.tipo}", "pontuacao": m.nota, "gancho": m.gancho,
                 "por_que": m.por_que, "titulo_ia": m.titulo, "pico_rel": min(3.0, (fim_abs - ini_abs) / 2),
+                "cena": (m.cena or "").strip().lower() or None,  # jogo → tela dividida; conversa → formato de sempre
             })
 
         melhor = max((m.nota for m in analise.momentos), default=0)

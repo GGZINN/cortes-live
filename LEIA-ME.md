@@ -32,6 +32,28 @@ amarela passou da nota mas já tinha sido cortada, cinza não valia.
 **Sem a chave do Gemini**, ele usa a reserva: corta nos picos de áudio (grito, risada, explosão),
 pegando 25 s antes e 10 s depois.
 
+## Formato do corte: tela dividida no gameplay
+
+A regra é:
+
+- **Jogo** (gameplay com a câmera do streamer num canto): tela dividida, ocupando a tela toda, com a
+  **câmera em cima** (40%) e o **jogo embaixo** (60%). O jogo recebe um pouco de zoom pelo centro (a mira continua
+  no meio) até a janela da câmera sair dele.
+- **Streamer conversando com o chat** (a câmera ocupa a tela): o formato de sempre, com a live inteira no meio e
+  fundo desfocado. Cenas sem câmera separada também ficam assim.
+
+Quem decide a cena é a IA que assiste a live: para cada corte ela diz se é jogo ou conversa. No jogo, outra
+chamada da IA olha um quadro do corte e marca onde está a câmera; essa posição vale para os próximos 15 minutos
+de live do mesmo streamer. Sem a chave do Gemini, todos ficam no formato de sempre. Para desligar a tela dividida:
+⚙ Configurações → **Formato do corte** → *Sempre a live inteira no meio*.
+
+**Selo da live**: um selo pequeno com o logo da plataforma (Kick, Twitch ou YouTube) e o link da live
+(ex.: `kick.com/coringa`) no meio do vídeo: na emenda entre a câmera e o jogo, ou logo acima da live no formato
+de sempre. Dá para esconder em ⚙ Configurações → **Selo da live**.
+
+Os cortes divididos guardam também uma cópia 16:9 só da live (`live.mp4`, ~6 MB), usada nas thumbnails e nos
+compilados, porque o corte vertical não tem mais a live inteira.
+
 ## Abas por streamer e os 2 melhores de cada 10
 
 Os cortes ficam separados em **uma aba por streamer** (ex.: *alanzoka*, *Gaules*). Dentro de cada aba:
@@ -69,6 +91,110 @@ pode usar o texto enviado (transcrição do corte) para melhorar os produtos del
 Se preferir a Claude (paga, centavos por corte), use o campo *Chave da Claude*. Ela só é usada
 quando não há chave do Gemini. As chaves ficam salvas só neste computador, em `dados/settings.json`.
 
+## Postar e agendar direto no YouTube
+
+Conecte seu canal uma vez e envie os cortes sem baixar nada: **Publicar** → aba **YouTube Shorts** →
+**Enviar ao YouTube**. Dá para publicar na hora, deixar não listado/privado ou **agendar**: o próprio
+YouTube publica na hora marcada, mesmo com o PC desligado.
+
+Configurar (uma vez, ~10 min, grátis). O botão **▶ Conectar YouTube** no topo do painel tem os links:
+
+1. Crie um projeto no [Google Cloud](https://console.cloud.google.com/projectcreate).
+2. Ative a **YouTube Data API v3** e a **YouTube Analytics API**.
+3. Em **Google Auth Platform → Branding**, clique em *Começar* (nome do app, seu e-mail, público *Externo*).
+4. Em **Público-alvo**, clique em **Publicar app**. Em modo *Teste*, o login expira a cada 7 dias.
+5. Em **Clientes → Criar cliente**, escolha **App para computador** e baixe o JSON.
+6. No painel: **▶ Conectar YouTube** → envie o JSON → **Conectar canal**. Na tela do Google, se aparecer
+   "O Google não verificou este app", clique em *Avançado → Acessar*. O app é seu.
+
+**Importante:** o Google deixa **privados** os vídeos enviados por projetos novos até eles passarem na
+[auditoria da API do YouTube](https://support.google.com/youtube/contact/yt_api_form) (grátis, leva alguns
+dias). Peça logo depois de configurar. Enquanto isso, o painel avisa e você muda a visibilidade pelo Studio.
+A cota grátis da API limita os envios a poucos por dia (dá para pedir aumento no mesmo formulário da
+auditoria); ela volta à meia-noite do Pacífico (4h–5h em Brasília).
+
+A credencial e o login ficam só neste computador, em `dados/`.
+
+## Agenda do YouTube
+
+Na aba **📅 Agenda do YouTube** você define os **horários de postagem** (ex.: 12:00, 18:00, 21:00) e os
+**dias da semana**. A partir daí:
+
+- **Preencher sozinho**: os cortes ⭐ escolhidos entram sozinhos nos horários livres dos próximos dias,
+  os mais recentes primeiro e sem repetir o mesmo streamer em sequência.
+- Para pôr um corte específico: **+ Escolher corte** num horário livre, ou **Publicar → YouTube Shorts →
+  📅 Próximo horário da agenda** (usa o título e a descrição que estiverem na tela).
+- Cada vídeo **sobe ao YouTube algumas horas antes** do horário (padrão: 3 h), como privado com data de
+  publicação; o YouTube publica sozinho na hora. Até subir, dá para mudar o título, o horário ou tirar da agenda.
+- Depois de subir, ainda dá para mudar o horário; tirar da agenda deixa o vídeo no canal como privado.
+- Se a cota da API acabar, a agenda pausa e volta sozinha quando a cota renova. Se um horário passar
+  sem o vídeo ter subido (PC desligado, por exemplo), ele vai para o próximo horário livre.
+- O painel precisa estar aberto para os vídeos subirem; depois de subirem, o PC pode ficar desligado.
+
+## Thumbnails
+
+Em **Publicar**, na coluna do vídeo, clique em **🖼 Criar thumbnail**. O app tira 8 quadros do corte
+(só a imagem da live, sem a legenda) e monta **3 opções** em dois formatos:
+
+- **16:9 (1280×720)**: a thumbnail do YouTube.
+- **9:16 (1080×1920)**: capa vertical para subir no TikTok, Reels e Kwai.
+
+Com a chave do Gemini, a IA escolhe os quadros com a reação mais forte e escreve os textos (2 a 4 palavras).
+Sem a chave, usa o quadro mais nítido perto do pico e textos tirados do título.
+
+No editor dá para escolher uma das opções ou **personalizar**: trocar o quadro, o texto, a cor e o layout
+(texto ao lado, embaixo ou em cima) e clicar em **Montar**.
+
+Ao enviar ao YouTube (na hora ou pela agenda), a thumbnail escolhida vai junto; se o corte ainda não tiver
+uma, ela é gerada na hora. Dá para desligar isso em **▶ YouTube**. Thumbnail personalizada exige o canal
+**verificado por telefone** (youtube.com/verify). No Shorts, ela aparece no canal e na busca; no feed de
+Shorts o YouTube mostra o próprio vídeo.
+
+## Roteiros
+
+Na aba **📝 Roteiros**, clique em **+ Novo roteiro** e escolha o tipo:
+
+- **📱 Short**: roteiro de 30 a 60 s para gravar. Gancho, blocos curtos com fala e o que aparece na tela, e
+  chamada final.
+- **🎙 Vídeo original**: roteiro completo de um vídeo longo (3 a 15 min) sobre um tema, pronto para ler.
+- **🎬 Compilado**: escolha de 2 a 20 cortes prontos (os ⭐ escolhidos aparecem primeiro). A IA ordena os
+  cortes (começa forte, deixa o melhor para o fim), dá nome aos capítulos e escreve as pontes.
+
+Tudo fica salvo e editável: título (com 5 opções), texto da thumbnail, gancho, partes (mudar a ordem, editar,
+remover), encerramento, descrição e tags. Dá para **copiar** o roteiro ou baixar em **.txt**.
+
+No compilado, **🎬 Montar vídeo** gera o vídeo 16:9 sozinho: cartela de abertura com o título, uma cartela
+por capítulo (#N, contagem regressiva), o corte (só a imagem da live, sem a legenda) e uma cartela final.
+Os **capítulos com os tempos** entram sozinhos na descrição, junto com os créditos dos streamers. O app
+também monta a thumbnail 16:9 e dá para **enviar ao YouTube** (na hora, agendado, não listado ou privado).
+
+A IA escreve a partir do tema; ela não assiste vídeos nem pesquisa na internet. O que você precisar conferir
+ela deixa [entre colchetes]. Sem chave de IA, o app cria um modelo em branco para preencher.
+
+## Painel do canal
+
+A aba **📊 Canal** mostra o canal do YouTube conectado:
+
+- **Números**: inscritos, views, horas assistidas, retenção média e likes dos últimos 28 dias, e um gráfico de
+  views por dia (passe o mouse numa barra para ver o dia). O YouTube Analytics leva 2 a 3 dias para fechar os
+  números, então os últimos dias aparecem baixos.
+- **Vídeos**: todos os vídeos do canal (até 200) com views, likes e retenção, em ordem de recentes, mais vistos
+  ou retenção. Os que saíram do app aparecem marcados (corte do streamer X ou roteiro).
+- **✎ Editar**: muda título, descrição, tags e visibilidade de um vídeo já publicado, direto no YouTube. O resto
+  das configurações do vídeo fica como está. Cada edição gasta 51 das 10.000 unidades da cota diária.
+- **🧠 Aprendizado**: com pelo menos 5 vídeos públicos com 2 dias ou mais, o app compara os vídeos e mostra o que
+  repetir, o que evitar, os mais vistos e os melhores horários para postar (com botão para usar na agenda).
+  Essas lições entram sozinhas nas instruções da IA ao escrever os títulos e ao escolher os 2 melhores de cada 10.
+  - **Aprender com**: por padrão, só os vídeos postados pelo Cortes Live. Se o canal só posta cortes, escolha
+    **Todos os vídeos do canal** para aproveitar o histórico. Num canal com outro tipo de conteúdo, deixe no
+    padrão: senão a IA aprende com vídeos que não têm nada a ver com os cortes.
+  - **Usar nas instruções da IA**: desmarque para ver as lições sem que elas mudem os títulos.
+  - A sugestão de horários só aparece quando dá para comparar: 4 horários ou mais com 2 vídeos ou mais cada.
+
+Os dados são atualizados sozinhos a cada 6 horas (ou no botão **↻ Atualizar**, que gasta umas 10 unidades da
+cota). Retenção, horas assistidas e o gráfico precisam da **YouTube Analytics API** ativada no projeto do Google
+Cloud (passo 2 da configuração do YouTube). Sem ela, o painel mostra o resto e avisa.
+
 ## Situação por plataforma
 
 Twitch, YouTube e Kick funcionam igual: a IA assiste o vídeo, então não depende do chat de
@@ -79,4 +205,10 @@ nenhuma plataforma. Na Twitch, os intervalos comerciais são pulados na gravaç�
 - **Sensibilidade**: comece em 5. Muitos cortes ruins? Baixe. Poucos cortes? Suba.
 - **Legenda**: o modelo `small` é um bom equilíbrio. Sem placa de vídeo NVIDIA, `base` é mais rápido.
   Na primeira vez ele baixa o modelo (~500 MB para o `small`).
+- **Placa de vídeo**: a legenda só usa a placa NVIDIA se as bibliotecas do CUDA 12 (cuBLAS e cuDNN)
+  estiverem instaladas. Se não estiverem, ela passa sozinha para o processador (mais lento, mas funciona).
+- **Espaço em disco**: cada corte guarda o vídeo bruto (~20–40 MB) até ficar pronto, e o corte pronto ocupa
+  ~20 MB. Com menos de **1 GB** livre, o app para de criar cortes novos; com menos de 512 MB, a gravação
+  espera; com menos de 200 MB, a fila de processamento espera. Tudo volta sozinho quando liberar espaço.
+  Se um corte falhar, use **↻ Tentar de novo** no card.
 - O buffer guarda só os últimos 6 minutos de cada live em `dados/buffer`, então o disco não enche.

@@ -144,6 +144,12 @@ class Recorder:
     # ---------- loop principal ----------
     def _loop(self):
         while not self._stop.is_set():
+            livre = config.disco_livre_mb()
+            if livre < config.DISCO_MIN_GRAVAR_MB:
+                self.status = "disco cheio"
+                self.status_detail = f"Só {livre} MB livres no disco. A gravação volta sozinha quando liberar espaço."
+                self._stop.wait(60)
+                continue
             self.status = "conectando"
             try:
                 info = resolve(self.url)
@@ -157,7 +163,12 @@ class Recorder:
                 continue
             if self.on_info:
                 self.on_info(info)
-            self._record(info)
+            try:
+                self._record(info)
+            except Exception as e:  # noqa  (ex.: disco cheio) — antes isso matava a gravação de vez
+                self.status, self.status_detail = "erro", str(e)[:200]
+                self._stop.wait(30)
+                continue
             if not self._stop.is_set():
                 self.status = "reconectando"
                 self._stop.wait(5)
