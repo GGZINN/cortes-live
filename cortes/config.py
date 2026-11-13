@@ -26,6 +26,8 @@ DEFAULTS = {
     "buffer_minutos": 6,       # quanto da live fica guardado em disco
     "chave_gemini": "",        # opcional e grátis: títulos gerados por IA (Gemini)
     "chave_claude": "",        # opcional: títulos gerados por IA (Claude)
+    "chave_openai": "",        # opcional (paga): reserva para quando o limite do Gemini acabar
+    "modelo_openai": "gpt-4o-mini",  # modelo da OpenAI usado na reserva
     "youtube_categoria": "20", # categoria dos vídeos enviados ao YouTube (20 = Jogos)
     "thumb_automatica": True,  # ao enviar ao YouTube, manda junto a thumbnail escolhida (gera se não tiver)
     "aprendizado_ativo": True, # o que funcionou no canal entra nas instruções da IA (títulos e escolha dos cortes)
@@ -34,9 +36,10 @@ DEFAULTS = {
     "selo_live": True,         # logo da plataforma + link da live, pequeno, no meio do vídeo
     "cortar_pausas": True,     # pausa entre frases acima de 0,3 s vira 0,2 s (fora do gameplay)
     "zoom_cortes": True,       # jump cuts: a imagem do streamer alterna 100% / 110% a cada ~2,8 s
+    "pesquisar_assuntos": True, # a IA pesquisa no Google os assuntos falados na live antes de dar nota aos cortes
 }
 
-SECRET_KEYS = {"chave_gemini", "chave_claude"}
+SECRET_KEYS = {"chave_gemini", "chave_claude", "chave_openai"}
 
 
 def _mask(v):

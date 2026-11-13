@@ -37,6 +37,34 @@ Cortes da mesma live não repetem o mesmo texto de gancho. A **sensibilidade** d
 (5–6 → nota 7+). No card da live, cada barra é um trecho analisado: **verde virou corte**,
 amarela passou da nota mas já tinha sido cortada, cinza não valia.
 
+**Tipos de momento.** A IA repara no que o streamer fala, em como ele age e em como ele joga, e cada tipo tem o seu
+jeito de cortar: notícia ou assunto em alta, opinião forte, conversa engraçada, história, reação, jogada ou fail,
+dica ou detalhe do jogo. Na notícia, por exemplo, o corte começa na frase que anuncia o assunto e termina no
+veredito do streamer.
+
+**Base de conhecimento.** Antes de dar nota, a IA recebe o que se sabe sobre os assuntos da live:
+- **Pesquisa:** a cada análise ela anota até 3 assuntos falados (uma notícia, um jogo, uma pessoa, uma polêmica).
+  O programa pesquisa cada um em segundo plano no Google Notícias (manchetes dos últimos 7 dias) e na Wikipédia,
+  o Gemini resume e o resumo vale por 12 horas. A análise seguinte da mesma live já usa.
+- **Notas fixas:** arquivos `.md` em `cortes/base/` (vêm com o programa; hoje, `gta6.md`) e em `dados/base/`
+  (as suas). A primeira linha diz quando a nota vale, por exemplo `chaves: gta 6, vice city`. Ela entra quando
+  uma das chaves aparece no título da live, no jogo ou nos assuntos falados.
+- Um momento sobre um assunto em alta ganha 1 ponto na nota. A base só ajuda a IA a entender o assunto: o corte
+  continua mostrando só o que foi dito e mostrado na live.
+- Para desligar a pesquisa: ⚙ Configurações → **Pesquisar os assuntos da live**. O que está na base aparece em
+  `http://localhost:8765/api/conhecimento`.
+
+**GTA 6.** A nota `gta6.md` ensina o que vira corte em live de GTA 6 (primeira reação, comparação com o GTA 5,
+detalhe escondido, caos e bug, dica, opinião, missão) e o cuidado com spoiler: o texto de gancho nunca entrega o
+desfecho da história.
+
+**Reserva com a OpenAI.** O plano grátis do Gemini tem limite diário. Com uma chave da OpenAI em ⚙ Configurações →
+**Chave da OpenAI**, quando o limite do Gemini acaba o mesmo pedido vai para a OpenAI (escolha dos cortes, títulos,
+tela dividida, curadoria, thumbnails, roteiros e pesquisa de assuntos), e o programa volta a tentar o Gemini a cada
+30 minutos. A API da OpenAI é paga. Ela não recebe vídeo: o trecho da live vai como um quadro a cada 2 s mais a
+transcrição do áudio, então ela vê e lê, mas não ouve o tom da voz. No card da live, o modelo da análise aparece
+como `openai:...` quando a reserva está em uso.
+
 **Sem a chave do Gemini**, ele usa a reserva: corta nos picos de áudio (grito, risada, explosão),
 pegando 25 s antes e 10 s depois.
 

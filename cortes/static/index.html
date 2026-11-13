@@ -471,6 +471,9 @@
   <div class="field"><label>Selo da live</label>
     <select data-k="selo_live"><option value="true">Mostrar</option><option value="false">Esconder</option></select>
     <small>Logo da plataforma (Kick, Twitch ou YouTube) e o link da live, pequeno, no meio do vídeo.</small></div>
+  <div class="field"><label>Pesquisar os assuntos da live</label>
+    <select data-k="pesquisar_assuntos"><option value="true">Ligado (Google Notícias + Wikipédia)</option><option value="false">Desligado</option></select>
+    <small>A IA anota os assuntos falados na live (uma notícia, um jogo, uma polêmica), pesquisa em segundo plano e usa o resumo para reconhecer o que está em alta antes de dar nota aos cortes. Suas próprias anotações vão em <code>dados/base/</code> (arquivos .md começando com a linha <code>chaves: ...</code>).</small></div>
   <div class="field"><label>Pausas</label>
     <select data-k="cortar_pausas"><option value="true">Cortar (pausa entre frases vira 0,2 s)</option><option value="false">Deixar como na live</option></select>
     <small>Só tira silêncio de verdade: risada, grito e som do jogo ficam. No gameplay as pausas não são cortadas, porque nelas a jogada costuma estar acontecendo.</small></div>
@@ -491,6 +494,12 @@
   <div class="field"><label>Chave da Claude (opcional, paga)</label>
     <input type="password" data-k="chave_claude" placeholder="sk-ant-..." autocomplete="off">
     <small>Só é usada se não houver chave do Gemini. Custa centavos por corte.</small></div>
+  <div class="field"><label>Chave da OpenAI (reserva do Gemini)</label>
+    <input type="password" data-k="chave_openai" placeholder="sk-..." autocomplete="off">
+    <small>Opcional e paga. Quando o limite grátis do Gemini acabar, a escolha dos cortes, os títulos e o resto da IA passam a usar a OpenAI, e voltam ao Gemini sozinhos quando o limite voltar. Crie a chave em platform.openai.com → API keys (precisa ter crédito na conta). <a href="#" onclick="testarOpenAI(this);return false">Testar a chave</a> (salve antes).</small></div>
+  <div class="field"><label>Modelo da OpenAI</label>
+    <input type="text" data-k="modelo_openai" placeholder="gpt-4o-mini" autocomplete="off">
+    <small>Precisa aceitar imagem. Se o modelo não existir na sua conta, o programa tenta outros sozinho.</small></div>
   <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
     <button class="ghost" onclick="cfg.close()">Fechar</button>
     <button class="primary" onclick="salvarConfig()">Salvar</button>
@@ -770,6 +779,13 @@ async function salvarConfig(){
   cfg.querySelectorAll("[data-k]").forEach(el => body[el.dataset.k] = el.value==="true" ? true : el.value==="false" ? false : el.value);
   await api("/api/config",{method:"POST", body:JSON.stringify(body)});
   cfg.close();
+}
+
+async function testarOpenAI(a){
+  const antes = a.textContent; a.textContent = "testando…";
+  try{ const r = await api("/api/openai/testar", {method:"POST"}); alert("A chave da OpenAI funciona. Modelo: " + r.modelo); }
+  catch(e){ alert("Não funcionou: " + erroTxt(e)); }
+  a.textContent = antes;
 }
 
 /* ===================== Publicar ===================== */

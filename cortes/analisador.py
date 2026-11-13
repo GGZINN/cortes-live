@@ -31,7 +31,7 @@ class Momento(BaseModel):
     inicio: str          # "MM:SS" relativo ao vídeo enviado
     fim: str
     nota: int            # 0..10 potencial de retenção/viral
-    tipo: str            # reação, jogada, fail, história, polêmica, inesperado, emocionante, engraçado...
+    tipo: str            # reação, jogada, fail, notícia, assunto em alta, opinião, conversa engraçada, história, dica...
     gancho: str          # o que acontece nos primeiros segundos do corte
     por_que: str         # por que segura a pessoa até o fim
     titulo: str          # sugestão de título curto
@@ -44,6 +44,7 @@ class Momento(BaseModel):
 class Analise(BaseModel):
     resumo: str          # o que está acontecendo nesse trecho da live (1 frase)
     jogo: str            # nome do jogo na tela (ex.: "Mario Party Jamboree"); "" se não for jogo
+    assuntos: List[str]  # até 3 assuntos falados no trecho que vale pesquisar (notícia, pessoa, jogo, polêmica)
     momentos: List[Momento]
 
 
@@ -61,6 +62,25 @@ O que faz um corte reter (use como critério):
    algo inesperado acontecendo na tela, história com final engraçado, opinião polêmica ou frase marcante, momento emocionante,
    interação engraçada com outra pessoa.
 5. DURAÇÃO: entre 12 e 60 segundos (o ideal é 20 a 40). Corte o que for enrolação.
+
+TIPOS DE MOMENTO (repare no que o streamer FALA, em como ele AGE e em como ele JOGA; cada tipo tem o seu jeito de cortar):
+- NOTÍCIA ou ASSUNTO EM ALTA (ele comenta um lançamento, uma polêmica, algo que aconteceu com alguém conhecido, uma
+  novidade de um jogo): o corte tem a informação E a posição dele sobre ela. Começa na frase que anuncia o assunto
+  ("vocês viram que…", "saiu que…", "o fulano falou que…") e termina no veredito ou na reação. Só vale se quem não
+  acompanha o assunto entende do que se trata só com o corte. É "conversa" em "cena".
+- OPINIÃO FORTE: ele discorda, critica, defende ou dá nota para algo, com convicção. Corte do argumento até a conclusão.
+- CONVERSA ENGRAÇADA (com o chat, com outro streamer, com alguém em call): a graça tem começo e punchline. Corte a
+  preparação curta, a punchline e 1 a 2 s da risada. Piada interna que depende de contexto não vale.
+- HISTÓRIA: ele conta um caso com final. Só vale se o final cabe no corte.
+- REAÇÃO: grito, susto, gargalhada, choque, raiva. O corte começa um pouco antes da causa (para dar para ver o que
+  provocou) e fica na reação.
+- JOGADA ou FAIL: clutch, jogada absurda, morte besta, bug, algo inesperado na tela. Precisa dar para VER o que
+  aconteceu; narração dele ou reação logo depois valoriza.
+- DICA ou DETALHE: ele mostra ou explica algo útil ou escondido do jogo, que dá para entender só com o corte.
+RELEVÂNCIA: um momento sobre um assunto que está em alta (veja a BASE DE CONHECIMENTO, quando vier no pedido) vale mais
+do que o mesmo momento sobre um assunto qualquer: some 1 ponto à nota (sem passar de 10) e deixe o assunto claro no
+"texto_gancho" e no "titulo". Um assunto em alta falado sem graça, sem posição e sem desfecho continua não valendo.
+A base serve para você ENTENDER e RECONHECER o assunto; o corte mostra só o que foi dito e mostrado na live.
 
 Evite: tela parada, menu, carregamento, anúncio, tela de "já volto", conversa morna sem desfecho, leitura de doações/subs,
 momentos que só fazem sentido com o chat ou com contexto anterior.
@@ -95,6 +115,9 @@ MONTAGEM (como os canais de cortes que passam de 1 milhão de views editam):
   Não repita a ideia nem a estrutura de frase dos ganchos já usados nesta live (a lista vem no pedido, quando houver).
 - "complemento": linha curta de piada ou contexto entre parênteses, em CAIXA ALTA (ex.: "(ESSE É O VIDEO GAME 2)",
   "(O CHAT AVISOU)"); vazio se não tiver uma boa.
+"assuntos": até 3 assuntos que foram FALADOS neste trecho e que vale pesquisar para entender melhor a live: uma
+notícia, uma pessoa conhecida, um jogo ou lançamento, um evento, uma polêmica. Escreva curto, como se busca no Google
+(ex.: "GTA 6 data de lançamento", "Coringa Free Fire campeonato", "novo patch Valorant"). Lista vazia se só jogaram.
 "jogo": o nome oficial do jogo que aparece na tela (ex.: "Mario Party Jamboree", "Counter-Strike 2", "Minecraft"),
 como as pessoas buscam no YouTube; deixe vazio se não for jogo ou se não der para saber com certeza.
 Timestamps no formato MM:SS, relativos ao início DESTE vídeo. Textos em português do Brasil."""
@@ -219,6 +242,8 @@ class Analisador:
         self.analises = deque(maxlen=40)   # histórico para o painel
         self.cortados = deque(maxlen=200)  # (inicio, fim) já cortados
         self.ganchos = deque(maxlen=12)    # textos de gancho dos últimos cortes desta live (para não repetir)
+        self.assuntos = deque(maxlen=8)    # últimos assuntos falados (escolhem o que entra da base de conhecimento)
+        self.jogo = ""                     # último jogo que a IA viu na tela
         self.proxima = JANELA              # instante da live em que roda a próxima análise
         self._stop = threading.Event()
         self.dir = os.path.join(stream.workdir, "ia")
@@ -287,9 +312,27 @@ class Analisador:
                     f"Este vídeo tem {int(dur)} segundos. Encontre os momentos que viram cortes de alta retenção.")
         if self.ganchos:
             contexto += "\nGanchos já usados nesta live (não repita): " + " | ".join(self.ganchos)
+        try:  # o que se sabe sobre os assuntos da live (notas fixas + pesquisa) e o que já funcionou no canal
+            from . import conhecimento
+            from .titulos import _aprendizado
+            contexto += conhecimento.contexto(s.title, self.jogo, list(self.assuntos)) + _aprendizado()
+        except Exception:  # noqa - sem a base, a análise segue como antes
+            pass
         t0 = time.time()
         analise, modelo = analisar_video(leve, contexto)
         gasto = time.time() - t0
+
+        # o que foi falado neste trecho é pesquisado em segundo plano: a próxima análise já usa o resumo
+        self.jogo = (analise.jogo or "").strip() or self.jogo
+        novos = [a.strip() for a in (analise.assuntos or [])[:3] if a and a.strip()]
+        for a in novos:
+            if a not in self.assuntos:
+                self.assuntos.append(a)
+        try:
+            from . import conhecimento
+            conhecimento.pedir(novos + ([self.jogo] if self.jogo else []))
+        except Exception:  # noqa
+            pass
 
         limiar = limiar_nota()
         aprovados = []
@@ -337,6 +380,6 @@ class Analisador:
         melhor = max((m.nota for m in analise.momentos), default=0)
         self.analises.append({
             "t": round(fim), "nota": melhor, "resumo": analise.resumo, "cortes": len(aprovados),
-            "modelo": modelo, "segundos": round(gasto, 1),
+            "modelo": modelo, "segundos": round(gasto, 1), "assuntos": novos,
         })
         self.status = "assistindo a live"

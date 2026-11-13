@@ -82,6 +82,25 @@ def force_clip(sid: str):
     return {"ok": True}
 
 
+@app.post("/api/openai/testar")
+def openai_testar():
+    """Confere a chave da OpenAI com um pedido mínimo."""
+    from . import openai_reserva
+    if not openai_reserva.chave():
+        raise HTTPException(400, "Coloque a chave da OpenAI nas configurações e salve antes de testar.")
+    try:
+        return {"ok": True, "modelo": openai_reserva.testar()}
+    except Exception as e:  # noqa
+        raise HTTPException(400, str(e)[:300])
+
+
+@app.get("/api/conhecimento")
+def conhecimento_estado():
+    """Base de conhecimento da IA: notas fixas e assuntos pesquisados nas últimas 12 horas."""
+    from . import conhecimento
+    return conhecimento.estado()
+
+
 @app.get("/api/diagnostico/tarefas")
 def diagnostico_tarefas():
     """Onde cada tarefa em segundo plano está agora (para achar travamentos). Só responde neste PC."""

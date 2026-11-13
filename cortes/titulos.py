@@ -4,6 +4,7 @@ Sem configuração nenhuma, usa modelos prontos montados com a fala do streamer 
 Com uma chave do Gemini (grátis) ou da Claude em Configurações, pede à IA títulos sob medida.
 """
 import os
+import traceback
 import re
 import unicodedata
 from typing import List
@@ -332,8 +333,16 @@ TRANSITORIOS = ("ReadError", "ReadTimeout", "ConnectError", "RemoteProtocolError
 
 def gemini_gerar(cliente, modelos, contents, cfg, tentativas=3):
     """Chama o Gemini com tentativas: falha de rede passageira → tenta de novo;
-    limite grátis/erro do modelo → passa para o próximo modelo da lista."""
+    limite grátis/erro do modelo → passa para o próximo modelo da lista.
+    Limite do Gemini esgotado e chave da OpenAI nas configurações → o mesmo pedido vai para a OpenAI
+    (e as próximas chamadas vão direto para ela por um tempo, sem gastar tentativas no Gemini)."""
     import time
+    from . import openai_reserva
+    if openai_reserva.gemini_em_pausa():
+        try:
+            return openai_reserva.gerar(contents, cfg)
+        except Exception:  # noqa - a OpenAI falhou: tenta o Gemini mesmo assim
+            traceback.print_exc()
     try:  # sem limite de tempo, uma chamada que não volta segura a fila (thumbs, títulos) para sempre
         from google.genai import types
         if getattr(cfg, "http_options", None) is None:
@@ -352,6 +361,10 @@ def gemini_gerar(cliente, modelos, contents, cfg, tentativas=3):
                     time.sleep(2 + 3 * n)
                     continue
                 break  # não é passageiro: tenta o próximo modelo
+    if erro is not None and openai_reserva.e_cota(erro) and openai_reserva.chave():
+        openai_reserva.pausar_gemini(erro)
+        print(f"[ia] limite do Gemini atingido; usando a OpenAI ({type(erro).__name__})", flush=True)
+        return openai_reserva.gerar(contents, cfg)
     raise erro or RuntimeError("resposta vazia do Gemini")
 
 
