@@ -61,7 +61,10 @@ O que faz um corte reter (use como critério):
 4. O QUE MAIS RETÉM: reação forte e genuína (grito, risada, susto, raiva), jogada absurda ou clutch, fail/vergonha,
    algo inesperado acontecendo na tela, história com final engraçado, opinião polêmica ou frase marcante, momento emocionante,
    interação engraçada com outra pessoa.
-5. DURAÇÃO: entre 12 e 60 segundos (o ideal é 20 a 40). Corte o que for enrolação.
+5. DURAÇÃO: entre {MIN} e {MAX} segundos. O corte precisa mostrar a CONVERSA ou a JOGADA COMPLETA: comece onde o
+   assunto começa (a pergunta, a preparação da piada, a situação do jogo que leva ao lance) e vá até o desfecho e a
+   reação. Corte curto demais, só com a frase final, não se entende e não retém. Nada de enrolação no começo, mas
+   também nada de cortar o contexto que faz o desfecho ter graça.
 
 TIPOS DE MOMENTO (repare no que o streamer FALA, em como ele AGE e em como ele JOGA; cada tipo tem o seu jeito de cortar):
 - NOTÍCIA ou ASSUNTO EM ALTA (ele comenta um lançamento, uma polêmica, algo que aconteceu com alguém conhecido, uma
@@ -103,7 +106,7 @@ reação a algo fora do jogo, IRL); "outro" para o resto (vídeo, navegador, tel
 MONTAGEM (como os canais de cortes que passam de 1 milhão de views editam):
 - "partes": os pedaços deste vídeo, em ordem, que contam a história do momento. Use cortes secos para tirar espera,
   carregamento, menu sem graça, silêncio e conversa paralela, e para pular de uma tentativa para o resultado.
-  Se o momento é contínuo e sem enrolação, mande 1 parte só. Cada parte com 2 s ou mais; somadas, 15 a 60 s.
+  Se o momento é contínuo e sem enrolação, mande 1 parte só. Cada parte com 2 s ou mais; somadas, {MIN} a {MAX} s.
   O "inicio" do momento é o da 1ª parte e o "fim" o da última.
 - "enquadramento" de cada parte (só vale quando a tela tem jogo + câmera do streamer):
   "dividido" = padrão (câmera em cima, jogo embaixo); "rosto" = só a câmera em tela cheia, para a REAÇÃO forte
@@ -162,7 +165,7 @@ def analisar_video(path, contexto):
         contexto,
     ]
     cfg = types.GenerateContentConfig(
-        system_instruction=SISTEMA,
+        system_instruction=SISTEMA.replace("{MIN}", str(dur_min())).replace("{MAX}", str(dur_max())),
         response_mime_type="application/json",
         response_json_schema=_schema_sem_refs(Analise),
         media_resolution=types.MediaResolution.MEDIA_RESOLUTION_LOW,
@@ -174,6 +177,25 @@ def analisar_video(path, contexto):
 
 
 ENQUADRAMENTOS = ("dividido", "rosto", "jogo")
+
+
+def dur_min():
+    return max(5, int(config.get("duracao_minima") or 15))
+
+
+def dur_max():
+    return max(dur_min() + 5, int(config.get("duracao_maxima") or 40))
+
+
+def _garantir_minimo(a, b, dur, minimo):
+    """Momento curto demais: estende para TRÁS (o contexto da conversa vem antes do desfecho) e, se ainda
+    faltar (começo do vídeo), para frente. Devolve (a, b)."""
+    falta = minimo - (b - a)
+    if falta <= 0:
+        return a, b
+    novo_a = max(0.0, a - falta)
+    falta -= a - novo_a
+    return novo_a, min(dur, b + max(0.0, falta))
 
 
 def _partes(partes, a, b, dur):
@@ -199,15 +221,22 @@ def _partes(partes, a, b, dur):
             juntos[-1][1] = y
         else:
             juntos.append([x, y, enq])
-    total, limitados = 0.0, []                  # a montagem inteira cabe em 60 s
+    maximo = dur_max()
+    total, limitados = 0.0, []                  # a montagem inteira cabe na duração máxima
     for x, y, enq in juntos:
-        if total + (y - x) > 60:
-            y = x + (60 - total)
+        if total + (y - x) > maximo:
+            y = x + (maximo - total)
         if y - x >= 1.0:
             limitados.append([x, y, enq])
             total += y - x
-        if total >= 60:
+        if total >= maximo:
             break
+    if total < dur_min():                       # montagem curta demais: o primeiro pedaço ganha o contexto de antes
+        x0 = max(0.0, limitados[0][0] - (dur_min() - total))
+        total += limitados[0][0] - x0
+        limitados[0][0] = x0
+    if total < dur_min():                       # começo do vídeo, sem antes: o último pedaço segue um pouco
+        limitados[-1][1] = min(dur, limitados[-1][1] + (dur_min() - total))
     return limitados
 
 
@@ -347,10 +376,11 @@ class Analisador:
             if a is None or b is None or b <= a:
                 continue
             a, b = max(0.0, a), min(dur, b)
-            if b - a < 6:
-                continue
-            if b - a > 60 and len(m.partes or []) <= 1:
-                b = a + 60  # trecho contínuo longo demais (com várias partes, quem limita é a soma delas)
+            if b - a < 3:
+                continue  # sem conteúdo nenhum
+            a, b = _garantir_minimo(a, b, dur, dur_min())  # curto demais: ganha o começo da conversa
+            if b - a > dur_max() and len(m.partes or []) <= 1:
+                b = a + dur_max()  # trecho contínuo longo demais (com várias partes, quem limita é a soma delas)
             # termina colado no fim da janela e começa depois da emenda: a próxima análise pega ele inteiro
             if b >= dur - 2 and a >= JANELA - PASSO and fim - inicio >= JANELA - 1 and not rec.ultima:
                 continue

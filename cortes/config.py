@@ -18,7 +18,8 @@ DEFAULTS = {
     "sensibilidade": 5,        # 1 (poucos cortes) .. 10 (muitos cortes)
     "segundos_antes": 25,      # quanto pegar antes do pico
     "segundos_depois": 10,     # quanto pegar depois do pico
-    "duracao_maxima": 60,      # limite de um corte (picos seguidos são unidos)
+    "duracao_minima": 15,      # nenhum corte fica menor que isso (a conversa precisa caber inteira)
+    "duracao_maxima": 40,      # limite de um corte (a IA e o modo áudio respeitam)
     "intervalo_minimo": 60,    # segundos mínimos entre dois cortes da mesma live
     "legenda": True,
     "modelo_whisper": "small", # tiny / base / small / medium

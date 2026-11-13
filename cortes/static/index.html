@@ -461,8 +461,10 @@
     <input type="range" min="5" max="60" data-k="segundos_antes"><small>Só no modo áudio (sem chave do Gemini). Com a IA, ela mesma escolhe onde o corte começa e termina.</small></div>
   <div class="field"><label>Segundos depois do pico <span id="v_segundos_depois"></span></label>
     <input type="range" min="0" max="30" data-k="segundos_depois"></div>
+  <div class="field"><label>Duração mínima do corte <span id="v_duracao_minima"></span></label>
+    <input type="range" min="8" max="40" step="1" data-k="duracao_minima"><small>Cortes mais curtos que isso ganham o contexto de antes (o começo da conversa).</small></div>
   <div class="field"><label>Duração máxima do corte <span id="v_duracao_maxima"></span></label>
-    <input type="range" min="15" max="120" step="5" data-k="duracao_maxima"></div>
+    <input type="range" min="20" max="90" step="5" data-k="duracao_maxima"><small>A IA mostra a conversa completa, mas nunca passa disso.</small></div>
   <div class="field"><label>Intervalo mínimo entre cortes <span id="v_intervalo_minimo"></span></label>
     <input type="range" min="15" max="300" step="5" data-k="intervalo_minimo"></div>
   <div class="field"><label>Legenda das falas no vídeo</label>
@@ -559,7 +561,7 @@ async function refazerClip(id){
   try{ await api("/api/cortes/"+id+"/reprocessar",{method:"POST"}); tick(); }
   catch(e){ alert(erroTxt(e)); }
 }
-async function delClip(id){ if(confirm("Apagar esse corte?")){ await api("/api/cortes/"+id,{method:"DELETE"}); delete clipCache[id]; document.getElementById("c_"+id)?.remove(); } }
+async function delClip(id){ if(confirm("Apagar esse corte?")){ await api("/api/cortes/"+id,{method:"DELETE"}); delete clipCache[id]; cards[id]?.remove(); delete cards[id]; } }
 function abrirPasta(){ api("/api/abrir-pasta",{method:"POST"}); }
 
 function fmtTime(s){ const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return (h? h+"h ":"")+m+"m "+String(x).padStart(2,"0")+"s"; }
@@ -669,9 +671,13 @@ let abaCanal = lsGet("aba"), filtro = lsGet("filtro") || "postar", estrutura = "
 const _html = {};
 function setHTML(sel, h){ if(_html[sel] !== h){ _html[sel] = h; $(sel).innerHTML = h; } }
 
+const cards = {};  // cards já montados, guardados mesmo fora da página (a lista é remontada ao trocar de aba/filtro)
 function cardDe(c){
-  let el = document.getElementById("c_"+c.id);
-  if(!el){ el = document.createElement("div"); el.className="clip"; el.id="c_"+c.id; }
+  let el = cards[c.id];
+  if(!el){
+    el = document.createElement("div"); el.className = "clip"; el.id = "c_" + c.id;
+    cards[c.id] = el; delete clipCache[c.id];  // card novo: precisa ser preenchido
+  }
   const key = [c.status, c.titulo, c.escolhido, c.motivo_escolha, capaV(c)].join("|");
   if(clipCache[c.id] !== key){ el.innerHTML = clipHTML(c); clipCache[c.id] = key; }
   const yl = el.querySelector(".ytl"), yh = ytLinha(c);  // separado: o progresso do envio não reinicia o vídeo
