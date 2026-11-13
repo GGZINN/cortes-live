@@ -11,7 +11,7 @@ import threading
 import time
 import uuid
 
-from . import clipper, config
+from . import clipper, config, curadoria, videos
 from .analisador import Analisador, chave_gemini, limiar_nota
 from .chat import platform_of, slug_of
 from .detector import Detector
@@ -65,7 +65,15 @@ class Stream:
 
     def _loop(self):
         last_t = 0.0
+        fechou = False
         while not self._stop.wait(1.0):
+            if self.recorder.video:
+                # vídeo: quem corta é só a IA. Acabou -> a curadoria fecha o lote com os cortes que saíram
+                if self.recorder.status == "terminado" and not fechou:
+                    fechou = True
+                    if self.clip_count:
+                        curadoria.fechar_canal(self.name)
+                continue
             if self.recorder.status != "gravando":
                 self._check_pending()
                 continue
@@ -150,6 +158,7 @@ class Stream:
             "tempo": round(self.recorder.t), "cortes": self.clip_count, "modo": modo(),
             "pontuacao": round(self.score, 2), "limite": round(threshold(), 2),
             "aguardando_corte": bool(self.pending),
+            "video": self.recorder.video, "total": round(self.recorder.total),
             "ia_status": ia.status if ia else "", "limite_nota": limiar_nota(),
         }
         if series:
@@ -175,3 +184,4 @@ def remove_stream(sid):
     s = streams.pop(sid, None)
     if s:
         s.stop()
+        videos.esquecer(s.url)  # vídeo tirado do painel: colar o link de novo refaz do começo

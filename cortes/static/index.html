@@ -41,6 +41,9 @@
   .status.gravando b{background:var(--accent);box-shadow:0 0 8px var(--accent)}
   .status.gravando{color:var(--text)}
   .status.offline b{background:#555}
+  .status.analisando b,.status.baixando b,.status.preparando b{background:var(--accent2)}
+  .status.analisando{color:var(--text)}
+  .status.terminado b{background:var(--ok)}
   .live .title{color:var(--muted);font-size:12.5px;margin:6px 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px}
   .stats{display:flex;gap:18px;font-size:12px;color:var(--muted);margin-bottom:10px;flex-wrap:wrap}
   .stats span b{color:var(--text);font-weight:600}
@@ -375,11 +378,11 @@
   </section>
   <section id="v_painel">
   <form class="add" onsubmit="addLive(event)">
-    <input id="url" placeholder="Cole o link do canal: twitch.tv/canal · youtube.com/@canal/live · kick.com/canal" autocomplete="off">
-    <button class="primary">Monitorar</button>
+    <input id="url" placeholder="Cole o link de uma live (twitch.tv/canal · youtube.com/@canal/live · kick.com/canal) ou de um vídeo (youtube.com/watch?v=…)" autocomplete="off">
+    <button class="primary">Adicionar</button>
   </form>
 
-  <h2>Lives monitoradas</h2>
+  <h2>Lives e vídeos</h2>
   <div class="lives" id="lives"></div>
 
   <h2>Cortes</h2>
@@ -471,6 +474,9 @@
   <div class="field"><label>Selo da live</label>
     <select data-k="selo_live"><option value="true">Mostrar</option><option value="false">Esconder</option></select>
     <small>Logo da plataforma (Kick, Twitch ou YouTube) e o link da live, pequeno, no meio do vídeo.</small></div>
+  <div class="field"><label>Cortes que a IA não escolheu</label>
+    <select data-k="apagar_nao_escolhidos"><option value="true">Apagar sozinho (fica só o que a IA escolheu)</option><option value="false">Guardar todos</option></select>
+    <small>Quando um lote fecha (10 cortes, ou o vídeo acabou), a IA escolhe os melhores e o resto é apagado do disco. Cortes que você agendou, postou ou usou num roteiro nunca são apagados. <a href="#" onclick="limparNaoEscolhidos(this);return false">Apagar agora os não escolhidos que já existem</a>.</small></div>
   <div class="field"><label>Pesquisar os assuntos da live</label>
     <select data-k="pesquisar_assuntos"><option value="true">Ligado (Google Notícias + Wikipédia)</option><option value="false">Desligado</option></select>
     <small>A IA anota os assuntos falados na live (uma notícia, um jogo, uma polêmica), pesquisa em segundo plano e usa o resumo para reconhecer o que está em alta antes de dar nota aos cortes. Suas próprias anotações vão em <code>dados/base/</code> (arquivos .md começando com a linha <code>chaves: ...</code>).</small></div>
@@ -532,7 +538,8 @@
 
 <script>
 const $ = s => document.querySelector(s);
-const statusTxt = {gravando:"ao vivo · gravando", offline:"offline · aguardando", conectando:"conectando…", reconectando:"reconectando…", erro:"erro", "disco cheio":"⚠ disco cheio · pausado"};
+const statusTxt = {gravando:"ao vivo · gravando", offline:"offline · aguardando", conectando:"conectando…", reconectando:"reconectando…", erro:"erro", "disco cheio":"⚠ disco cheio · pausado",
+  baixando:"vídeo · baixando", preparando:"vídeo · preparando", analisando:"vídeo · IA assistindo", terminado:"vídeo · terminado"};
 const clipCache = {};
 
 async function api(path, opts={}){
@@ -547,7 +554,7 @@ async function addLive(e){
   await api("/api/lives", {method:"POST", body:JSON.stringify({url})});
   tick();
 }
-async function delLive(id){ if(confirm("Parar de monitorar essa live?")){ await api("/api/lives/"+id,{method:"DELETE"}); tick(); } }
+async function delLive(id, video){ if(confirm(video ? "Tirar esse vídeo do painel? Os cortes já feitos ficam. Se colar o link de novo, ele é refeito do começo." : "Parar de monitorar essa live?")){ await api("/api/lives/"+id,{method:"DELETE"}); tick(); } }
 async function refazerClip(id){
   try{ await api("/api/cortes/"+id+"/reprocessar",{method:"POST"}); tick(); }
   catch(e){ alert(erroTxt(e)); }
@@ -560,7 +567,7 @@ function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&
 
 function renderLives(lives){
   const box = $("#lives");
-  if(!lives.length){ box.innerHTML = '<div class="empty">Cole o link de um canal acima. A IA assiste a live e corta sozinha os momentos com mais potencial de retenção.</div>'; return; }
+  if(!lives.length){ box.innerHTML = '<div class="empty">Cole acima o link de um canal ao vivo ou de um vídeo já publicado. A IA assiste e corta sozinha os momentos com mais potencial de retenção.</div>'; return; }
   const ids = new Set(lives.map(l=>l.id));
   [...box.children].forEach(c => { if(!ids.has(c.dataset.id)) c.remove(); });
   for(const l of lives){
@@ -569,19 +576,23 @@ function renderLives(lives){
       el = document.createElement("div"); el.className="live"; el.dataset.id=l.id;
       el.innerHTML = `<div class="top"><span class="badge ${l.plataforma}">${l.plataforma}</span><span class="name"></span><span class="status"><b></b><em></em></span><button class="x" title="Remover">✕</button></div>
         <div class="title"></div><div class="stats"></div><div class="iabox"></div><canvas></canvas>`;
-      el.querySelector(".x").onclick = () => delLive(l.id);
+      el.querySelector(".x").onclick = () => delLive(l.id, el.dataset.video === "1");
       box.appendChild(el);
     }
     el.querySelector(".name").textContent = l.nome;
+    el.dataset.video = l.video ? "1" : "";
     const st = el.querySelector(".status"); st.className = "status "+l.status;
     st.querySelector("em").textContent = statusTxt[l.status] || l.status;
-    el.querySelector(".title").textContent = l.status==="gravando" ? l.titulo : (l.detalhe || l.titulo || "");
+    el.querySelector(".title").textContent = (l.status==="gravando" || l.status==="analisando") ? l.titulo : (l.detalhe || l.titulo || "");
     const modo = l.modo==="ia" ? `<span class="modo ia">🧠 IA assistindo</span>` : `<span class="modo">🔊 só áudio</span>`;
     el.querySelector(".stats").innerHTML =
-      `${modo}<span>gravado <b>${fmtTime(l.tempo)}</b></span><span>cortes <b>${l.cortes}</b></span>` +
+      (l.video ? `<span class="modo ia">🎬 vídeo</span><span>analisado <b>${fmtTime(l.tempo)}</b> de <b>${fmtTime(l.total)}</b></span>`
+               : `${modo}<span>gravado <b>${fmtTime(l.tempo)}</b></span>`) + `<span>cortes <b>${l.cortes}</b></span>` +
       (l.aguardando_corte ? `<span style="color:var(--accent2)"><b>● cortando momento…</b></span>`:"") ;
     const ult = (l.analises||[]).slice(-1)[0];
-    el.querySelector(".iabox").innerHTML = l.modo==="ia"
+    el.querySelector(".iabox").innerHTML = (l.video && l.modo!=="ia")
+      ? `<div class="iast">Os cortes de vídeo são escolhidos pela IA: coloque a chave grátis do Gemini em ⚙ Configurações.</div>`
+      : l.modo==="ia"
       ? `<div class="iast">${esc(l.ia_status)}</div>` + (ult ? `<div class="iares">“${esc(ult.resumo)}” <b>nota ${ult.nota}/10</b>${ult.cortes?` · <span style="color:var(--ok)">✂ ${ult.cortes} corte${ult.cortes>1?"s":""}</span>`:""}</div>` : "")
       : `<div class="iast">Sem chave do Gemini: cortando só pelos picos de áudio. Coloque a chave grátis em ⚙ Configurações para a IA assistir a live.</div>`;
     if(l.modo==="ia") drawBars(el.querySelector("canvas"), l.analises||[], l.limite_nota);
@@ -722,7 +733,7 @@ function renderClips(clips, lotes, tam){
     grupos.forEach(g => {
       const total = porLote[g.n].length;
       const cab = document.createElement("div"); cab.className = "lotecab";
-      const estado = g.s.status === "feito" ? `⭐ ${porLote[g.n].filter(c=>c.escolhido===true).length} escolhido(s) de ${total}${g.s.fonte==="nota"?" (pela nota)":""}`
+      const estado = g.s.status === "feito" ? `⭐ ${porLote[g.n].filter(c=>c.escolhido===true).length} escolhido(s) de ${total + (g.s.apagados||0)}${g.s.fonte==="nota"?" (pela nota)":""}${g.s.apagados?` · ${g.s.apagados} apagado(s)`:""}`
                    : g.s.status === "escolhendo" ? "🧠 IA escolhendo…" : `${total}/${tam} cortes`;
       cab.innerHTML = `<b>Lote ${g.n}</b><span>${estado}</span>` + (g.s.resumo ? `<div class="resumo">${esc(g.s.resumo)}</div>` : "");
       const grid = document.createElement("div"); grid.className = "clips";
@@ -779,6 +790,16 @@ async function salvarConfig(){
   cfg.querySelectorAll("[data-k]").forEach(el => body[el.dataset.k] = el.value==="true" ? true : el.value==="false" ? false : el.value);
   await api("/api/config",{method:"POST", body:JSON.stringify(body)});
   cfg.close();
+}
+
+async function limparNaoEscolhidos(a){
+  try{
+    const {n} = await api("/api/cortes/nao-escolhidos");
+    if(!n){ alert("Não há cortes não escolhidos para apagar."); return; }
+    if(!confirm(`Apagar ${n} corte(s) que a IA não escolheu? Os vídeos saem do disco e não dá para desfazer. Os ⭐ escolhidos e os que você agendou ou postou ficam.`)) return;
+    const r = await api("/api/cortes/nao-escolhidos/apagar", {method:"POST"});
+    alert(`${r.apagados} corte(s) apagado(s).`); tick();
+  }catch(e){ alert(erroTxt(e)); }
 }
 
 async function testarOpenAI(a){

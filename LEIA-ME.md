@@ -6,9 +6,22 @@ cortes **verticais 9:16 com legenda animada**, prontos para TikTok, Shorts e Ree
 ## Como usar
 
 1. Dê dois cliques em **`INICIAR.bat`**. O painel abre em http://localhost:8765
-2. Cole o link do canal (ex.: `twitch.tv/canal`, `youtube.com/@canal/live`, `kick.com/canal`) e clique em **Monitorar**.
+2. Cole o link do canal (ex.: `twitch.tv/canal`, `youtube.com/@canal/live`, `kick.com/canal`) **ou de um vídeo já publicado** (ex.: `youtube.com/watch?v=...`, um VOD da Twitch) e clique em **Adicionar**.
 3. Pode deixar rodando: se o canal estiver offline, ele fica esperando e começa a gravar quando a live abrir.
 4. Os cortes aparecem no painel e ficam salvos em `cortes_prontos/`.
+
+## Cortes de vídeos (não só de lives)
+
+O mesmo campo aceita o link de um vídeo já publicado. O programa percebe sozinho que não é uma live, baixa o vídeo
+(até 1080p; acima de 2 horas, 720p), e a IA assiste tudo em blocos de 2 minutos, sem esperar o tempo passar.
+Daí em diante é igual à live: mesmos critérios de nota, mesma montagem, legenda, títulos e curadoria.
+
+- O cartão mostra `analisado X de Y`. Um vídeo de 1 hora leva uns 20 a 40 minutos (depende do limite do Gemini).
+- Quando o vídeo acaba, o lote daquele canal é fechado na hora e a IA escolhe os melhores, mesmo sem chegar a 10 cortes.
+- Se o programa fechar no meio, o vídeo continua de onde parou (não repete cortes). Vídeo terminado não é refeito;
+  para refazer, tire do painel e cole o link de novo.
+- Precisa da chave do Gemini (no modo só áudio o vídeo não é cortado). O link de um canal (`youtube.com/@canal`) não
+  conta como vídeo: cole o link do vídeo.
 
 ## Como ele decide o que cortar: a IA assiste a live
 
@@ -104,7 +117,9 @@ Os cortes ficam separados em **uma aba por streamer** (ex.: *alanzoka*, *Gaules*
 - **⭐ Para postar**: só os escolhidos. A cada **10 cortes** de um streamer (um *lote*), a IA compara
   os 10 (gancho, desfecho, se entende sozinho, emoção, duração, variedade) e escolhe os **2** que
   devem ser postados, explicando o porquê. Sem a chave do Gemini, escolhe pela maior nota.
-- **Todos**: todos os cortes, separados por lote. Os que ficaram de fora aparecem apagadinhos, mas não são apagados.
+- **Todos**: todos os cortes, separados por lote. Fechado o lote, os que ficaram de fora são **apagados do disco sozinhos**
+  (dá para desligar em ⚙ Configurações → *Cortes que a IA não escolheu*). Cortes que você agendou, postou ou usou num
+  roteiro nunca são apagados. O link *Apagar agora os não escolhidos que já existem*, no mesmo lugar, limpa os antigos.
 - **Escolher agora**: escolhe os 2 melhores do lote atual sem esperar completar 10.
 
 ## Publicar (títulos + passo a passo)

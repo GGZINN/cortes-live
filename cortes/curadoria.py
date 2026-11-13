@@ -57,7 +57,22 @@ def atribuir_lote(clip, clips):
     ultimo = max(c["lote"] for c in meus)
     n = sum(1 for c in meus if c["lote"] == ultimo)
     st = _lotes.get(_k(canal, ultimo), {}).get("status")
-    clip["lote"] = ultimo + 1 if (n >= TAM_LOTE or st in ("escolhendo", "feito")) else ultimo
+    fechando = _lotes.get(_k(canal, ultimo), {}).get("fechar")
+    clip["lote"] = ultimo + 1 if (n >= TAM_LOTE or st in ("escolhendo", "feito") or fechando) else ultimo
+
+
+def fechar_canal(nome):
+    """O vídeo acabou: o lote aberto desse canal é escolhido assim que os cortes dele terminarem de processar,
+    mesmo sem chegar a 10."""
+    from . import clipper
+    canal = (nome or "").strip().lower()
+    abertos = {c["lote"] for c in clipper.list_clips() if canal_key(c) == canal and c.get("lote")}
+    with _lock:
+        for lote in abertos:
+            if _lotes.get(_k(canal, lote), {}).get("status") not in ("escolhendo", "feito"):
+                _lotes.setdefault(_k(canal, lote), {"status": "pendente"})["fechar"] = True
+        _salvar()
+    verificar()
 
 
 def preencher_lotes_antigos(clips):
@@ -83,7 +98,7 @@ def verificar(forcar=None):
         st = _lotes.get(_k(canal, lote), {}).get("status")
         if st in ("escolhendo", "feito"):
             continue
-        fechado = len(cs) >= TAM_LOTE or (forcar == (canal, lote))
+        fechado = len(cs) >= TAM_LOTE or (forcar == (canal, lote)) or _lotes.get(_k(canal, lote), {}).get("fechar")
         processados = all(c["status"] in ("pronto", "erro") for c in cs)
         if fechado and processados:
             with _lock:
@@ -168,6 +183,38 @@ def _thumbs_dos_escolhidos(ids):
             pass
 
 
+def _protegido(c):
+    """Corte que não foi escolhido pela IA mas que o usuário usou: está na agenda, foi para o YouTube
+    ou faz parte de um roteiro. Esses nunca são apagados sozinhos."""
+    y = c.get("youtube") or {}
+    if c.get("agenda") or y.get("id") or y.get("status") in ("na fila", "enviando", "enviado"):
+        return True
+    try:
+        from . import roteiros
+        return any(s.get("cid") == c["id"] for r in roteiros._roteiros for s in (r.get("secoes") or []))
+    except Exception:  # noqa - na dúvida, não apaga
+        return True
+
+
+def nao_escolhidos():
+    """Cortes de lotes já decididos que a IA não escolheu e que ninguém usou."""
+    from . import clipper
+    return [c for c in clipper.list_clips()
+            if c.get("escolhido") is False and c.get("status") in ("pronto", "erro")
+            and _lotes.get(_k(canal_key(c), c.get("lote")), {}).get("status") == "feito" and not _protegido(c)]
+
+
+def limpar(ids=None):
+    """Apaga os não escolhidos (todos, ou só os de `ids`). Devolve quantos apagou."""
+    from . import clipper
+    n = 0
+    for c in nao_escolhidos():
+        if ids is None or c["id"] in ids:
+            clipper.delete_clip(c["id"])
+            n += 1
+    return n
+
+
 def _escolher(canal, lote):
     from . import clipper
     try:
@@ -195,6 +242,12 @@ def _escolher(canal, lote):
         with _lock:
             _lotes[_k(canal, lote)] = {"status": "feito", "resumo": resumo, "fonte": fonte}
             _salvar()
+        if config.get("apagar_nao_escolhidos") and motivos:  # fica só o que a IA escolheu
+            apagados = limpar({c["id"] for c in cs if c["id"] not in motivos})
+            if apagados:
+                with _lock:
+                    _lotes[_k(canal, lote)]["apagados"] = apagados
+                    _salvar()
         _thumbs_dos_escolhidos(list(motivos))
     except Exception as e:  # noqa
         with _lock:

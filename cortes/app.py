@@ -140,6 +140,17 @@ def escolher_lote(req: LoteReq):
     return {"ok": True}
 
 
+@app.get("/api/cortes/nao-escolhidos")
+def nao_escolhidos():
+    """Quantos cortes de lotes já decididos a IA não escolheu (e ninguém agendou, postou ou usou em roteiro)."""
+    return {"n": len(curadoria.nao_escolhidos())}
+
+
+@app.post("/api/cortes/nao-escolhidos/apagar")
+def apagar_nao_escolhidos():
+    return {"apagados": curadoria.limpar()}
+
+
 @app.get("/api/config")
 def get_config():
     return config.all_settings()

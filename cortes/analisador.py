@@ -257,11 +257,12 @@ class Analisador:
         espera_erro = 0
         while not self._stop.wait(3):
             rec = self.stream.recorder
-            if rec.status != "gravando":
-                self.status = "aguardando a live"
+            if not rec.ativo:
+                self.status = ("vídeo inteiro analisado" if rec.terminou else "aguardando o vídeo") if rec.video \
+                    else "aguardando a live"
                 continue
             fim = rec.covered_until()
-            if fim < self.proxima:
+            if fim < self.proxima and not rec.ultima:
                 falta = int(self.proxima - fim)
                 if not self.analises:
                     self.status = f"assistindo… 1ª análise em {falta}s"
@@ -276,6 +277,7 @@ class Analisador:
                 self._analisar(inicio, fim)
                 self.proxima = fim + PASSO
                 espera_erro = 0
+                rec.avancar(fim, self.proxima)  # vídeo: libera o próximo trecho sem esperar o tempo passar
             except Exception as e:  # noqa
                 txt = f"{type(e).__name__} {e}"
                 if any(x in txt for x in ("429", "RESOURCE_EXHAUSTED", "quota")):
@@ -284,7 +286,10 @@ class Analisador:
                 else:
                     self.status = f"erro na análise: {type(e).__name__}"
                     espera_erro = min(300, max(30, espera_erro * 2))
-                self.proxima = rec.covered_until() + espera_erro
+                if rec.video:
+                    self._stop.wait(espera_erro)  # o vídeo não anda sozinho: espera e tenta o mesmo trecho
+                else:
+                    self.proxima = rec.covered_until() + espera_erro
 
     def _analisar(self, inicio, fim):
         from .clipper import run_ffmpeg
@@ -308,7 +313,8 @@ class Analisador:
                     "-c:a", "aac", "-b:a", "48k", "-ac", "1", "-movflags", "+faststart", leve])
 
         s = self.stream
-        contexto = (f"Live de {s.name} ({s.platform}). Título da live: {s.title or '-'}.\n"
+        tipo = "Vídeo gravado (não é live)" if rec.video else "Live"
+        contexto = (f"{tipo} de {s.name} ({s.platform}). Título: {s.title or '-'}.\n"
                     f"Este vídeo tem {int(dur)} segundos. Encontre os momentos que viram cortes de alta retenção.")
         if self.ganchos:
             contexto += "\nGanchos já usados nesta live (não repita): " + " | ".join(self.ganchos)
@@ -346,7 +352,7 @@ class Analisador:
             if b - a > 60 and len(m.partes or []) <= 1:
                 b = a + 60  # trecho contínuo longo demais (com várias partes, quem limita é a soma delas)
             # termina colado no fim da janela e começa depois da emenda: a próxima análise pega ele inteiro
-            if b >= dur - 2 and a >= JANELA - PASSO and fim - inicio >= JANELA - 1:
+            if b >= dur - 2 and a >= JANELA - PASSO and fim - inicio >= JANELA - 1 and not rec.ultima:
                 continue
             if m.nota < limiar:
                 continue
@@ -382,4 +388,4 @@ class Analisador:
             "t": round(fim), "nota": melhor, "resumo": analise.resumo, "cortes": len(aprovados),
             "modelo": modelo, "segundos": round(gasto, 1), "assuntos": novos,
         })
-        self.status = "assistindo a live"
+        self.status = "assistindo o vídeo" if rec.video else "assistindo a live"

@@ -47,8 +47,19 @@ def resolve(url):
         if "not currently live" in msg or "is offline" in msg.lower():
             msg = "Canal não está ao vivo agora"
         raise Offline(msg[:200])
-    if info.get("_type") == "playlist" and info.get("entries"):
+    lista = info.get("_type") == "playlist"
+    if lista and info.get("entries"):
         info = next(iter(info["entries"]))
+    # link de um vídeo já publicado (não de um canal): vira cortes pelo modo vídeo (videos.py)
+    if not lista and info.get("duration") and (info.get("live_status") in ("not_live", "was_live")
+                                               or (info.get("live_status") is None and info.get("is_live") is False)):
+        tam = info.get("filesize_approx") or info.get("filesize") or 0
+        return {
+            "video": True, "duracao": float(info["duration"]), "tamanho_mb": int(tam) // 2 ** 20,
+            "title": info.get("title") or "",
+            "channel": info.get("uploader") or info.get("channel") or info.get("uploader_id") or "",
+            "webpage_url": info.get("webpage_url") or url,
+        }
     if info.get("live_status") not in (None, "is_live") or info.get("is_live") is False:
         raise Offline("Canal não está ao vivo agora")
     if info.get("requested_formats"):
@@ -77,6 +88,10 @@ class Recorder:
         self.status = "conectando"
         self.status_detail = ""
         self.t = 0.0               # linha do tempo da gravação (segundos)
+        self.video = False         # o link é de um vídeo já publicado (videos.py), não de uma live
+        self.total = 0.0           # vídeo: duração
+        self.cursor = 0.0          # vídeo: até onde a IA pode assistir agora
+        self.terminou = False      # vídeo: a IA já viu até o fim
         self.segments = deque()    # dicts {path, start, end}
         self._seg_lock = threading.Lock()
         self._stop = threading.Event()
@@ -102,7 +117,28 @@ class Recorder:
         with self._seg_lock:
             return [s for s in self.segments if s["end"] > start and s["start"] < end]
 
+    @property
+    def ativo(self):
+        """Tem imagem chegando para a IA assistir (live gravando ou vídeo sendo analisado)."""
+        return self.status in ("gravando", "analisando")
+
+    @property
+    def ultima(self):
+        """Vídeo: a janela atual vai até o fim (não tem próxima análise para pegar o que ficou na emenda)."""
+        return self.video and self.cursor >= self.total - 0.5
+
+    def avancar(self, analisado_ate, proxima):
+        """Vídeo: a IA terminou de ver até `analisado_ate`; libera o próximo trecho (ou encerra)."""
+        if not self.video:
+            return
+        if analisado_ate >= self.total - 0.5:
+            self.terminou = True
+        else:
+            self.cursor = min(self.total, proxima)
+
     def covered_until(self):
+        if self.video:
+            return self.cursor
         with self._seg_lock:
             return self.segments[-1]["end"] if self.segments else 0.0
 
@@ -163,6 +199,15 @@ class Recorder:
                 continue
             if self.on_info:
                 self.on_info(info)
+            if info.get("video"):
+                from . import videos
+                try:
+                    if videos.processar(self, info):
+                        return  # vídeo terminado (ou parado): não tem o que reconectar
+                except Exception as e:  # noqa
+                    self.status, self.status_detail = "erro", str(e)[:200]
+                self._stop.wait(60)
+                continue
             try:
                 self._record(info)
             except Exception as e:  # noqa  (ex.: disco cheio) — antes isso matava a gravação de vez

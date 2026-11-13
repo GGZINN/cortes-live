@@ -36,6 +36,7 @@ DEFAULTS = {
     "selo_live": True,         # logo da plataforma + link da live, pequeno, no meio do vídeo
     "cortar_pausas": True,     # pausa entre frases acima de 0,3 s vira 0,2 s (fora do gameplay)
     "zoom_cortes": True,       # jump cuts: a imagem do streamer alterna 100% / 110% a cada ~2,8 s
+    "apagar_nao_escolhidos": True,  # fechado o lote, os cortes que a IA não escolheu são apagados sozinhos
     "pesquisar_assuntos": True, # a IA pesquisa no Google os assuntos falados na live antes de dar nota aos cortes
 }
 
