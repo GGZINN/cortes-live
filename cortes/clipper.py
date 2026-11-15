@@ -564,12 +564,21 @@ def _process(cid, raw, offset, dur):
         offset = _offset_estimado(raw, dur)
     clip = get_clip(cid) or {}
     fonte, trocas = "bruto.ts", []
+    if clip.get("de_video"):
+        # Corte tirado de um vídeo: os quadros-chave ficam a cada ~6 s (na live, ~2 s) e, dentro de um .ts, o
+        # ffmpeg começa a imagem só no quadro-chave seguinte, com o áudio já no ponto certo (som adiantado).
+        # Reembalado em .mp4 (sem recodificar), o ponto de corte fica exato para imagem e som.
+        try:
+            run_ffmpeg(["-i", "bruto.ts", "-c", "copy", "bruto.mp4"], cwd=d)
+            fonte = "bruto.mp4"
+        except Exception:  # noqa - não deu para reembalar: segue com o .ts
+            traceback.print_exc()
     partes = [p for p in clip.get("partes") or [] if len(p) == 3 and p[1] > p[0]]
     if partes:
         com_salto = any(partes[i + 1][0] - partes[i][1] > 0.3 for i in range(len(partes) - 1))
         if com_salto:  # a IA montou a história com pedaços separados: junta com cortes secos
             update_clip(cid, status="montando")
-            fonte, dur, trocas = _montar(d, offset, partes)
+            fonte, dur, trocas = _montar(d, offset, partes, fonte)
             offset = 0.0
             update_clip(cid, duracao=round(dur, 1))
         else:          # trecho contínuo: só as trocas de enquadramento
@@ -638,7 +647,7 @@ def _process(cid, raw, offset, dur):
     clip = get_clip(cid) or {}
     pico = clip.get("pico_rel", dur * 0.7)
     frase = " ".join(w["w"] for w in words if pico - 6 <= w["s"] <= pico + 3)
-    for f in ("bruto.ts", "audio.pcm", "montado.mp4", "enxuto.mp4"):
+    for f in ("bruto.ts", "bruto.mp4", "audio.pcm", "montado.mp4", "enxuto.mp4"):
         try:
             os.remove(os.path.join(d, f))
         except OSError:
