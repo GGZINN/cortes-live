@@ -189,6 +189,8 @@ def _protegido(c):
     y = c.get("youtube") or {}
     if c.get("agenda") or y.get("id") or y.get("status") in ("na fila", "enviando", "enviado"):
         return True
+    if (c.get("tiktok") or {}).get("status") not in (None, "erro"):  # foi (ou está indo) para o TikTok
+        return True
     try:
         from . import roteiros
         return any(s.get("cid") == c["id"] for r in roteiros._roteiros for s in (r.get("secoes") or []))

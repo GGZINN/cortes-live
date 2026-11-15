@@ -173,6 +173,19 @@ auditoria); ela volta à meia-noite do Pacífico (4h–5h em Brasília).
 
 A credencial e o login ficam só neste computador, em `dados/`.
 
+## Postar no TikTok
+
+Botão **♪ Conectar TikTok** no topo. O TikTok pede um app seu em developers.tiktok.com (grátis, uma vez só; o
+passo a passo aparece no painel): Login Kit (plataforma Desktop, Redirect URI `http://localhost:8765/api/tiktok/callback/`)
+e Content Posting API. Cole o Client key e o Client secret, conecte a conta e pronto: no corte, **Publicar** → aba
+**TikTok** → **Mandar para o TikTok**.
+
+- **Rascunho** (padrão): o vídeo vai para a caixa de entrada do TikTok; no app, você cola a legenda e publica.
+  Funciona normal desde já. O TikTok aceita no máximo 5 rascunhos pendentes por dia.
+- **Direto**: publica com a legenda. Enquanto o app não passar na auditoria do TikTok, só sai como **privado**.
+- A API do TikTok não agenda: o envio é na hora. Cortes enviados ao TikTok nunca são apagados pela limpeza.
+- O login fica em `dados/tiktok_token.json`, só neste computador.
+
 ## Agenda do YouTube
 
 Na aba **📅 Agenda do YouTube** você define os **horários de postagem** (ex.: 12:00, 18:00, 21:00) e os

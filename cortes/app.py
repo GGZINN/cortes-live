@@ -5,7 +5,7 @@ import shutil
 import webbrowser
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -33,6 +33,7 @@ def _startup():
                 manager.add_stream(url)
         except Exception:
             pass
+    from . import tiktok  # noqa: F401 - retoma o acompanhamento dos envios ao TikTok
     thumbs._limpar_interrompidas()  # thumbnail que estava sendo gerada quando o programa fechou
     curadoria.verificar()  # lotes completos que ainda não tiveram os 2 escolhidos
 
@@ -181,6 +182,68 @@ def reprocessar_clip(cid: str):
 def del_clip(cid: str):
     clipper.delete_clip(cid)
     return {"ok": True}
+
+
+# ------------------------------------------------------------------ TikTok
+@app.get("/api/tiktok/status")
+def tt_status(recarregar: bool = False):
+    from . import tiktok
+    return tiktok.status(recarregar)
+
+
+@app.post("/api/tiktok/conectar")
+def tt_conectar():
+    from . import tiktok
+    try:
+        tiktok.conectar()
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+    return tiktok.status()
+
+
+@app.get("/api/tiktok/callback/")
+def tt_callback(code: str = "", state: str = "", error: str = "", error_description: str = ""):
+    """O TikTok volta aqui depois que a conta autoriza o app (Redirect URI do app)."""
+    from html import escape
+    from . import tiktok
+    ok, msg = tiktok.callback(code, state, error, error_description)
+    cor = "#2bd67b" if ok else "#ff6b6b"
+    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>TikTok</title>
+<body style="background:#0e0f13;color:#eee;font:16px system-ui;display:grid;place-items:center;height:100vh;margin:0">
+<div style="text-align:center"><h2 style="color:{cor}">{escape(msg)}</h2>
+<p>Pode fechar esta aba e voltar ao painel do Cortes Live.</p></div></body>""")
+
+
+@app.post("/api/tiktok/desconectar")
+def tt_desconectar():
+    from . import tiktok
+    tiktok.desconectar()
+    return tiktok.status()
+
+
+@app.get("/api/tiktok/criador")
+def tt_criador():
+    from . import tiktok
+    try:
+        return tiktok.criador()
+    except Exception as e:  # noqa
+        raise HTTPException(400, str(e)[:300])
+
+
+class TikTokReq(BaseModel):
+    legenda: str = ""
+    modo: str = "rascunho"
+    privacidade: str | None = None
+    comentarios: bool = True
+
+
+@app.post("/api/cortes/{cid}/tiktok")
+def tt_enviar(cid: str, req: TikTokReq):
+    from . import tiktok
+    try:
+        return tiktok.enviar(cid, req.legenda, req.modo, req.privacidade, req.comentarios)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 # ------------------------------------------------------------------ YouTube

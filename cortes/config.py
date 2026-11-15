@@ -29,6 +29,9 @@ DEFAULTS = {
     "chave_claude": "",        # opcional: títulos gerados por IA (Claude)
     "chave_openai": "",        # opcional (paga): reserva para quando o limite do Gemini acabar
     "modelo_openai": "gpt-4o-mini",  # modelo da OpenAI usado na reserva
+    "tiktok_client_key": "",   # app criado em developers.tiktok.com (Login Kit + Content Posting API)
+    "tiktok_client_secret": "",
+    "tiktok_modo": "rascunho", # "rascunho": vai para a caixa de entrada do TikTok; "direto": publica (privado até a auditoria)
     "youtube_categoria": "20", # categoria dos vídeos enviados ao YouTube (20 = Jogos)
     "thumb_automatica": True,  # ao enviar ao YouTube, manda junto a thumbnail escolhida (gera se não tiver)
     "aprendizado_ativo": True, # o que funcionou no canal entra nas instruções da IA (títulos e escolha dos cortes)
@@ -41,7 +44,7 @@ DEFAULTS = {
     "pesquisar_assuntos": True, # a IA pesquisa no Google os assuntos falados na live antes de dar nota aos cortes
 }
 
-SECRET_KEYS = {"chave_gemini", "chave_claude", "chave_openai"}
+SECRET_KEYS = {"chave_gemini", "chave_claude", "chave_openai", "tiktok_client_secret"}
 
 
 def _mask(v):

@@ -138,6 +138,16 @@
   .nota{font-size:12.5px;color:var(--muted);background:var(--panel2);border-radius:10px;padding:10px 12px;border-left:3px solid var(--accent2)}
   .fonte{font-size:11.5px;padding:3px 8px;border-radius:6px;background:var(--panel2);color:var(--muted)}
   .fonte.ia{background:rgba(145,70,255,.18);color:#c9a8ff}
+  /* ---------- TikTok ---------- */
+  #ttBtn.on{border-color:rgba(255,0,80,.6)}
+  #ttBtn img{width:18px;height:18px;border-radius:50%;vertical-align:-4px;margin-right:6px}
+  dialog#ttdlg{width:min(600px,94vw)}
+  .ttform{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
+  .ttform select{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:8px;border-radius:8px;font:inherit}
+  .ttform button.go{grid-column:1/-1;background:#ff0050;border-color:#ff0050;color:#fff;font-weight:700;padding:11px}
+  .ttform button.go:disabled{opacity:.5}
+  .ttform label{font-size:12.5px;display:flex;gap:6px;align-items:center}
+  .clip .tt{font-size:12px;font-weight:600;color:#ff6a9a}
   /* ---------- YouTube ---------- */
   #ytBtn.on{border-color:rgba(255,46,46,.6)}
   #ytBtn img{width:18px;height:18px;border-radius:50%;vertical-align:-4px;margin-right:6px}
@@ -337,6 +347,7 @@
   <span class="chip" id="fila">fila: 0</span>
   <div class="sp"></div>
   <button class="ghost" onclick="abrirPasta()">📁 Abrir pasta</button>
+  <button id="ttBtn" onclick="abrirTT()">♪ Conectar TikTok</button>
   <button id="ytBtn" onclick="abrirYT()">▶ Conectar YouTube</button>
   <button onclick="abrirConfig()">⚙ Configurações</button>
 </header>
@@ -514,6 +525,11 @@
   </div>
 </dialog>
 
+<dialog id="ttdlg">
+  <div class="pub-head"><h3>TikTok</h3><button class="x" onclick="ttdlg.close()" title="Fechar">✕</button></div>
+  <div id="ttBody"></div>
+</dialog>
+
 <dialog id="ytdlg">
   <div class="pub-head"><h3>YouTube</h3><button class="x" onclick="ytdlg.close()" title="Fechar">✕</button></div>
   <div id="ytBody"></div>
@@ -680,7 +696,7 @@ function cardDe(c){
   }
   const key = [c.status, c.titulo, c.escolhido, c.motivo_escolha, capaV(c)].join("|");
   if(clipCache[c.id] !== key){ el.innerHTML = clipHTML(c); clipCache[c.id] = key; }
-  const yl = el.querySelector(".ytl"), yh = ytLinha(c);  // separado: o progresso do envio não reinicia o vídeo
+  const yl = el.querySelector(".ytl"), yh = ytLinha(c) + ttLinha(c);  // separado: o progresso do envio não reinicia o vídeo
   if(yl && yl.innerHTML !== yh) yl.innerHTML = yh;
   el.classList.toggle("desc", c.escolhido === false);
   el.classList.toggle("esc", c.escolhido === true);
@@ -769,7 +785,8 @@ async function tick(){
     renderLives(s.lives); renderClips(s.cortes, s.lotes||{}, s.tam_lote||10);
     if(pub.open && pubClip && clipsById[pubClip.id]){
       pubClip.youtube = clipsById[pubClip.id].youtube; pubClip.agenda = clipsById[pubClip.id].agenda;
-      pubClip.thumbs = clipsById[pubClip.id].thumbs; renderYtBox(); renderPubThumb();
+      pubClip.thumbs = clipsById[pubClip.id].thumbs; pubClip.tiktok = clipsById[pubClip.id].tiktok;
+      renderYtBox(); renderTtBox(); renderPubThumb();
     }
     if(thDlg.open) renderTh();
     $("#fila").textContent = "fila de processamento: " + s.fila;
@@ -884,7 +901,7 @@ let pubClip = null, pubPlat = "tiktok", pubSel = 0, pubCustom = null;
 
 function abrirPublicar(id){
   pubClip = clipsById[id]; if(!pubClip) return;
-  pubSel = 0; pubCustom = null; ytForcar = false; ytQuando = "";
+  pubSel = 0; pubCustom = null; ytForcar = false; ytQuando = ""; ttForcar = false; ttCriador = null;
   const v = $("#pubVideo"); v.src = pubClip.arquivo; v.poster = pubClip.capa || "";
   $("#pubInfo").innerHTML = `${esc(pubClip.canal)} · ${pubClip.duracao}s<br>${pubClip.por_que ? "🧠 "+esc(pubClip.por_que) : "⚡ "+esc(pubClip.motivo)}`;
   renderPub();
@@ -947,6 +964,7 @@ function renderPub(){
       <button onclick="gerarDeNovo()">↻ Gerar de novo</button></div></div>
     ${campoTexto}
     ${pubPlat === "shorts" ? `<div class="sec" id="ytBox"></div>` : ""}
+    ${pubPlat === "tiktok" ? `<div class="sec" id="ttBox"></div>` : ""}
     <div class="sec bigacts">
       <a href="${pubClip.arquivo}" download="${slug(titulo)||"corte-"+pubClip.id}.mp4">⬇ Baixar vídeo</a>
       ${abrir}
@@ -955,7 +973,7 @@ function renderPub(){
     <div class="sec"><b>Dicas</b><ul class="dicas">${P.dicas.map(x=>`<li>${x}</li>`).join("")}</ul></div>
     <div class="nota">⚠ Antes de postar, confira se o streamer permite cortes do conteúdo dele. A maioria permite com crédito, que já vai na legenda, mas sem autorização o vídeo pode tomar strike de direitos autorais.</div>`;
   if(tituloLimite) contar();
-  renderYtBox(true); renderPubThumb(true);
+  renderYtBox(true); renderTtBox(true); renderPubThumb(true);
 }
 function contar(){
   const el = $("#fTitulo"), c = $("#cnt"); if(!el||!c) return;
@@ -966,6 +984,146 @@ async function copiar(id, btn){
   try{ await navigator.clipboard.writeText(el.value); }
   catch(e){ el.select(); document.execCommand("copy"); }
   const t = btn.textContent; btn.textContent = "✓ Copiado!"; setTimeout(()=>btn.textContent=t, 1400);
+}
+
+/* ===================== TikTok ===================== */
+const ttdlg = $("#ttdlg");
+let ttSt = {configurado:false, conectado:false, login:{}}, ttForcar = false, ttBoxKey = "", ttCriador = null;
+let ttPriv = "", ttComent = true;
+
+async function ttCarregar(recarregar){
+  try{ ttSt = await api("/api/tiktok/status" + (recarregar ? "?recarregar=true" : "")); }catch(e){}
+  const b = $("#ttBtn");
+  b.classList.toggle("on", !!ttSt.conectado);
+  b.innerHTML = ttSt.conectado
+    ? `${ttSt.conta.foto ? `<img src="${esc(ttSt.conta.foto)}" alt="">` : "♪ "}${esc(ttSt.conta.nome)}`
+    : "♪ Conectar TikTok";
+  if(ttdlg.open) renderTT();
+  if(pub.open) renderTtBox(true);
+}
+function abrirTT(){ renderTT(); ttdlg.showModal(); ttCarregar(true); }
+const TT_LINKS = {apps:"https://developers.tiktok.com/apps", sandbox:"https://developers.tiktok.com/doc/add-a-sandbox",
+  auditoria:"https://developers.tiktok.com/application/content-posting-api"};
+const ttlk = (k, t) => `<a href="${TT_LINKS[k]}" target="_blank" rel="noopener">${t}</a>`;
+
+function renderTT(){
+  const s = ttSt, L = s.login || {};
+  const modo = `<div class="field"><label>Como enviar</label>
+      <select onchange="ttModo(this.value)">
+        <option value="rascunho" ${s.modo !== "direto" ? "selected" : ""}>Rascunho: vai para a caixa de entrada do TikTok e você publica no app</option>
+        <option value="direto" ${s.modo === "direto" ? "selected" : ""}>Direto: publica com a legenda (privado até a auditoria do TikTok)</option>
+      </select><small>O rascunho funciona normal desde já (no máximo 5 pendentes por dia). O direto só publica como <b>privado</b> até o app passar na ${ttlk("auditoria","auditoria do TikTok")}. Trocar o modo pede para conectar de novo.</small></div>`;
+  let h;
+  if(s.conectado){
+    h = `<div class="ytcanal">${s.conta.foto ? `<img src="${esc(s.conta.foto)}" alt="">` : ""}<div><b>${esc(s.conta.nome)}</b>
+        <small>conta do TikTok conectada</small></div></div>${modo}
+      <p class="m" style="color:var(--muted)">Para enviar: no corte, clique em <b>Publicar</b> → aba <b>TikTok</b> → <b>Mandar para o TikTok</b>.</p>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="ghost" onclick="ttDesconectar()">Desconectar conta</button></div>`;
+  } else if(L.status === "aguardando"){
+    h = `<div style="text-align:center;padding:20px"><div class="spinner"></div>A página do TikTok abriu no navegador.<br>Entre na conta onde os cortes vão ser postados e autorize.
+      ${L.url ? `<p><a href="${esc(L.url)}" target="_blank" rel="noopener" style="color:var(--accent2)">A página não abriu? Clique aqui.</a></p>` : ""}
+      <p><button class="mini" onclick="ttCarregar(true)">Já autorizei</button></p></div>`;
+  } else {
+    h = `<p style="margin-top:0">Para mandar os cortes direto ao TikTok, o TikTok pede um app seu (grátis, uma vez só):</p>
+      <ol class="setup">
+        <li>Entre em ${ttlk("apps","developers.tiktok.com → Manage apps")} com a sua conta e crie um app (ex.: <i>Cortes Live</i>). Para testar já, use o modo <b>Sandbox</b> do app e adicione a sua conta do TikTok em <b>Target users</b> (${ttlk("sandbox","como fazer")}).</li>
+        <li>Em <b>Products</b>, adicione <b>Login Kit</b> e <b>Content Posting API</b>.</li>
+        <li>No Login Kit, plataforma <b>Desktop</b>, coloque o Redirect URI:<br><code>${esc(s.redirect || "http://localhost:8765/api/tiktok/callback/")}</code></li>
+        <li>Em <b>Scopes</b>, marque <b>user.info.basic</b> e <b>video.upload</b> (e <b>video.publish</b>, se for usar o modo direto).</li>
+        <li>Copie o <b>Client key</b> e o <b>Client secret</b> do app aqui:</li>
+      </ol>
+      <div class="field"><label>Client key</label><input id="ttKey" type="text" autocomplete="off" placeholder="aw..."></div>
+      <div class="field"><label>Client secret</label><input id="ttSecret" type="password" autocomplete="off" placeholder="${s.configurado ? "•••••• (já salvo)" : ""}"></div>
+      ${modo}
+      ${L.erro ? `<p class="err">${esc(L.erro)}</p>` : ""}${s.erro ? `<p class="err">${esc(s.erro)}</p>` : ""}
+      <div class="bigacts"><button class="go" style="background:#ff0050" onclick="ttConectar()">♪ Salvar e conectar conta</button></div>
+      <p id="ttErr" class="err"></p>`;
+  }
+  $("#ttBody").innerHTML = h + `<p class="avisoyt">Ao conectar, você concorda com os <a href="https://www.tiktok.com/legal/terms-of-service" target="_blank" rel="noopener">Termos de Serviço do TikTok</a>.
+    O login fica só neste computador. <a href="https://www.tiktok.com/setting/security" target="_blank" rel="noopener">Revogar o acesso</a></p>`;
+}
+async function ttModo(v){
+  await api("/api/config", {method:"POST", body:JSON.stringify({tiktok_modo:v})});
+  ttSt.modo = v;
+  if(ttSt.conectado && v === "direto" && !(ttSt.escopo||"").includes("video.publish"))
+    alert("O modo direto precisa da permissão video.publish: clique em Desconectar conta e conecte de novo.");
+  renderTT(); renderTtBox(true);
+}
+async function ttConectar(){
+  const k = ($("#ttKey")?.value || "").trim(), sec = ($("#ttSecret")?.value || "").trim();
+  try{
+    const novo = {}; if(k) novo.tiktok_client_key = k; if(sec) novo.tiktok_client_secret = sec;
+    if(Object.keys(novo).length) await api("/api/config", {method:"POST", body:JSON.stringify(novo)});
+    ttSt = await api("/api/tiktok/conectar", {method:"POST"});
+  }catch(e){ const el = $("#ttErr"); if(el) el.textContent = erroTxt(e); else alert(erroTxt(e)); return; }
+  renderTT();
+  const t = setInterval(async () => { await ttCarregar(); if((ttSt.login||{}).status !== "aguardando") clearInterval(t); }, 2000);
+}
+async function ttDesconectar(){
+  if(!confirm("Desconectar a conta do TikTok? A autorização guardada neste computador será apagada.")) return;
+  ttSt = await api("/api/tiktok/desconectar", {method:"POST"}); ttCarregar();
+}
+
+function ttLinha(c){
+  const t = c.tiktok; if(!t) return "";
+  if(t.status === "na fila") return `<div class="tt">⏳ na fila para o TikTok</div>`;
+  if(t.status === "enviando") return `<div class="tt">⬆ enviando ao TikTok ${Math.round((t.progresso||0)*100)}%</div>`;
+  if(t.status === "processando") return `<div class="tt">♪ TikTok processando…</div>`;
+  if(t.status === "erro") return `<div class="tt">⚠ o envio ao TikTok falhou</div>`;
+  if(t.status === "rascunho") return `<div class="tt">♪ rascunho no TikTok (publique pelo app)</div>`;
+  if(t.status === "publicado") return `<div class="tt">♪ ${t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener">no TikTok</a>` : "no TikTok"}${t.privacidade === "SELF_ONLY" ? " (privado)" : ""}</div>`;
+  return "";
+}
+
+async function ttCarregarCriador(){
+  try{ ttCriador = await api("/api/tiktok/criador"); }
+  catch(e){ ttCriador = {erro: erroTxt(e)}; }
+  renderTtBox(true);
+}
+function renderTtBox(forcar){
+  const box = $("#ttBox"); if(!box || !pubClip) return;
+  const t = pubClip.tiktok || null, direto = ttSt.modo === "direto";
+  const key = JSON.stringify([ttSt.conectado, ttSt.modo, t, ttForcar, ttCriador, ttPriv, ttComent]);
+  if(!forcar && key === ttBoxKey) return;
+  ttBoxKey = key;
+  let h = `<b>Enviar direto ao TikTok</b>`;
+  if(!ttSt.conectado){
+    h += `<div class="nota">Conecte sua conta para mandar o corte daqui, sem baixar o vídeo. <button class="mini" onclick="abrirTT()">♪ Conectar TikTok</button></div>`;
+  } else if(t && ["na fila","enviando","processando"].includes(t.status)){
+    const p = Math.round((t.progresso||0)*100);
+    const txt = t.status === "na fila" ? "Na fila…" : t.status === "enviando" ? "Enviando… " + p + "%" : "O TikTok está processando o vídeo…";
+    h += `<div class="ytres"><span>${txt}</span><div class="barra"><i style="width:${p}%;background:#ff0050"></i></div></div>`;
+  } else if(t && (t.status === "rascunho" || t.status === "publicado") && !ttForcar){
+    h += t.status === "rascunho"
+      ? `<div class="ytres"><span class="ok">✓ Está na caixa de entrada do seu TikTok</span>
+          <small style="color:var(--muted)">No app do TikTok, abra a notificação do vídeo, cole a legenda (botão <b>Copiar legenda</b> acima), escolha a capa e publique.</small>`
+      : `<div class="ytres"><span class="ok">✓ Publicado${t.privacidade === "SELF_ONLY" ? " como privado" : ""}</span>
+          ${t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener">Ver no TikTok</a>` : `<small style="color:var(--muted)">Pode levar alguns minutos para aparecer no perfil.</small>`}`;
+    h += `<div class="row"><span style="flex:1"></span><button class="mini" onclick="ttForcar=true;renderTtBox(true)">Enviar de novo</button></div></div>`;
+  } else {
+    if(t && t.status === "erro") h += `<p class="err">${esc(t.erro)}</p>`;
+    if(direto && !ttCriador){ box.innerHTML = h + `<div class="ytres"><span>Consultando a conta no TikTok…</span></div>`; ttCarregarCriador(); return; }
+    if(direto && ttCriador.erro){ box.innerHTML = h + `<p class="err">${esc(ttCriador.erro)}</p><button class="mini" onclick="ttCriador=null;renderTtBox(true)">Tentar de novo</button>`; return; }
+    const ops = direto ? (ttCriador.privacidades || []) : [];
+    const nomes = ttSt.privacidades || {};
+    h += `<div class="ttform">${direto
+        ? `<select onchange="ttPriv=this.value;renderTtBox(true)"><option value="">Quem pode ver…</option>${ops.map(o => `<option value="${o}" ${o===ttPriv?"selected":""}>${esc(nomes[o]||o)}</option>`).join("")}</select>
+           <label><input type="checkbox" ${ttComent?"checked":""} ${ttCriador.comentarios_off?"disabled":""} onchange="ttComent=this.checked"> Permitir comentários</label>
+           ${ttCriador.max_s && pubClip.duracao > ttCriador.max_s ? `<p class="err" style="grid-column:1/-1">Esta conta aceita vídeos de até ${ttCriador.max_s} s.</p>` : ""}`
+        : `<span style="grid-column:1/-1;color:var(--muted);font-size:12.5px">Vai como <b>rascunho</b> para a caixa de entrada do TikTok de <b>${esc(ttSt.conta.nome)}</b>. A legenda não vai junto: copie acima e cole no app na hora de publicar.</span>`}
+        <button class="go" id="ttGo" onclick="ttEnviar()" ${direto && !ttPriv ? "disabled" : ""}>♪ ${direto ? "Publicar no TikTok" : "Mandar para o TikTok"}</button></div>
+      ${direto ? `<small style="color:var(--muted);display:block;margin-top:6px;font-size:12px">Publica em <b>${esc(ttCriador.nome || ttSt.conta.nome)}</b> com a legenda acima. Ao publicar, você concorda com a <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener" style="color:var(--accent2)">Confirmação de Uso de Música</a> do TikTok. Pode levar alguns minutos para aparecer no perfil.</small>` : ""}`;
+  }
+  box.innerHTML = h;
+}
+async function ttEnviar(){
+  const b = $("#ttGo"); if(b) b.disabled = true;
+  try{
+    const corpo = {legenda: $("#fTexto")?.value || "", modo: ttSt.modo === "direto" ? "direto" : "rascunho",
+                   privacidade: ttPriv || null, comentarios: ttComent};
+    pubClip = Object.assign(pubClip, await api(`/api/cortes/${pubClip.id}/tiktok`, {method:"POST", body:JSON.stringify(corpo)}));
+    clipsById[pubClip.id] = pubClip; ttForcar = false; renderTtBox(true);
+  }catch(e){ alert(erroTxt(e)); if(b) b.disabled = false; }
 }
 
 /* ===================== YouTube ===================== */
@@ -1946,7 +2104,7 @@ async function cnSalvar(){
   }catch(e){ $("#cnErr").textContent = erroTxt(e); btn.disabled = false; }
 }
 
-tick(); setInterval(tick, 1500); ytCarregar();
+tick(); setInterval(tick, 1500); ytCarregar(); ttCarregar();
 mostrarView(viewAtual); agCarregar();
 setInterval(() => { if(viewAtual === "agenda" || Date.now() % 30000 < 3000) agCarregar(); }, 3000);
 </script>
