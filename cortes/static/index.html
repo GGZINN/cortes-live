@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cortes Live</title>
+<title>Cortes de Live</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0c0d10; --panel:#15171c; --panel2:#1c1f26; --line:#272b34;
@@ -339,26 +339,278 @@
   @media (max-width:600px){header,main{padding-left:16px;padding-right:16px}.lives{grid-template-columns:1fr}
     header{flex-wrap:wrap;gap:8px;padding-top:12px;padding-bottom:12px}header .sp{flex-basis:100%;height:0}header .chip{font-size:11px}
     header button{padding:7px 10px;font-size:13px}.views button{padding:8px 12px;font-size:13px}}
+
+  /* ================= Visual "Cortes de Live" (pôr do sol de Vice City) ================= */
+  :root{
+    --bg:#0D0B1A; --panel:#15112A; --panel2:#1E1834; --line:#241E3D; --line2:#3A3160;
+    --text:#F5F0FF; --muted:#B9B0D6; --accent:#FF4D9D; --accent2:#FFA24C; --teal:#35E0D0; --violet:#A98BFF;
+    --ink:#14061F; --ok:#35E0D0; --grade:#241E3D;
+    --display:Anton,Impact,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  body{background:var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,sans-serif}
+  a{color:#FFB3D4} a:hover{color:#fff}
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  button{border-color:var(--line2);background:transparent;border-radius:12px}
+  button:hover{border-color:#5A4F86}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--ink);font-weight:700}
+  button.primary:hover{filter:brightness(1.08)}
+  h2{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.5px;text-transform:uppercase;color:var(--text);margin:28px 0 12px}
+  dialog{background:var(--panel);border-color:var(--line);border-radius:22px}
+  dialog h3,.pub-head h3{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.5px;text-transform:uppercase}
+  dialog::backdrop{background:rgba(8,5,18,.72)}
+  select,.field input[type=password],.field input[type=text]{background:var(--bg);border-color:var(--line2);border-radius:10px}
+  .empty{border-color:var(--line2);border-radius:20px;color:var(--muted)}
+  .seg{background:var(--bg);border-color:var(--line2);border-radius:12px}
+  .seg button.on{background:var(--panel2);color:#fff}
+  .tabs button.on{color:#fff}
+  .tit.on{border-color:var(--accent);background:rgba(255,77,157,.08)}
+  .fonte.ia,.modo.ia{background:rgba(169,139,255,.16);color:#CDB9FF}
+  .nota{border-left-color:var(--accent)}
+  .rv-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .rv-mono{font-family:var(--mono)}
+  .rv-muted{color:var(--muted)}
+  .rv-kicker{font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+  .rv-h{font-family:var(--display);font-weight:400;letter-spacing:.5px;text-transform:uppercase;margin:0;color:var(--text)}
+
+  /* ---- topo ---- */
+  header.rv-top{display:block;padding:0;gap:0;position:sticky;top:0;z-index:20;background:rgba(13,11,26,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .rv-top-in{max-width:1440px;margin:0 auto;padding:12px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px}
+  .rv-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+  .rv-brand b{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:1.5px;line-height:1}
+  .rv-brand i{font-style:normal;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink);background:var(--teal);padding:3px 7px;border-radius:6px}
+  header .views{display:flex;flex-wrap:wrap;gap:4px;margin:0;flex:1 1 auto}
+  header .views button{border:0;background:none;color:var(--muted);font-weight:500;font-size:15px;padding:10px 14px;border-radius:10px}
+  header .views button:hover{color:#fff}
+  header .views button.on{background:var(--panel2);color:#fff;font-weight:600}
+  header .views button span{color:var(--ink);background:var(--accent);font-size:11px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:6px}
+  header .views button span:empty{display:none}
+  .rv-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rv-tools input[type=search]{width:230px;height:44px;padding:0 14px;border-radius:12px;border:1px solid #2E2650;background:var(--panel);color:var(--text);font:inherit;font-size:14px}
+  .rv-tools button{height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:var(--panel);color:var(--text);font-size:14px;font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rv-tools button.rv-ic{width:44px;padding:0;font-size:17px}
+  #ttBtn.on{border-color:var(--teal)} #ytBtn.on{border-color:#FF4D4D}
+  main{max-width:1440px;padding:28px 32px 64px}
+  .disco{border-color:rgba(255,77,157,.5);background:rgba(255,77,157,.1);border-radius:16px}
+
+  /* ---- topo do painel (pôr do sol) ---- */
+  .rv-hero{position:relative;overflow:hidden;border-radius:28px;background:linear-gradient(165deg,#170A33 0%,#3E1160 34%,#A8226C 66%,#FF7F45 100%);padding:40px 44px 48px;display:flex;flex-wrap:wrap;gap:32px;align-items:center}
+  .rv-sun{position:absolute;right:36%;bottom:-70px;width:300px;height:300px;border-radius:50%;background:linear-gradient(180deg,#FFE38A 0%,#FF9A4D 48%,#FF4D9D 100%);opacity:.9;
+    -webkit-mask-image:repeating-linear-gradient(180deg,#000 0,#000 16px,transparent 16px,transparent 22px);mask-image:repeating-linear-gradient(180deg,#000 0,#000 16px,transparent 16px,transparent 22px)}
+  .rv-mar{position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(180deg,rgba(14,108,115,0) 0%,rgba(10,70,92,.75) 60%,rgba(8,40,62,.95) 100%)}
+  .rv-palma{position:absolute;bottom:0;opacity:.9}
+  .rv-hero-txt{position:relative;flex:999 1 420px;min-width:0;display:flex;flex-direction:column;gap:16px}
+  .rv-pill{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;background:rgba(13,11,26,.55);color:#fff;padding:7px 12px;border-radius:999px}
+  .rv-dot{width:8px;height:8px;border-radius:50%;background:#FF3B6B;display:inline-block}
+  .rv-live{animation:rvlive 1.2s ease-in-out infinite alternate}
+  @keyframes rvlive{from{opacity:1}to{opacity:.35}}
+  .rv-hero h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(44px,5.6vw,84px);line-height:.95;letter-spacing:.5px;text-transform:uppercase;color:#fff;text-shadow:0 4px 0 rgba(20,6,31,.35)}
+  .rv-hero p{margin:0;max-width:470px;font-size:17px;color:#FFEAF4}
+  .rv-hero-box{position:relative;min-width:0;flex:1 1 380px;max-width:460px;background:rgba(13,11,26,.78);border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 30px 60px rgba(10,4,24,.45)}
+  .rv-drop{border:2px dashed rgba(255,255,255,.28);border-radius:16px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .rv-drop-ic{width:56px;height:56px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+  .rv-drop b{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.6px;text-transform:uppercase}
+  .rv-drop small{font-size:13px;color:var(--muted)}
+  .rv-form{display:flex;flex-direction:column;gap:8px;margin:0}
+  .rv-form label{font-size:13px;font-weight:600;color:#E6E0F7}
+  .rv-form div{display:flex;gap:8px}
+  .rv-form input{flex:1 1 auto;min-width:0;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:var(--panel);color:var(--text);font:inherit;font-size:14px}
+  .rv-form button{height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--accent);color:var(--ink);font-weight:700;font-size:14px;white-space:nowrap}
+
+  /* ---- processando agora (uma faixa por live) ---- */
+  .rv-procs{display:flex;flex-direction:column;gap:16px;margin-top:24px}
+  .rv-proc{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:24px;display:flex;flex-wrap:wrap;gap:24px 28px;align-items:center}
+  .rv-proc-main{flex:999 1 520px;min-width:0;display:flex;flex-direction:column;gap:16px}
+  .rv-proc-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;padding-right:36px}
+  .rv-proc-top>div:first-child{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .rv-proc h3{margin:0;font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.5px;text-transform:uppercase;line-height:1.05;overflow-wrap:anywhere}
+  .rv-proc .rv-sub{font-size:13px;color:var(--muted);font-family:var(--mono);overflow-wrap:anywhere}
+  .rv-big{display:flex;align-items:baseline;gap:6px}
+  .rv-big b{font-family:var(--display);font-weight:400;font-size:64px;line-height:.9;color:var(--accent)}
+  .rv-big span{font-family:var(--display);font-size:22px;color:var(--muted);text-transform:uppercase}
+  .rv-barra{height:12px;border-radius:999px;background:var(--line);overflow:hidden}
+  .rv-barra i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#A98BFF 0%,var(--accent) 55%,#FF8A3D 100%);transition:width .4s linear}
+  .rv-etapas{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .rv-etapa{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:14px}
+  .rv-etapa.rodando{background:rgba(255,255,255,.07)}
+  .rv-etapa>span{width:28px;height:28px;flex:0 0 28px;border-radius:50%;background:var(--line2);color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  .rv-etapa.feito>span{background:var(--teal)} .rv-etapa.rodando>span{background:var(--accent)}
+  .rv-etapa div{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .rv-etapa b{font-weight:600;font-size:14px;color:var(--muted)}
+  .rv-etapa.feito b,.rv-etapa.rodando b{color:#fff}
+  .rv-etapa small{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+  .rv-notas{position:relative;height:46px;display:flex;align-items:flex-end;gap:3px}
+  .rv-notas i{flex:1 1 0;border-radius:3px 3px 0 0;background:#3A3358;transition:height .35s ease}
+  .rv-notas i.alta{background:#7A3E8E} .rv-notas i.cortou{background:var(--accent)}
+  .rv-notas em{position:absolute;left:0;right:0;border-top:1px dashed rgba(255,162,76,.7)}
+  .rv-linha{font-size:15px;color:#E6E0F7;font-weight:500}
+  .rv-linha q{color:var(--muted);font-weight:400}
+  .rv-proc .x{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:12px}
+  .rv-radar-box{flex:1 1 200px;display:flex;flex-direction:column;align-items:center;gap:12px}
+  .rv-radar{position:relative;width:176px;height:176px;border-radius:50%;background:radial-gradient(circle,#0F2A33 0%,#0B1A26 60%,#0A1220 100%);border:2px solid #1E4752;overflow:hidden}
+  .rv-radar .a1,.rv-radar .a2{position:absolute;border-radius:50%;border:1px solid rgba(53,224,208,.25)}
+  .rv-radar .a1{inset:16%} .rv-radar .a2{inset:32%}
+  .rv-radar .ev,.rv-radar .eh{position:absolute;background:rgba(53,224,208,.18)}
+  .rv-radar .ev{left:50%;top:0;bottom:0;width:1px} .rv-radar .eh{top:50%;left:0;right:0;height:1px}
+  .rv-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(53,224,208,0) 0deg,rgba(53,224,208,0) 290deg,rgba(53,224,208,.45) 360deg);animation:rvspin 3.2s linear infinite}
+  .rv-radar.parado .rv-sweep{animation:none;opacity:.25}
+  @keyframes rvspin{to{transform:rotate(360deg)}}
+  .rv-blip{position:absolute;width:10px;height:10px;border-radius:50%;border:2px solid #0B1A26;animation:rvpulse 1.6s ease-out infinite}
+  @keyframes rvpulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}100%{box-shadow:0 0 0 12px rgba(255,255,255,0)}}
+  .rv-centro{position:absolute;left:calc(50% - 7px);top:calc(50% - 7px);width:14px;height:14px;transform:rotate(45deg);background:#fff;border-radius:2px}
+  .rv-vazio{border:1px dashed var(--line2);border-radius:20px;padding:32px 24px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:6px;align-items:center}
+  .rv-vazio b{font-family:var(--display);font-weight:400;font-size:22px;letter-spacing:.5px;text-transform:uppercase;color:#fff}
+
+  /* ---- área de trabalho: mapa + cortes + editor ---- */
+  .rv-work{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;margin-top:24px}
+  .rv-esq{flex:999 1 640px;min-width:0;display:flex;flex-direction:column;gap:24px}
+  .rv-caixa{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:22px 24px}
+  .rv-cab{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;margin-bottom:14px}
+  .rv-cab h2,.rv-clips-cab h2{margin:0}
+  .rv-leg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted)}
+  .rv-leg span{display:inline-flex;align-items:center;gap:6px}
+  .rv-leg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .rv-mapa{position:relative;height:150px}
+  .rv-marcas{position:absolute;left:0;right:0;top:0;height:44px}
+  .rv-marcas button{position:absolute;top:0;width:44px;height:44px;margin-left:-22px;border:0;padding:0;background:transparent;display:flex;align-items:center;justify-content:center}
+  .rv-marcas button span{width:16px;height:16px;transform:rotate(45deg);border-radius:3px;border:2px solid var(--bg);display:block}
+  .rv-marcas button.on span{border-color:#fff}
+  .rv-calor{position:absolute;left:0;right:0;bottom:22px;height:92px;display:flex;align-items:flex-end;gap:2px}
+  .rv-calor i{flex:1 1 0;border-radius:3px 3px 0 0;transition:height .35s ease,background-color .35s ease}
+  .rv-scan{position:absolute;bottom:22px;height:104px;width:2px;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.8)}
+  .rv-eixo{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .rv-clips{display:flex;flex-direction:column;gap:16px}
+  .rv-clips-cab{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+  .rv-clips-cab small{display:block;font-size:13px;color:var(--muted)}
+  .rv-linha-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .rv-chip{height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:#E6E0F7;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px;transition:background-color .15s ease,color .15s ease}
+  .rv-chip em{font-style:normal;font-family:var(--mono);font-size:11px;opacity:.8}
+  .rv-chip.on{background:#fff;color:var(--ink);border-color:#fff}
+  .rv-chip.st{height:34px;font-size:12.5px}
+  .rv-lote{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+  .rv-lote b{color:#fff}
+  .rv-lote q{font-style:italic;flex-basis:100%}
+  .rv-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:16px}
+  .rv-card{text-align:left;padding:0;border:0;border-radius:20px;overflow:hidden;background:var(--panel);color:var(--text);display:flex;flex-direction:column;outline:0 solid transparent;outline-offset:3px;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}
+  .rv-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+  .rv-card.sel{outline:3px solid var(--accent)}
+  .rv-card.dim{opacity:.55} .rv-card.dim:hover{opacity:1}
+  .rv-pop{animation:rvpop .5s cubic-bezier(.2,.9,.3,1.25) both}
+  @keyframes rvpop{from{opacity:0;transform:translateY(14px) scale(.95)}to{opacity:1;transform:none}}
+  .rv-thumb{position:relative;aspect-ratio:9/13;display:flex;flex-direction:column;justify-content:space-between;padding:12px;overflow:hidden}
+  .rv-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .rv-thumb .sombra{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,20,.25) 0%,rgba(10,6,20,0) 30%,rgba(10,6,20,.88) 100%)}
+  .rv-thumb-top{position:relative;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .rv-cat{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink);padding:4px 8px;border-radius:6px}
+  .rv-dur{font-family:var(--mono);font-size:12px;font-weight:700;background:rgba(10,6,20,.7);color:#fff;padding:3px 7px;border-radius:6px}
+  .rv-play{position:relative;align-self:center;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center}
+  .rv-thumb.img .rv-play{position:absolute;right:10px;bottom:10px;width:36px;height:36px}
+  .rv-thumb.img .rv-play svg{width:15px;height:15px}
+  .rv-play .spinner{margin:0;width:24px;height:24px;border-color:#ccc;border-top-color:var(--accent)}
+  .rv-hook{position:relative;font-family:var(--display);font-size:22px;line-height:1.02;text-transform:uppercase;color:#fff;letter-spacing:.4px;overflow-wrap:anywhere}
+  .rv-corpo{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .rv-corpo>b{font-weight:600;font-size:14px;line-height:1.3;min-height:36px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .rv-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .rv-stars{display:inline-flex;gap:2px;flex:none}
+  .rv-stars svg{fill:#3A3358;stroke:var(--bg);stroke-width:1.5;stroke-linejoin:round}
+  .rv-stars svg.on{fill:#fff}
+  .rv-st{align-self:flex-start;margin-top:auto;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:4px 8px;border-radius:6px}
+
+  /* ---- editor ---- */
+  .rv-ed{flex:1 1 360px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:18px;position:sticky;top:84px;max-height:calc(100vh - 100px);overflow:auto;scrollbar-width:thin}
+  .rv-ed-cab{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .rv-palco{display:flex;justify-content:center;align-items:center;border-radius:18px;background:var(--bg);padding:12px}
+  .rv-cel{position:relative;width:min(234px,100%);aspect-ratio:9/16;border-radius:18px;overflow:hidden;background:#000;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+  .rv-cel video{width:100%;height:100%;object-fit:cover;display:block}
+  .rv-cel .rv-stars{position:absolute;top:10px;right:10px;pointer-events:none}
+  .rv-cel .proc{color:var(--muted);text-align:center;font-size:13px;padding:20px;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center}
+  .rv-ed-tit{font-weight:700;font-size:16px;line-height:1.3}
+  .rv-ed small{color:var(--muted);font-size:13px}
+  .rv-pq{font-size:13px;color:#E6E0F7;background:var(--bg);border-radius:12px;padding:10px 12px;border-left:3px solid var(--violet)}
+  .rv-sec{display:flex;flex-direction:column;gap:8px}
+  .rv-lab{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+  .rv-lab span:last-child{font-family:var(--mono);letter-spacing:0}
+  .rv-onda{position:relative;height:56px;border-radius:12px;background:var(--bg);overflow:hidden;display:flex;align-items:center;gap:2px;padding:0 8px}
+  .rv-onda i{flex:1 1 0;border-radius:2px;background:var(--line2)}
+  .rv-onda u{position:absolute;top:4px;bottom:4px;border:2px solid var(--accent);border-radius:10px;background:rgba(255,77,157,.14)}
+  .rv-fmt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .rv-fmt span{min-height:44px;border-radius:12px;border:1px solid var(--line2);color:var(--muted);font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 6px}
+  .rv-fmt span.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+  .rv-tg{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:6px 0;border:0;background:transparent;color:var(--text);font-size:14px;font-weight:500;text-align:left;width:100%;border-radius:8px}
+  .rv-tg i{position:relative;width:44px;height:26px;flex:0 0 44px;border-radius:999px;background:var(--line2);transition:background-color .2s ease}
+  .rv-tg i:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s ease}
+  .rv-tg[aria-pressed=true] i{background:var(--accent)} .rv-tg[aria-pressed=true] i:after{left:21px}
+  .rv-plats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .rv-plat{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 12px;border-radius:12px;border:1px solid var(--line2);background:transparent;color:var(--text);font-size:13px;font-weight:600;text-align:left}
+  .rv-plat>span{width:20px;height:20px;flex:0 0 20px;border-radius:6px;border:2px solid #6C6390;display:flex;align-items:center;justify-content:center}
+  .rv-plat>span svg{opacity:0}
+  .rv-plat.on{border-color:var(--teal);background:rgba(255,255,255,.06)}
+  .rv-plat.on>span{background:var(--teal);border-color:var(--teal)} .rv-plat.on>span svg{opacity:1}
+  .rv-plat div{display:flex;flex-direction:column;min-width:0}
+  .rv-plat small{font-size:11.5px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rv-ed .yt,.rv-ed .tt{font-size:12.5px;font-weight:600}
+  .rv-ed .yt{color:#ff9a9a} .rv-ed .tt{color:#ff8ab8}
+  .rv-cta{height:56px;border-radius:14px;border:0;background:var(--accent);color:var(--ink);font-family:var(--display);font-size:20px;letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
+  .rv-cta:hover{filter:brightness(1.08)}
+  .rv-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .rv-2 button,.rv-2 a{height:44px;border-radius:12px;border:1px solid var(--line2);background:transparent;color:var(--text);font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;text-decoration:none}
+  .rv-2 a:hover{color:#fff;border-color:#5A4F86}
+  .rv-2 .perigo{color:#FF9DB8}
+  @media (prefers-reduced-motion: reduce){.rv-sweep,.rv-blip,.rv-pop,.rv-live{animation:none}.rv-card:hover{transform:none}}
+  .rv-voltar{display:none;height:36px;padding:0 12px;font-size:13px;font-weight:600}
+  .rv-ed-cab{flex-wrap:wrap}
+  @media (max-width:1100px){.rv-ed{position:static;max-height:none}.rv-voltar{display:inline-flex;align-items:center}}
+  @media (max-width:700px){
+    header.rv-top{position:static}
+    .rv-top-in{padding:10px 16px;gap:10px}
+    .rv-hero-box{min-width:0;max-width:none}
+    .rv-hero h1{font-size:44px}
+    .rv-sun{right:-60px;width:220px;height:220px}
+    header .views{order:3;flex-basis:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+    header .views button{white-space:nowrap;flex:none;padding:9px 12px}
+    .rv-tools{flex:1 1 auto;justify-content:flex-end}
+    .rv-tools input[type=search]{order:9;flex:1 1 100%;width:auto}
+    .rv-tools button{max-width:130px;font-size:13px;padding:0 10px}
+    main{padding:16px 16px 48px}
+    .rv-hero{padding:28px 20px 36px;border-radius:22px}
+    .rv-hero-box{padding:16px}
+    .rv-proc{padding:18px}
+    .rv-proc h3{font-size:24px}
+    .rv-big b{font-size:48px}
+    .rv-caixa{padding:18px 16px}
+    .rv-grade{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .rv-hook{font-size:17px}
+    .rv-corpo{padding:10px}
+    .rv-corpo>b{font-size:13px}
+    .rv-meta{flex-wrap:wrap}
+    .rv-ed{padding:16px}
+  }
 </style>
 </head>
 <body>
-<header>
-  <div class="logo"><i></i>CORTES LIVE</div>
-  <span class="chip" id="fila">fila: 0</span>
-  <div class="sp"></div>
-  <button class="ghost" onclick="abrirPasta()">📁 Abrir pasta</button>
-  <button id="ttBtn" onclick="abrirTT()">♪ Conectar TikTok</button>
-  <button id="ytBtn" onclick="abrirYT()">▶ Conectar YouTube</button>
-  <button onclick="abrirConfig()">⚙ Configurações</button>
+<header class="rv-top">
+ <div class="rv-top-in">
+  <a href="#" class="rv-brand" onclick="mostrarView('painel');return false" aria-label="Cortes de Live, ir para o painel">
+   <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="#FF4D9D" stroke-width="2"/><circle cx="17" cy="17" r="8" fill="none" stroke="#35E0D0" stroke-width="1.5" opacity=".7"/><path d="M17 17 L28 9" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="23" cy="22" r="2.4" fill="#FFA24C"/></svg>
+   <b>CORTES DE LIVE</b>
+  </a>
+  <nav class="views" aria-label="Principal">
+   <button data-view="painel">Painel</button>
+   <button data-view="agenda">Agenda<span id="agCount"></span></button>
+   <button data-view="roteiros">Roteiros</button>
+   <button data-view="canal">Canal</button>
+  </nav>
+  <div class="rv-tools">
+   <label for="busca" class="rv-sr">Buscar cortes</label>
+   <input id="busca" type="search" placeholder="Buscar corte, streamer, fala…" autocomplete="off">
+   <button id="ttBtn" onclick="abrirTT()" title="Conta do TikTok">♪ Conectar TikTok</button>
+   <button id="ytBtn" onclick="abrirYT()" title="Canal do YouTube">▶ Conectar YouTube</button>
+   <button class="rv-ic" onclick="abrirPasta()" title="Abrir a pasta dos cortes" aria-label="Abrir a pasta dos cortes">📁</button>
+   <button class="rv-ic" onclick="abrirConfig()" title="Configurações" aria-label="Configurações">⚙</button>
+  </div>
+ </div>
 </header>
 <main>
   <div class="disco" id="discoAviso" hidden></div>
-  <nav class="views">
-    <button data-view="painel">🎬 Lives e cortes</button>
-    <button data-view="agenda">📅 Agenda do YouTube<span id="agCount"></span></button>
-    <button data-view="roteiros">📝 Roteiros</button>
-    <button data-view="canal">📊 Canal</button>
-  </nav>
   <section id="v_canal" hidden>
     <div id="cnTopo"></div>
     <div id="cnAviso"></div>
@@ -388,22 +640,65 @@
     <div id="agPub"></div>
   </section>
   <section id="v_painel">
-  <form class="add" onsubmit="addLive(event)">
-    <input id="url" placeholder="Cole o link de uma live (twitch.tv/canal · youtube.com/@canal/live · kick.com/canal) ou de um vídeo (youtube.com/watch?v=…)" autocomplete="off">
-    <button class="primary">Adicionar</button>
-  </form>
+  <section class="rv-hero" aria-labelledby="rv-hero-tit">
+    <div class="rv-sun" aria-hidden="true"></div>
+    <div class="rv-mar" aria-hidden="true"></div>
+    <svg class="rv-palma" aria-hidden="true" width="230" height="300" viewBox="0 0 230 300" style="left:47%"><path d="M118 300 C112 230 108 170 122 96" stroke="#14061F" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M122 96 C92 70 50 72 18 96 C56 84 92 88 122 100Z" fill="#14061F"/><path d="M122 96 C150 64 196 62 226 86 C190 78 156 86 124 102Z" fill="#14061F"/><path d="M122 96 C108 58 76 34 42 30 C78 48 102 70 120 100Z" fill="#14061F"/><path d="M122 96 C140 54 172 36 204 38 C172 52 146 74 126 102Z" fill="#14061F"/><path d="M122 96 C118 60 124 30 140 8 C136 40 132 70 126 100Z" fill="#14061F"/></svg>
+    <svg class="rv-palma" aria-hidden="true" width="150" height="210" viewBox="0 0 150 210" style="left:58%;opacity:.85"><path d="M70 210 C74 160 80 120 72 70" stroke="#14061F" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M72 70 C52 50 26 52 6 68 C30 60 52 62 72 74Z" fill="#14061F"/><path d="M72 70 C92 48 120 48 146 62 C118 58 94 64 74 76Z" fill="#14061F"/><path d="M72 70 C64 44 44 26 22 22 C46 36 60 52 70 74Z" fill="#14061F"/><path d="M72 70 C84 42 106 30 128 30 C106 40 90 56 76 76Z" fill="#14061F"/></svg>
+    <div class="rv-hero-txt">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="rv-pill"><span class="rv-dot rv-live"></span>Painel de cortes · ao vivo</span>
+        <span id="fila" style="font-size:13px;color:#FFE6F2">fila de processamento: 0</span>
+      </div>
+      <h1 id="rv-hero-tit">Cola a live.<br>A IA caça<br>os momentos.</h1>
+      <p>A IA assiste a live (ou o vídeo) com imagem e áudio, dá nota para cada trecho e entrega cortes verticais prontos para o Shorts, TikTok, Reels e Kwai.</p>
+    </div>
+    <div class="rv-hero-box">
+      <div class="rv-drop">
+        <div class="rv-drop-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#14061F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></div>
+        <b>Puxa a live pelo link</b>
+        <small>Twitch, YouTube e Kick ao vivo, ou um vídeo já publicado do YouTube</small>
+      </div>
+      <form class="rv-form" onsubmit="addLive(event)">
+        <label for="url">Link da live ou do vídeo</label>
+        <div>
+          <input id="url" type="text" inputmode="url" placeholder="twitch.tv/… · youtube.com/@canal/live · kick.com/…" autocomplete="off">
+          <button>Puxar live</button>
+        </div>
+      </form>
+    </div>
+  </section>
 
-  <h2>Lives e vídeos</h2>
-  <div class="lives" id="lives"></div>
+  <div class="rv-procs" id="lives" aria-label="Lives e vídeos sendo processados"></div>
 
-  <h2>Cortes</h2>
-  <div class="ctabs" id="ctabs"></div>
-  <div class="csub" id="csub"></div>
-  <div id="cbody"></div>
+  <div class="rv-work">
+    <div class="rv-esq">
+      <section class="rv-caixa" id="mapaBox" aria-labelledby="rv-mapa-tit" hidden>
+        <div class="rv-cab">
+          <h2 id="rv-mapa-tit">Mapa de calor da live</h2>
+          <div class="rv-leg" id="mapaLeg"></div>
+        </div>
+        <div class="rv-mapa" id="mapa"></div>
+        <small class="rv-muted" id="mapaSub" style="display:block;margin-top:8px;font-size:12.5px"></small>
+      </section>
+
+      <section class="rv-clips" aria-labelledby="rv-clips-tit">
+        <div class="rv-clips-cab">
+          <div><h2 id="rv-clips-tit">Cortes encontrados</h2><small id="clipsSub"></small></div>
+          <div class="rv-linha-chips" role="group" aria-label="Streamers" id="ctabs"></div>
+        </div>
+        <div class="rv-linha-chips" id="csub"></div>
+        <div class="rv-linha-chips" role="group" aria-label="Filtrar por tipo" id="cats"></div>
+        <div id="cbody"></div>
+      </section>
+    </div>
+
+    <aside class="rv-ed" id="editor" aria-labelledby="rv-ed-tit"></aside>
+  </div>
   </section>
 </main>
 <footer class="rodape">
-  O Cortes Live usa os <b>YouTube API Services</b> para enviar, agendar e editar vídeos e para ler os números do canal conectado.
+  O Cortes de Live usa os <b>YouTube API Services</b> para enviar, agendar e editar vídeos e para ler os números do canal conectado.
   Ao conectar um canal, você concorda com os <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">Termos de Serviço do YouTube</a>
   e com a <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Política de Privacidade do Google</a>.<br>
   <a href="https://github.com/GGZINN/cortes-live/blob/master/PRIVACY.md" target="_blank" rel="noopener">Política de privacidade</a> ·
@@ -484,6 +779,11 @@
   <div class="field"><label>Formato do corte</label>
     <select data-k="formato_corte"><option value="auto">Automático: gameplay com câmera vira tela dividida</option><option value="padrao">Sempre a live inteira no meio</option></select>
     <small>No automático, a IA (Gemini) acha a câmera do streamer: ela vai para a parte de cima e o jogo para a de baixo, ocupando a tela toda. Conversa e cenas sem câmera separada ficam no formato de sempre.</small></div>
+  <div class="field"><label>Tela cheia</label>
+    <select data-k="tela_cheia"><option value="nao">Desligada: a live no meio, com fundo desfocado</option><option value="conversa">Só nos cortes de conversa</option><option value="todos">Em todos os cortes (menos a tela dividida do gameplay)</option></select>
+    <small>O vídeo enche a tela toda com o miolo vertical da live. As laterais ficam de fora: é onde costumam aparecer os alertas de doação (Pix), o chat e as molduras do streamer. Perde as bordas da imagem e a imagem é ampliada, então fica um pouco menos nítida.</small></div>
+  <div class="field"><label>Posição do recorte na tela cheia</label>
+    <select data-k="tela_cheia_pos"><option value="50">Centro</option><option value="20">Esquerda (se o streamer fica à esquerda)</option><option value="80">Direita (se o streamer fica à direita)</option></select></div>
   <div class="field"><label>Selo da live</label>
     <select data-k="selo_live"><option value="true">Mostrar</option><option value="false">Esconder</option></select>
     <small>Logo da plataforma (Kick, Twitch ou YouTube) e o link da live, pequeno, no meio do vídeo.</small></div>
@@ -577,198 +877,345 @@ async function refazerClip(id){
   try{ await api("/api/cortes/"+id+"/reprocessar",{method:"POST"}); tick(); }
   catch(e){ alert(erroTxt(e)); }
 }
-async function delClip(id){ if(confirm("Apagar esse corte?")){ await api("/api/cortes/"+id,{method:"DELETE"}); delete clipCache[id]; cards[id]?.remove(); delete cards[id]; } }
+async function delClip(id){ if(confirm("Apagar esse corte?")){ await api("/api/cortes/"+id,{method:"DELETE"}); delete clipsById[id]; if(selId === id){ selId = null; } tick(); } }
 function abrirPasta(){ api("/api/abrir-pasta",{method:"POST"}); }
 
 function fmtTime(s){ const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return (h? h+"h ":"")+m+"m "+String(x).padStart(2,"0")+"s"; }
 function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-function renderLives(lives){
+/* ===================== Painel: lives, mapa de calor, cortes e editor ===================== */
+const CAT = {
+  "Jogada":    {cor:"#FF4D9D", fundo:"linear-gradient(165deg,#3B0F4F 0%,#B81E63 58%,#FF7A45 100%)"},
+  "Engraçado": {cor:"#FFA24C", fundo:"linear-gradient(165deg,#3A1A0E 0%,#C2561C 55%,#FFC24C 100%)"},
+  "Reação":    {cor:"#35E0D0", fundo:"linear-gradient(165deg,#06222E 0%,#0E6C73 55%,#35E0D0 100%)"},
+  "Opinião":   {cor:"#A98BFF", fundo:"linear-gradient(165deg,#1A1440 0%,#4B3A9E 55%,#A98BFF 100%)"},
+  "Outro":     {cor:"#B9B0D6", fundo:"linear-gradient(165deg,#15112A 0%,#3A3160 100%)"}
+};
+const semAcento = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const chaveCanal = s => semAcento(s).replace(/^@/, "").trim();
+function categoria(c){
+  const m = semAcento(c.motivo);
+  if(/opini|notic|assunto|dica|detalhe|polem|veredito/.test(m)) return "Opinião";
+  if(/reac|susto|grito|pico|audio|chat/.test(m)) return "Reação";
+  if(/engra|comed|convers|intera|hist|piada|risad/.test(m)) return "Engraçado";
+  if(/jogada|fail|bug|missao|acao|clutch|persegu/.test(m)) return "Jogada";
+  return "Outro";
+}
+const nEstrelas = c => Math.max(0, Math.min(5, Math.round((c.pontuacao || 0) / 2)));
+function estrelasHTML(c, px){
+  const n = nEstrelas(c);
+  return `<span class="rv-stars" role="img" aria-label="${n} de 5 estrelas (nota ${c.pontuacao ?? "–"} de 10)">` +
+    [1, 2, 3, 4, 5].map(i => `<svg width="${px}" height="${px}" viewBox="0 0 24 24" aria-hidden="true" class="${i <= n ? "on" : ""}"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>`).join("") + `</span>`;
+}
+const tc = s => { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const horaCurta = iso => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"}); };
+const diaHora = iso => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("pt-BR", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"}); };
+function put(el, html){ if(el && el._h !== html){ el._h = html; el.innerHTML = html; } }
+
+function situacao(c){  // [texto, cor do texto, fundo]
+  if(c.status === "erro") return ["Falhou", "#14061F", "#FF6B8A"];
+  if(c.status !== "pronto") return [c.status + "…", "#B9B0D6", "rgba(185,176,214,.12)"];
+  const y = c.youtube, t = c.tiktok;
+  if(y && !["erro", "na fila", "enviando"].includes(y.status)) return ["No YouTube", "#14061F", "#35E0D0"];
+  if(t && ["publicado", "rascunho"].includes(t.status)) return ["No TikTok", "#14061F", "#35E0D0"];
+  if(c.agenda) return ["Na agenda · " + diaHora(c.agenda.quando), "#14061F", "#FFA24C"];
+  if(c.escolhido === true) return ["⭐ Escolhido para postar", "#14061F", "#FFE38A"];
+  if(c.escolhido === false) return ["A IA não escolheu", "#B9B0D6", "rgba(185,176,214,.12)"];
+  return ["Pronto", "#35E0D0", "rgba(53,224,208,.12)"];
+}
+
+/* ---------- lives e vídeos sendo processados ---------- */
+function sessaoDaLive(l, clips){
+  const k = chaveCanal(l.nome);
+  if(l.video) return clips.filter(c => chaveCanal(c.canal) === k && c.titulo_live === l.titulo);
+  const desde = Date.now() - ((l.tempo || 0) + 180) * 1000;
+  return clips.filter(c => chaveCanal(c.canal) === k && new Date(c.criado).getTime() >= desde);
+}
+function blipsHTML(lista, t0, t1){
+  const span = Math.max(1, t1 - t0);
+  return lista.map(c => {
+    const t = new Date(c.criado).getTime(), ang = ((t - t0) / span) * Math.PI * 2 - Math.PI / 2;
+    const r = 13 + (5 - nEstrelas(c)) * 7;
+    return `<span class="rv-blip" style="left:calc(${(50 + r * Math.cos(ang)).toFixed(1)}% - 5px);top:calc(${(50 + r * Math.sin(ang)).toFixed(1)}% - 5px);background:${CAT[categoria(c)].cor}"></span>`;
+  }).join("");
+}
+function etapasDaLive(l, fila, lote, tam){
+  const no_ar = ["gravando", "analisando"].includes(l.status), fim = l.status === "terminado";
+  const E = [];
+  if(l.video) E.push({n:"Baixando o vídeo", s: ["baixando", "preparando"].includes(l.status) ? "rodando" : (no_ar || fim ? "feito" : "espera"),
+                      t: ["baixando", "preparando"].includes(l.status) ? statusTxt[l.status] : (no_ar || fim ? "Pronto" : (statusTxt[l.status] || l.status))});
+  else E.push({n:"Gravando a live", s: l.status === "gravando" ? "rodando" : (["conectando", "reconectando"].includes(l.status) ? "rodando" : "espera"),
+               t: l.status === "gravando" ? "ao vivo · " + fmtTime(l.tempo) : (l.detalhe && l.status === "offline" ? l.detalhe : (statusTxt[l.status] || l.status))});
+  E.push(l.modo === "ia"
+    ? {n:"IA assistindo", s: fim ? "feito" : (no_ar ? "rodando" : "espera"), t: fim ? "Terminou" : (l.ia_status || "esperando")}
+    : {n:"Picos de áudio", s: no_ar ? "rodando" : "espera", t:"Sem a chave do Gemini"});
+  E.push({n:"Cortando", s: l.aguardando_corte || fila ? "rodando" : (l.cortes ? "feito" : "espera"),
+          t: l.aguardando_corte ? "cortando um momento…" : fila ? `${fila} na fila` : `${l.cortes} corte${l.cortes === 1 ? "" : "s"} nesta sessão`});
+  const ls = lote ? lote.s.status : null;
+  E.push({n:"Escolhendo os melhores", s: ls === "escolhendo" ? "rodando" : (ls === "feito" ? "feito" : "espera"),
+          t: !lote ? "a cada " + tam + " cortes" : ls === "escolhendo" ? "IA escolhendo…" : ls === "feito" ? `lote ${lote.n} fechado` : `lote ${lote.n}: ${lote.qtd}/${tam}`});
+  return E.map((e, i) => `<div class="rv-etapa ${e.s}"><span>${e.s === "feito" ? "✓" : i + 1}</span><div><b>${e.n}</b><small>${esc(e.t)}</small></div></div>`).join("");
+}
+function loteAtual(canal, clips, lotes){
+  const k = chaveCanal(canal), meus = clips.filter(c => chaveCanal(c.canal) === k && c.lote);
+  if(!meus.length) return null;
+  const n = Math.max(...meus.map(c => c.lote));
+  const chave = Object.keys(lotes).find(x => chaveCanal(x.split("|")[0]) === k && x.split("|")[1] === String(n));
+  return {n, qtd: meus.filter(c => c.lote === n).length, s: (chave && lotes[chave]) || {}};
+}
+function renderLives(lives, clips, lotes, tam, fila){
   const box = $("#lives");
-  if(!lives.length){ box.innerHTML = '<div class="empty">Cole acima o link de um canal ao vivo ou de um vídeo já publicado. A IA assiste e corta sozinha os momentos com mais potencial de retenção.</div>'; return; }
-  const ids = new Set(lives.map(l=>l.id));
+  if(!lives.length){
+    put(box, `<div class="rv-vazio"><b>Nenhuma live no radar</b><span>Cola o link de um canal ao vivo ou de um vídeo lá em cima. A IA assiste e corta sozinha os momentos com mais potencial.</span></div>`);
+    return;
+  }
+  if(box.querySelector(".rv-vazio")){ box.innerHTML = ""; box._h = null; }
+  const ids = new Set(lives.map(l => l.id));
   [...box.children].forEach(c => { if(!ids.has(c.dataset.id)) c.remove(); });
   for(const l of lives){
     let el = box.querySelector(`[data-id="${l.id}"]`);
     if(!el){
-      el = document.createElement("div"); el.className="live"; el.dataset.id=l.id;
-      el.innerHTML = `<div class="top"><span class="badge ${l.plataforma}">${l.plataforma}</span><span class="name"></span><span class="status"><b></b><em></em></span><button class="x" title="Remover">✕</button></div>
-        <div class="title"></div><div class="stats"></div><div class="iabox"></div><canvas></canvas>`;
-      el.querySelector(".x").onclick = () => delLive(l.id, el.dataset.video === "1");
+      el = document.createElement("section"); el.className = "rv-proc"; el.dataset.id = l.id;
+      el.innerHTML = `<div class="rv-proc-main">
+          <div class="rv-proc-top"><div><div class="rv-kicker k"></div><h3></h3><div class="rv-sub"></div></div><div class="rv-big"></div></div>
+          <div class="rv-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div>
+          <div class="rv-etapas"></div>
+          <div class="rv-notas" aria-hidden="true"></div>
+          <div class="rv-linha" aria-live="polite"></div>
+        </div>
+        <div class="rv-radar-box"><div class="rv-radar" role="img"><div class="a1"></div><div class="a2"></div><div class="ev"></div><div class="eh"></div><div class="rv-sweep"></div><div class="bl"></div><div class="rv-centro"></div></div><div class="rv-kicker r"></div></div>
+        <button class="x" title="Remover" aria-label="Remover">✕</button>`;
+      el.querySelector(".x").onclick = () => delLive(l.id, !!l.video);
       box.appendChild(el);
     }
-    el.querySelector(".name").textContent = l.nome;
-    el.dataset.video = l.video ? "1" : "";
-    const st = el.querySelector(".status"); st.className = "status "+l.status;
-    st.querySelector("em").textContent = statusTxt[l.status] || l.status;
-    el.querySelector(".title").textContent = (l.status==="gravando" || l.status==="analisando") ? l.titulo : (l.detalhe || l.titulo || "");
-    const modo = l.modo==="ia" ? `<span class="modo ia">🧠 IA assistindo</span>` : `<span class="modo">🔊 só áudio</span>`;
-    el.querySelector(".stats").innerHTML =
-      (l.video ? `<span class="modo ia">🎬 vídeo</span><span>analisado <b>${fmtTime(l.tempo)}</b> de <b>${fmtTime(l.total)}</b></span>`
-               : `${modo}<span>gravado <b>${fmtTime(l.tempo)}</b></span>`) + `<span>cortes <b>${l.cortes}</b></span>` +
-      (l.aguardando_corte ? `<span style="color:var(--accent2)"><b>● cortando momento…</b></span>`:"") ;
-    const ult = (l.analises||[]).slice(-1)[0];
-    el.querySelector(".iabox").innerHTML = (l.video && l.modo!=="ia")
-      ? `<div class="iast">Os cortes de vídeo são escolhidos pela IA: coloque a chave grátis do Gemini em ⚙ Configurações.</div>`
-      : l.modo==="ia"
-      ? `<div class="iast">${esc(l.ia_status)}</div>` + (ult ? `<div class="iares">“${esc(ult.resumo)}” <b>nota ${ult.nota}/10</b>${ult.cortes?` · <span style="color:var(--ok)">✂ ${ult.cortes} corte${ult.cortes>1?"s":""}</span>`:""}</div>` : "")
-      : `<div class="iast">Sem chave do Gemini: cortando só pelos picos de áudio. Coloque a chave grátis em ⚙ Configurações para a IA assistir a live.</div>`;
-    if(l.modo==="ia") drawBars(el.querySelector("canvas"), l.analises||[], l.limite_nota);
-    else drawChart(el.querySelector("canvas"), l.serie, l.limite);
+    const sessao = sessaoDaLive(l, clips), lote = loteAtual(l.nome, clips, lotes);
+    const no_ar = ["gravando", "analisando", "baixando", "preparando"].includes(l.status);
+    put(el.querySelector(".k"), `<span class="badge ${l.plataforma}">${l.plataforma}</span> ${l.video ? "" : "Processando agora · "}${esc(statusTxt[l.status] || l.status)}`);
+    el.querySelector("h3").textContent = l.nome + ((l.titulo || l.detalhe) ? " · " + (l.titulo || l.detalhe) : "");
+    el.querySelector(".rv-sub").textContent = l.url + (l.video ? ` · ${fmtTime(l.tempo)} de ${fmtTime(l.total)}` : ` · gravado ${fmtTime(l.tempo)}`);
+    const pctV = l.video && l.total ? Math.min(100, Math.round(l.tempo / l.total * 100)) : null;
+    put(el.querySelector(".rv-big"), pctV !== null ? `<b>${pctV}</b><span>%</span>` : `<b>${l.cortes}</b><span>corte${l.cortes === 1 ? "" : "s"}</span>`);
+    const barra = el.querySelector(".rv-barra"); barra.hidden = pctV === null;
+    if(pctV !== null){ barra.setAttribute("aria-valuenow", pctV); barra.setAttribute("aria-label", "Quanto do vídeo a IA já assistiu"); barra.querySelector("i").style.width = pctV + "%"; }
+    put(el.querySelector(".rv-etapas"), etapasDaLive(l, fila, lote, tam));
+    const an = (l.analises || []).slice(-32), lim = l.limite_nota || 7;
+    put(el.querySelector(".rv-notas"), l.modo === "ia" && an.length
+      ? `<em style="bottom:${lim * 10}%"></em>` + an.map(a => `<i class="${a.cortes ? "cortou" : a.nota >= lim ? "alta" : ""}" style="height:${Math.max(4, a.nota * 10)}%" title="nota ${a.nota}"></i>`).join("")
+      : "");
+    el.querySelector(".rv-notas").hidden = !(l.modo === "ia" && an.length);
+    const ult = an.slice(-1)[0];
+    put(el.querySelector(".rv-linha"), (l.video && l.modo !== "ia") ? "Os cortes de vídeo precisam da IA: coloque a chave grátis do Gemini em ⚙ Configurações."
+      : ult ? `<q>${esc(ult.resumo)}</q> · nota ${ult.nota}/10${ult.cortes ? ` · <span style="color:var(--teal)">✂ ${ult.cortes} corte${ult.cortes > 1 ? "s" : ""}</span>` : ""}`
+      : esc(l.modo === "ia" ? l.ia_status : "Cortando pelos picos de áudio. Com a chave do Gemini a IA assiste a live."));
+    const radar = el.querySelector(".rv-radar");
+    radar.classList.toggle("parado", !no_ar);
+    radar.setAttribute("aria-label", `Radar de momentos: ${sessao.length} cortes nesta sessão`);
+    const ts = sessao.map(c => new Date(c.criado).getTime());
+    const t1 = no_ar ? Date.now() : Math.max(Date.now(), ...ts), t0 = l.video ? Math.min(...ts, t1 - 60000) : t1 - Math.max(60, l.tempo || 60) * 1000;
+    put(el.querySelector(".bl"), blipsHTML(sessao, t0, t1));
+    put(el.querySelector(".r"), `Radar de momentos · ${sessao.length} na mira`);
   }
 }
 
-/* modo IA: uma barra por trecho analisado (nota 0-10); verde = virou corte */
-function drawBars(cv, an, limite){
-  const dpr = devicePixelRatio||1, w = cv.clientWidth, h = cv.clientHeight;
-  cv.width = w*dpr; cv.height = h*dpr;
-  const g = cv.getContext("2d"); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
-  const y = v => h-8 - (v/10)*(h-20);
-  g.strokeStyle="rgba(255,176,32,.6)"; g.setLineDash([4,4]); g.beginPath(); g.moveTo(0,y(limite)); g.lineTo(w,y(limite)); g.stroke(); g.setLineDash([]);
-  g.fillStyle="rgba(255,176,32,.85)"; g.font="10px Inter"; g.fillText(`corta a partir da nota ${limite}`, 6, y(limite)-4);
-  if(!an.length){ g.fillStyle="#666"; g.fillText("a IA analisa a cada 1min30 (blocos de 2 min de live)", 6, h/2+14); return; }
-  const N = 24, bw = w/N, ini = Math.max(0, an.length-N);
-  an.slice(ini).forEach((a,i)=>{
-    const x = (N - Math.min(N, an.length) + i)*bw;
-    g.fillStyle = a.cortes ? "#2bd67b" : (a.nota>=limite ? "#ffb020" : "#3a3f4b");
-    const top = y(Math.max(a.nota, 0.3));
-    g.fillRect(x+3, top, bw-6, h-8-top);
-  });
-}
-
-function drawChart(cv, serie, limite){
-  const dpr = devicePixelRatio||1, w = cv.clientWidth, h = cv.clientHeight;
-  cv.width = w*dpr; cv.height = h*dpr;
-  const g = cv.getContext("2d"); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
-  const max = Math.max(limite*1.4, ...serie.map(p=>p.s), 1);
-  const y = v => h-6 - (v/max)*(h-14);
-  g.strokeStyle="rgba(255,176,32,.6)"; g.setLineDash([4,4]); g.beginPath(); g.moveTo(0,y(limite)); g.lineTo(w,y(limite)); g.stroke(); g.setLineDash([]);
-  g.fillStyle="rgba(255,176,32,.8)"; g.font="10px Inter"; g.fillText("gatilho de corte", 6, y(limite)-4);
-  if(serie.length<2){ g.fillStyle="#666"; g.fillText("aquecendo… (precisa de ~1 min de live)", 6, h/2+10); return; }
-  const N = 300, step = w/(N-1), off = N - serie.length;
-  const grad = g.createLinearGradient(0,0,0,h); grad.addColorStop(0,"rgba(255,59,92,.45)"); grad.addColorStop(1,"rgba(255,59,92,0)");
-  g.beginPath(); g.moveTo(off*step, h);
-  serie.forEach((p,i)=> g.lineTo((off+i)*step, y(p.s)));
-  g.lineTo(w,h); g.closePath(); g.fillStyle=grad; g.fill();
-  g.beginPath(); serie.forEach((p,i)=> i? g.lineTo((off+i)*step, y(p.s)) : g.moveTo((off+i)*step, y(p.s)));
-  g.strokeStyle="#ff3b5c"; g.lineWidth=1.6; g.stroke();
-}
-
-function capaV(c){  // capa 9:16 escolhida do corte (ou null se ainda não foi gerada)
-  const t = c.thumbs || {}, vs = t.variacoes || [];
-  const v = vs[Math.min(t.escolhida || 0, Math.max(vs.length - 1, 0))];
-  return t.status === "pronto" && v && v.img_v ? v.img_v : null;
-}
-function abrirCapa(cid){ abrirTh(cid); thFmt = "v"; renderTh(true); }
-
-function clipHTML(c){
-  const when = new Date(c.criado).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-  const tags = c.por_que ? `<div class="pq">${esc(c.por_que)}</div>` : "";
-  const motivo = c.por_que ? `🧠 nota ${c.pontuacao}/10 · ${esc(String(c.motivo).replace(/^IA: /,""))}` : `⚡ ${esc(c.motivo)}`;
-  let vid;
-  if(c.status==="pronto") vid = `<video src="${c.arquivo}" poster="${esc(capaV(c) || c.capa)}" controls preload="none" playsinline></video>`;
-  else if(c.status==="erro") vid = `<div class="proc err">Falhou<br><small>${esc(c.erro)}</small></div>`;
-  else vid = `<div class="proc"><div class="spinner"></div>${esc(c.status)}…</div>`;
-  const star = c.escolhido ? `<div class="star">⭐ Escolhido para postar</div>${c.motivo_escolha?`<div class="pq">${esc(c.motivo_escolha)}</div>`:""}` : "";
-  return `<div class="vid">${vid}</div><div class="info">
-    ${star}<div class="ytl"></div>
-    <div class="t">${esc(c.titulo || c.motivo)}</div>
-    <div class="m">${esc(c.canal)} · ${when} · ${c.duracao}s</div>
-    <div class="m">${motivo}</div>
-    ${tags}
-    <div class="acts">${c.status==="pronto" ? `<button class="pub" onclick="abrirPublicar('${c.id}')">Publicar</button><button onclick="abrirCapa('${c.id}')" title="Capa 9:16 e thumbnail">🖼 Capa</button><a href="${c.arquivo}" download="${slug(c.titulo)||"corte-"+c.id}.mp4">Baixar</a>`:""}${c.status==="erro" ? `<button onclick="refazerClip('${c.id}')">↻ Tentar de novo</button>`:""}<button onclick="delClip('${c.id}')">Apagar</button></div>
-  </div>`;
-}
-/* ---------- cortes: uma aba por streamer, "Para postar" / "Todos" por lote ---------- */
-function lsGet(k){ try{ return localStorage.getItem("cl_"+k); }catch(e){ return null; } }
-function lsSet(k,v){ try{ localStorage.setItem("cl_"+k, v); }catch(e){} }
-let abaCanal = lsGet("aba"), filtro = lsGet("filtro") || "postar", estrutura = "";
-
+/* ---------- cortes: streamer, filtros, mapa de calor, cards e editor ---------- */
+function lsGet(k){ try{ return localStorage.getItem("cl_" + k); }catch(e){ return null; } }
+function lsSet(k, v){ try{ localStorage.setItem("cl_" + k, v); }catch(e){} }
+let abaCanal = lsGet("aba"), filtro = lsGet("filtro") || "postar", catFiltro = "Todos", busca = "";
+let selId = lsGet("sel"), ultimoEstado = null, cfgVals = {}, primeiraCarga = true;
+const vistos = new Set();
 const _html = {};
 function setHTML(sel, h){ if(_html[sel] !== h){ _html[sel] = h; $(sel).innerHTML = h; } }
 
-const cards = {};  // cards já montados, guardados mesmo fora da página (a lista é remontada ao trocar de aba/filtro)
-function cardDe(c){
-  let el = cards[c.id];
-  if(!el){
-    el = document.createElement("div"); el.className = "clip"; el.id = "c_" + c.id;
-    cards[c.id] = el; delete clipCache[c.id];  // card novo: precisa ser preenchido
-  }
-  const key = [c.status, c.titulo, c.escolhido, c.motivo_escolha, capaV(c)].join("|");
-  if(clipCache[c.id] !== key){ el.innerHTML = clipHTML(c); clipCache[c.id] = key; }
-  const yl = el.querySelector(".ytl"), yh = ytLinha(c) + ttLinha(c);  // separado: o progresso do envio não reinicia o vídeo
-  if(yl && yl.innerHTML !== yh) yl.innerHTML = yh;
-  el.classList.toggle("desc", c.escolhido === false);
-  el.classList.toggle("esc", c.escolhido === true);
-  return el;
+function cardHTML(c){
+  const cat = categoria(c), K = CAT[cat], [st, fg, bg] = situacao(c), img = capaV(c) || c.capa;
+  const novo = !vistos.has(c.id) && !primeiraCarga; vistos.add(c.id);
+  return `<button type="button" class="rv-card${novo ? " rv-pop" : ""}${c.id === selId ? " sel" : ""}${c.escolhido === false ? " dim" : ""}" data-sel="${c.id}" aria-pressed="${c.id === selId}">
+    <div class="rv-thumb${img && c.status === "pronto" ? " img" : ""}" style="background:${K.fundo}">
+      ${img && c.status === "pronto" ? `<img src="${esc(img)}" alt="" loading="lazy">` : ""}<div class="sombra"></div>
+      <div class="rv-thumb-top"><span class="rv-cat" style="background:${K.cor}">${cat}</span><span class="rv-dur">${tc(c.duracao)}</span></div>
+      <div class="rv-play">${c.status === "pronto" ? `<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="#14061F"/></svg>` : c.status === "erro" ? "⚠" : `<div class="spinner"></div>`}</div>
+      ${img && c.status === "pronto" ? "<span></span>" : `<div class="rv-hook">${esc(c.texto_gancho || c.titulo || c.motivo)}</div>`}
+    </div>
+    <div class="rv-corpo">
+      <b>${esc(c.titulo || c.titulo_ia || c.motivo)}</b>
+      <div class="rv-meta"><span>${esc(c.canal)} · ${horaCurta(c.criado)}</span>${estrelasHTML(c, 14)}</div>
+      <span class="rv-st" style="color:${fg};background:${bg}">${esc(st)}</span>
+    </div></button>`;
 }
 
-function renderClips(clips, lotes, tam){
+function renderMapa(meus, lives){
+  const box = $("#mapaBox");
+  const sessaoTit = meus.length ? meus[0].titulo_live : null;
+  const sessao = meus.filter(c => c.titulo_live === sessaoTit);
+  box.hidden = sessao.length < 1;
+  if(box.hidden) return;
+  const live = lives.find(l => chaveCanal(l.nome) === chaveCanal(meus[0].canal) && ["gravando", "analisando"].includes(l.status));
+  const ts = sessao.map(c => new Date(c.criado).getTime());
+  let t0 = Math.min(...ts), t1 = live ? Date.now() : Math.max(...ts);
+  if(live) t0 = Math.min(t0, Date.now() - (live.tempo || 0) * 1000);
+  const folga = Math.max(5 * 60000, (t1 - t0) * 0.04); t0 -= folga; if(!live) t1 += folga;
+  const span = Math.max(60000, t1 - t0), N = 80, sigma = span / 45, heat = [];
+  for(let i = 0; i < N; i++){
+    const x = t0 + ((i + .5) / N) * span;
+    let v = 0.1 + 0.06 * Math.abs(Math.sin(i * 1.7));
+    sessao.forEach((c, j) => { const d = (x - ts[j]) / sigma; v += (nEstrelas(c) / 5) * 0.55 * Math.exp(-d * d); });
+    v = Math.min(1, v);
+    heat.push(`<i style="height:${Math.round(v * 100)}%;background:${v > .5 ? "var(--accent)" : v > .32 ? "#7A3E8E" : "#3A3358"}"></i>`);
+  }
+  const marcas = sessao.map((c, j) => `<button type="button" data-sel="${c.id}" class="${c.id === selId ? "on" : ""}" style="left:${((ts[j] - t0) / span * 100).toFixed(2)}%" aria-label="Abrir corte: ${esc(c.titulo || c.motivo)}" title="${esc(c.titulo || c.motivo)} · ${horaCurta(c.criado)}"><span style="background:${CAT[categoria(c)].cor}"></span></button>`).join("");
+  const eixo = [0, .25, .5, .75, 1].map(f => `<span>${horaCurta(new Date(t0 + f * span).toISOString())}</span>`).join("");
+  setHTML("#mapa", `<div class="rv-marcas">${marcas}</div><div class="rv-calor" aria-hidden="true">${heat.join("")}</div>` +
+    (live ? `<div class="rv-scan" style="left:calc(100% - 2px)" aria-hidden="true"></div>` : "") + `<div class="rv-eixo">${eixo}</div>`);
+  setHTML("#mapaLeg", Object.keys(CAT).filter(k => k !== "Outro").map(k => `<span><i style="background:${CAT[k].cor}"></i>${k}</span>`).join(""));
+  setHTML("#mapaSub", `${esc(sessaoTit || "")} · cada losango é um corte; quanto mais estrelas, mais quente a barra.${live ? " A linha branca é agora." : ""}`);
+}
+
+function renderClips(clips, lotes, tam, lives){
   const canais = {};
-  clips.forEach(c => { const k = (c.canal||"?").toLowerCase(); (canais[k] = canais[k] || {nome:c.canal, clips:[]}).clips.push(c); });
-  const keys = Object.keys(canais).sort((a,b) => String(canais[b].clips[0].criado).localeCompare(String(canais[a].clips[0].criado)));
+  clips.forEach(c => { const k = (c.canal || "?").toLowerCase(); (canais[k] = canais[k] || {nome:c.canal, clips:[]}).clips.push(c); });
+  const keys = Object.keys(canais).sort((a, b) => String(canais[b].clips[0].criado).localeCompare(String(canais[a].clips[0].criado)));
   if(!keys.length){
-    setHTML("#ctabs", ""); setHTML("#csub", ""); estrutura = "";
-    $("#cbody").innerHTML = '<div class="empty">Nenhum corte ainda. Eles aparecem aqui sozinhos quando a IA achar um momento forte.</div>';
-    return;
+    setHTML("#ctabs", ""); setHTML("#csub", ""); setHTML("#cats", ""); setHTML("#clipsSub", ""); $("#mapaBox").hidden = true;
+    setHTML("#cbody", `<div class="rv-vazio"><b>O radar tá varrendo a live…</b><span>Os cortes aparecem aqui sozinhos quando a IA achar um momento forte.</span></div>`);
+    renderEditor(null); return;
   }
   if(!abaCanal || !canais[abaCanal]) abaCanal = keys[0];
   const meus = canais[abaCanal].clips;
+  renderMapa(meus, lives);
 
-  // lotes do streamer da aba (mais novo primeiro)
-  const porLote = {};
-  meus.forEach(c => (porLote[c.lote||0] = porLote[c.lote||0] || []).push(c));
-  const nums = Object.keys(porLote).map(Number).sort((a,b)=>b-a);
-  const st = n => (lotes[`${abaCanal}|${n}`]||{});
-  const escolhidos = meus.filter(c => c.escolhido === true);
-
-  // abas de streamer
   setHTML("#ctabs", keys.map(k => {
-    const cs = canais[k].clips, e = cs.filter(c=>c.escolhido===true).length;
-    return `<button class="${k===abaCanal?"on":""}" data-aba="${esc(k)}">${esc(canais[k].nome)}<span>${e?`⭐ ${e} · `:""}${cs.length}</span></button>`;
+    const cs = canais[k].clips, e = cs.filter(c => c.escolhido === true).length;
+    return `<button class="rv-chip${k === abaCanal ? " on" : ""}" data-aba="${esc(k)}" aria-pressed="${k === abaCanal}">${esc(canais[k].nome)}<em>${e ? `⭐${e} · ` : ""}${cs.length}</em></button>`;
   }).join(""));
 
-  // sub-abas + situação do lote atual
+  // lote atual do streamer
+  const porLote = {};
+  meus.forEach(c => (porLote[c.lote || 0] = porLote[c.lote || 0] || []).push(c));
+  const nums = Object.keys(porLote).map(Number).sort((a, b) => b - a);
+  const st = n => (lotes[`${abaCanal}|${n}`] || {});
   const atual = nums[0], nAtual = porLote[atual].length, sAtual = st(atual).status;
+  const escolhidos = meus.filter(c => c.escolhido === true);
   let info;
-  if(sAtual === "escolhendo") info = `🧠 IA escolhendo os ${Math.min(2,nAtual)} melhores do lote ${atual}…`;
-  else if(sAtual === "feito") info = `Lote ${atual} fechado. Os próximos cortes começam o lote ${atual+1}.`;
-  else info = `Lote ${atual}: <b>${nAtual}/${tam}</b> cortes · a IA escolhe os 2 melhores quando completar ${tam}`
+  if(sAtual === "escolhendo") info = `🧠 IA escolhendo os ${Math.min(2, nAtual)} melhores do lote ${atual}…`;
+  else if(sAtual === "feito") info = `Lote ${atual} fechado. Os próximos cortes começam o lote ${atual + 1}.`;
+  else info = `Lote ${atual}: <b>${nAtual}/${tam}</b> · a IA escolhe os 2 melhores quando completar ${tam}`
             + (nAtual ? ` <button class="mini" data-escolher="${atual}">Escolher agora</button>` : "");
+  const ultFeito = nums.find(n => st(n).status === "feito" && st(n).resumo);
   setHTML("#csub",
-    `<div class="seg"><button class="${filtro==="postar"?"on":""}" data-filtro="postar">⭐ Para postar (${escolhidos.length})</button>`+
-    `<button class="${filtro==="todos"?"on":""}" data-filtro="todos">Todos (${meus.length})</button></div><div class="loteinfo">${info}</div>`);
+    `<button class="rv-chip st${filtro === "postar" ? " on" : ""}" data-filtro="postar" aria-pressed="${filtro === "postar"}">⭐ Para postar <em>${escolhidos.length}</em></button>` +
+    `<button class="rv-chip st${filtro === "todos" ? " on" : ""}" data-filtro="todos" aria-pressed="${filtro === "todos"}">Todos <em>${meus.length}</em></button>` +
+    `<div class="rv-lote">${info}${ultFeito !== undefined ? `<q>Lote ${ultFeito}: ${esc(st(ultFeito).resumo)}</q>` : ""}</div>`);
 
-  // corpo: só reconstrói a estrutura se algo mudou (senão os vídeos que estão tocando param)
-  const grupos = nums.map(n => {
-    const lista = filtro === "postar" ? porLote[n].filter(c => c.escolhido === true) : porLote[n];
-    return {n, lista, s: st(n)};
-  }).filter(g => g.lista.length);
-  const assinatura = abaCanal + filtro + JSON.stringify(grupos.map(g => [g.n, g.s.status, g.s.resumo, g.lista.map(c=>c.id)]));
-  if(assinatura !== estrutura){
-    estrutura = assinatura;
-    const body = $("#cbody"); body.innerHTML = "";
-    if(!grupos.length){
-      body.innerHTML = `<div class="empty">Ainda não há cortes escolhidos para postar de ${esc(canais[abaCanal].nome)}. `+
-        `A cada ${tam} cortes a IA escolhe os 2 melhores. Lote atual: ${nAtual}/${tam}. Veja todos em <b>Todos</b>.</div>`;
-    }
-    grupos.forEach(g => {
-      const total = porLote[g.n].length;
-      const cab = document.createElement("div"); cab.className = "lotecab";
-      const estado = g.s.status === "feito" ? `⭐ ${porLote[g.n].filter(c=>c.escolhido===true).length} escolhido(s) de ${total + (g.s.apagados||0)}${g.s.fonte==="nota"?" (pela nota)":""}${g.s.apagados?` · ${g.s.apagados} apagado(s)`:""}`
-                   : g.s.status === "escolhendo" ? "🧠 IA escolhendo…" : `${total}/${tam} cortes`;
-      cab.innerHTML = `<b>Lote ${g.n}</b><span>${estado}</span>` + (g.s.resumo ? `<div class="resumo">${esc(g.s.resumo)}</div>` : "");
-      const grid = document.createElement("div"); grid.className = "clips";
-      g.lista.forEach(c => grid.appendChild(cardDe(c)));
-      body.appendChild(cab); body.appendChild(grid);
-    });
+  // lista: busca (todos os streamers) ou aba atual
+  const q = semAcento(busca.trim());
+  let lista = q ? clips.filter(c => semAcento([c.titulo, c.texto_gancho, c.canal, c.transcricao, c.motivo, c.jogo].join(" ")).includes(q))
+                : (filtro === "postar" ? escolhidos : meus);
+  const contagem = {Todos: lista.length};
+  lista.forEach(c => { const k = categoria(c); contagem[k] = (contagem[k] || 0) + 1; });
+  if(catFiltro !== "Todos" && !contagem[catFiltro]) catFiltro = "Todos";
+  setHTML("#cats", ["Todos", ...Object.keys(CAT)].filter(k => contagem[k]).map(k =>
+    `<button class="rv-chip${k === catFiltro ? " on" : ""}" data-cat="${k}" aria-pressed="${k === catFiltro}">${k}<em>${contagem[k]}</em></button>`).join(""));
+  lista = lista.filter(c => catFiltro === "Todos" || categoria(c) === catFiltro)
+               .sort((a, b) => String(b.criado).localeCompare(String(a.criado)));
+  const naAgenda = clips.filter(c => c.agenda || c.youtube).length;
+  setHTML("#clipsSub", `${q ? `${lista.length} resultado(s) para “${esc(busca.trim())}” · ` : `${lista.length} cortes · `}${naAgenda} na agenda ou postados · estrelas = nível de procurado (nota da IA)`);
+
+  if(!lista.length){
+    setHTML("#cbody", `<div class="rv-vazio"><b>${q ? "Nada encontrado" : "Nenhum corte escolhido ainda"}</b><span>${q ? "Tente outra palavra." : `A cada ${tam} cortes a IA escolhe os 2 melhores de ${esc(canais[abaCanal].nome)}. Lote atual: ${nAtual}/${tam}. Veja todos em <b>Todos</b>.`}</span></div>`);
   } else {
-    grupos.forEach(g => g.lista.forEach(cardDe));  // só atualiza o conteúdo dos cards
+    setHTML("#cbody", `<div class="rv-grade">${lista.map(cardHTML).join("")}</div>`);
   }
+  primeiraCarga = false;
+  if(!selId || !clipsById[selId]) selId = (lista[0] || meus[0] || {}).id || null;
+  renderEditor(selId ? clipsById[selId] : null);
 }
+
+/* ---------- editor do corte selecionado ---------- */
+const FORMATOS = [["dividido", "Câmera + jogo"], ["padrao", "Live no meio"], ["cheio", "Tela cheia"]];
+const TOGGLES = [["legenda", "Legenda das falas"], ["selo_live", "Selo da live"], ["zoom_cortes", "Zoom nos cortes (jump cut)"]];
+function onda(id){  // barras decorativas, sempre iguais para o mesmo corte
+  let h = 0; for(const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return Array.from({length:48}, (_, i) => `<i style="height:${Math.round(20 + 70 * Math.abs(Math.sin(i * 0.9 + h % 7) * Math.cos(i * 0.31 + h % 5)))}%"></i>`).join("");
+}
+function platsHTML(c){
+  const y = c.youtube, t = c.tiktok;
+  const yOn = !!(y && !["erro", "na fila", "enviando"].includes(y.status)) || !!c.agenda;
+  const tOn = !!(t && ["publicado", "rascunho"].includes(t.status));
+  const yTxt = y ? (y.status === "enviando" ? "enviando…" : y.status === "erro" ? "falhou" : y.status === "na fila" ? "na fila" : "enviado") : c.agenda ? "na agenda" : (ytSt.conectado ? "envio automático" : "manual");
+  const tTxt = t ? ({rascunho:"rascunho", publicado:"publicado", erro:"falhou", enviando:"enviando…", processando:"processando", "na fila":"na fila"}[t.status] || t.status) : (ttSt.conectado ? "envio automático" : "manual");
+  const P = [["shorts", "YouTube Shorts", yOn, yTxt], ["tiktok", "TikTok", tOn, tTxt], ["reels", "Instagram Reels", false, "manual"], ["kwai", "Kwai", false, "pelo celular"]];
+  return P.map(([k, n, on, s]) => `<button type="button" class="rv-plat${on ? " on" : ""}" data-postar="${k}" aria-label="Postar no ${n} (${s})">
+    <span aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#14061F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>
+    <div>${n}<small>${esc(s)}</small></div></button>`).join("");
+}
+function togglesHTML(){
+  return TOGGLES.map(([k, n]) => `<button type="button" class="rv-tg" data-tg="${k}" aria-pressed="${cfgVals[k] === true}"><span>${n}</span><i aria-hidden="true"></i></button>`).join("");
+}
+function renderEditor(c){
+  const ed = $("#editor");
+  if(!c){
+    put(ed, `<div class="rv-ed-cab"><h2 class="rv-h" id="rv-ed-tit" style="font-size:24px">Editar corte</h2></div><div class="rv-vazio" style="padding:28px 16px">Escolhe um corte na lista ou no mapa de calor pra ver aqui.</div>`);
+    ed._chave = null; return;
+  }
+  const chave = [c.id, c.status, c.arquivo, c.titulo, c.texto_gancho, c.escolhido, capaV(c)].join("|");
+  if(ed._chave !== chave){
+    ed._chave = chave; ed._h = null;
+    const cat = categoria(c), lay = (c.layout || {}).modo || "padrao";
+    const partes = (c.partes || []).filter(p => p && p.length >= 2);
+    const fimB = Math.max(1, ...partes.map(p => p[1]), c.duracao || 1);
+    const segs = partes.map(p => `<u style="left:calc(8px + ${(p[0] / fimB * 100).toFixed(1)}% * .93);width:calc(${((p[1] - p[0]) / fimB * 100).toFixed(1)}% * .93)"></u>`).join("");
+    const video = c.status === "pronto"
+      ? `<video src="${c.arquivo}" poster="${esc(capaV(c) || c.capa || "")}" controls preload="metadata" playsinline></video>`
+      : c.status === "erro" ? `<div class="proc"><b style="color:#FF9DB8">Falhou</b><small>${esc(c.erro || "")}</small></div>`
+      : `<div class="proc"><div class="spinner"></div>${esc(c.status)}…</div>`;
+    ed.innerHTML = `
+      <div class="rv-ed-cab"><h2 class="rv-h" id="rv-ed-tit" style="font-size:24px">Editar corte</h2><span class="rv-mono rv-muted" style="font-size:12px">${diaHora(c.criado)}</span>
+        <button class="rv-voltar" onclick="document.querySelector('[data-sel=&quot;${c.id}&quot;]')?.scrollIntoView({behavior:'smooth', block:'center'})">↑ Voltar aos cortes</button></div>
+      <div class="rv-palco"><div class="rv-cel">${video}${estrelasHTML(c, 16)}</div></div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div class="rv-ed-tit">${esc(c.titulo || c.titulo_ia || c.motivo)}</div>
+        <small>${esc(c.canal)} · ${cat} · ${tc(c.duracao)} · nota ${c.pontuacao ?? "–"}/10${c.jogo ? " · " + esc(c.jogo) : ""}</small>
+      </div>
+      ${c.escolhido && c.motivo_escolha ? `<div class="rv-pq" style="border-left-color:#FFE38A">⭐ ${esc(c.motivo_escolha)}</div>` : ""}
+      ${c.por_que ? `<div class="rv-pq">🧠 ${esc(c.por_que)}</div>` : ""}
+      ${partes.length ? `<div class="rv-sec"><div class="rv-lab"><span>Recorte</span><span>${partes.length} parte${partes.length > 1 ? "s" : ""} · ${tc(c.duracao)}</span></div>
+        <div class="rv-onda" aria-hidden="true">${onda(c.id)}${segs}</div>
+        <small>${partes.length > 1 ? "A IA juntou os pedaços com cortes secos para tirar a espera." : "Um trecho contínuo da live."}</small></div>` : ""}
+      <div class="rv-sec"><div class="rv-lab"><span>Formato deste corte</span></div>
+        <div class="rv-fmt">${FORMATOS.map(([k, n]) => `<span class="${k === lay ? "on" : ""}">${n}</span>`).join("")}</div></div>
+      <div class="rv-sec"><div class="rv-lab"><span>Nos próximos cortes</span></div><div id="edTg">${togglesHTML()}</div></div>
+      <div class="rv-sec"><div class="rv-lab"><span>Postar em</span></div><div class="rv-plats" id="edPlats"></div><div id="edLinhas"></div></div>
+      ${c.status === "pronto" ? `<div class="rv-sec">
+        <button class="rv-cta" onclick="abrirPublicar('${c.id}')">Publicar corte</button>
+        <div class="rv-2"><button onclick="edAgendar('${c.id}')">Agendar</button><a href="${c.arquivo}" download="${slug(c.titulo) || "corte-" + c.id}.mp4">Baixar MP4</a></div>
+        <div class="rv-2"><button onclick="abrirCapa('${c.id}')">Capa e thumbnail</button><button class="perigo" onclick="delClip('${c.id}')">Apagar</button></div></div>`
+      : `<div class="rv-2">${c.status === "erro" ? `<button onclick="refazerClip('${c.id}')">↻ Tentar de novo</button>` : "<span></span>"}<button class="perigo" onclick="delClip('${c.id}')">Apagar</button></div>`}`;
+  }
+  put($("#edPlats"), platsHTML(c));
+  put($("#edLinhas"), ytLinha(c) + ttLinha(c));
+  put($("#edTg"), togglesHTML());
+}
+function edAgendar(id){ abrirPublicar(id); pubPlat = "shorts"; ytVis = "agenda"; renderPub(); }
+function redesenhar(){ if(ultimoEstado) renderClips(ultimoEstado.cortes, ultimoEstado.lotes || {}, ultimoEstado.tam_lote || 10, ultimoEstado.lives || []); }
+async function carregarCfg(){ try{ cfgVals = await api("/api/config"); }catch(e){} redesenhar(); }
+
+$("#busca").addEventListener("input", e => { busca = e.target.value; redesenhar(); });
 document.addEventListener("click", async ev => {
-  const b = ev.target.closest("[data-aba],[data-filtro],[data-escolher]"); if(!b) return;
-  if(b.dataset.aba){ abaCanal = b.dataset.aba; lsSet("aba", abaCanal); }
+  const b = ev.target.closest("[data-aba],[data-filtro],[data-escolher],[data-cat],[data-sel],[data-tg],[data-postar]"); if(!b) return;
+  if(b.dataset.sel){
+    selId = b.dataset.sel; lsSet("sel", selId); redesenhar();
+    if(innerWidth < 1100) $("#editor").scrollIntoView({behavior:"smooth", block:"start"});
+    return;
+  }
+  if(b.dataset.postar){ const c = clipsById[selId]; if(!c || c.status !== "pronto") return; abrirPublicar(c.id); pubPlat = b.dataset.postar; renderPub(); return; }
+  if(b.dataset.tg){
+    const k = b.dataset.tg, v = !(cfgVals[k] === true);
+    b.disabled = true;
+    try{ await api("/api/config", {method:"POST", body:JSON.stringify({[k]: v})}); cfgVals[k] = v; }catch(e){ alert(erroTxt(e)); }
+    b.disabled = false; $("#edTg")._h = null; redesenhar(); return;
+  }
+  if(b.dataset.cat){ catFiltro = b.dataset.cat; redesenhar(); return; }
+  if(b.dataset.aba){ abaCanal = b.dataset.aba; lsSet("aba", abaCanal); catFiltro = "Todos"; selId = null; }
   if(b.dataset.filtro){ filtro = b.dataset.filtro; lsSet("filtro", filtro); }
   if(b.dataset.escolher){
     if(!confirm("Escolher agora os 2 melhores deste lote, mesmo sem completar 10 cortes? Os próximos cortes vão para um lote novo.")) return;
@@ -777,12 +1224,20 @@ document.addEventListener("click", async ev => {
   tick();
 });
 
+function capaV(c){  // capa 9:16 escolhida do corte (ou null se ainda não foi gerada)
+  const t = c.thumbs || {}, vs = t.variacoes || [];
+  const v = vs[Math.min(t.escolhida || 0, Math.max(vs.length - 1, 0))];
+  return t.status === "pronto" && v && v.img_v ? v.img_v : null;
+}
+function abrirCapa(cid){ abrirTh(cid); thFmt = "v"; renderTh(true); }
+
 const clipsById = {};
 async function tick(){
   try{
     const s = await api("/api/estado");
     s.cortes.forEach(c => clipsById[c.id] = c);
-    renderLives(s.lives); renderClips(s.cortes, s.lotes||{}, s.tam_lote||10);
+    ultimoEstado = s;
+    renderLives(s.lives, s.cortes, s.lotes||{}, s.tam_lote||10, s.fila); renderClips(s.cortes, s.lotes||{}, s.tam_lote||10, s.lives);
     if(pub.open && pubClip && clipsById[pubClip.id]){
       pubClip.youtube = clipsById[pubClip.id].youtube; pubClip.agenda = clipsById[pubClip.id].agenda;
       pubClip.thumbs = clipsById[pubClip.id].thumbs; pubClip.tiktok = clipsById[pubClip.id].tiktok;
@@ -812,7 +1267,7 @@ async function salvarConfig(){
   const body = {};
   cfg.querySelectorAll("[data-k]").forEach(el => body[el.dataset.k] = el.value==="true" ? true : el.value==="false" ? false : el.value);
   await api("/api/config",{method:"POST", body:JSON.stringify(body)});
-  cfg.close();
+  cfg.close(); carregarCfg();
 }
 
 async function limparNaoEscolhidos(a){
@@ -2104,7 +2559,7 @@ async function cnSalvar(){
   }catch(e){ $("#cnErr").textContent = erroTxt(e); btn.disabled = false; }
 }
 
-tick(); setInterval(tick, 1500); ytCarregar(); ttCarregar();
+tick(); setInterval(tick, 1500); ytCarregar(); ttCarregar(); carregarCfg();
 mostrarView(viewAtual); agCarregar();
 setInterval(() => { if(viewAtual === "agenda" || Date.now() % 30000 < 3000) agCarregar(); }, 3000);
 </script>

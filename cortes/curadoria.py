@@ -142,6 +142,16 @@ def _descricao(c):
             f"  título: {c.get('titulo') or '-'}\n  fala: {fala or '(sem fala)'}")
 
 
+def _base(prontos):
+    """Notas da base de conhecimento do jogo do lote (ex.: o que mais rende em gameplay de GTA 6). "" se não houver."""
+    try:
+        from . import conhecimento
+        jogos = [c.get("jogo") for c in prontos if c.get("jogo")]
+        return conhecimento.contexto(prontos[0].get("titulo_live"), jogos[0] if jogos else "")
+    except Exception:  # noqa - sem a base, a escolha segue como antes
+        return ""
+
+
 def _por_nota(prontos, k):
     ordem = sorted(prontos, key=lambda c: (-(c.get("pontuacao") or 0), abs((c.get("duracao") or 30) - 30)))
     return [(c["id"], "Maior nota da IA no lote.") for c in ordem[:k]]
@@ -156,7 +166,7 @@ def _por_ia(prontos, k):
         return None, None
     cliente = genai.Client(api_key=chave_gemini())
     texto = (f"Streamer: {prontos[0].get('canal')}. Escolha exatamente {k} corte(s) deste lote de {len(prontos)}.\n\n"
-             + "\n\n".join(_descricao(c) for c in prontos) + _aprendizado())
+             + "\n\n".join(_descricao(c) for c in prontos) + _base(prontos) + _aprendizado())
     cfg = types.GenerateContentConfig(system_instruction=SISTEMA, response_mime_type="application/json",
                                       response_json_schema=_schema_sem_refs(Escolha))
     r = gemini_gerar(cliente, MODELOS_GEMINI, texto, cfg)

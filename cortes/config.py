@@ -37,6 +37,8 @@ DEFAULTS = {
     "aprendizado_ativo": True, # o que funcionou no canal entra nas instruções da IA (títulos e escolha dos cortes)
     "aprendizado_base": "cortes",  # aprender com: "cortes" (só vídeos postados pelo app) ou "canal" (todos os vídeos)
     "formato_corte": "auto",   # "auto": gameplay com câmera vira tela dividida (câmera em cima, jogo embaixo); "padrao": sempre o de antes
+    "tela_cheia": "nao",       # "nao": live no meio com fundo desfocado | "conversa" | "todos": o vídeo enche a tela toda (recorte 9:16)
+    "tela_cheia_pos": 50,      # onde o recorte da tela cheia fica na live: 20 = esquerda, 50 = centro, 80 = direita
     "selo_live": True,         # logo da plataforma + link da live, pequeno, no meio do vídeo
     "cortar_pausas": True,     # pausa entre frases acima de 0,3 s vira 0,2 s (fora do gameplay)
     "zoom_cortes": True,       # jump cuts: a imagem do streamer alterna 100% / 110% a cada ~2,8 s

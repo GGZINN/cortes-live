@@ -261,6 +261,9 @@ def layout_gancho(gancho, complemento, modo):
     if modo == "dividido":   # logo abaixo da emenda câmera/jogo (o selo fica em cima da emenda)
         ancora, y_ancora = r"\an8", layout.ALT_CAM + 58
         y0, y1 = y_ancora - 34, y_ancora + alt + 26
+    elif modo == "cheio":    # tela cheia: no terço de cima, logo abaixo do selo da live
+        ancora, y_ancora = r"\an8", 310
+        y0, y1 = y_ancora - 34, y_ancora + alt + 26
     else:                    # formato padrão: a BASE do bloco fica acima do selo da live (não encosta nele)
         ancora, y_ancora = r"\an2", layout.TOPO_LIVE - 100
         y0, y1 = max(0, y_ancora - alt - 26), y_ancora + 30
@@ -564,15 +567,15 @@ def _process(cid, raw, offset, dur):
         offset = _offset_estimado(raw, dur)
     clip = get_clip(cid) or {}
     fonte, trocas = "bruto.ts", []
-    if clip.get("de_video"):
-        # Corte tirado de um vídeo: os quadros-chave ficam a cada ~6 s (na live, ~2 s) e, dentro de um .ts, o
-        # ffmpeg começa a imagem só no quadro-chave seguinte, com o áudio já no ponto certo (som adiantado).
-        # Reembalado em .mp4 (sem recodificar), o ponto de corte fica exato para imagem e som.
-        try:
-            run_ffmpeg(["-i", "bruto.ts", "-c", "copy", "bruto.mp4"], cwd=d)
-            fonte = "bruto.mp4"
-        except Exception:  # noqa - não deu para reembalar: segue com o .ts
-            traceback.print_exc()
+    # Dentro de um .ts, o ffmpeg começa a imagem só no quadro-chave SEGUINTE ao ponto de corte, mas o áudio já no
+    # ponto certo: a imagem fica adiantada e o som atrasado, por até o intervalo entre quadros-chave (~2 s na
+    # live, ~6 s num vídeo). Reembalado em .mp4 (sem recodificar), o corte cai exato para imagem e som.
+    # Medido com clarão e bipe juntos: .ts = 1,03 s de atraso do som; .mp4 = 0,03 s.
+    try:
+        run_ffmpeg(["-i", "bruto.ts", "-c", "copy", "bruto.mp4"], cwd=d)
+        fonte = "bruto.mp4"
+    except Exception:  # noqa - não deu para reembalar: segue com o .ts
+        traceback.print_exc()
     partes = [p for p in clip.get("partes") or [] if len(p) == 3 and p[1] > p[0]]
     if partes:
         com_salto = any(partes[i + 1][0] - partes[i][1] > 0.3 for i in range(len(partes) - 1))
@@ -630,12 +633,13 @@ def _process(cid, raw, offset, dur):
         caixa = (lg["y0"], lg["y1"], ate)
     # volume: −14 LUFS e pico abaixo de −1,5 dBTP (o padrão dos Shorts; as lives variam muito de volume)
     vf = ("[0:a:0]asetpts=PTS-STARTPTS,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[aud];"
-          + layout.filtro_video(lay["modo"], lay["camera"], selo, has_subs, lay.get("janela"), trocas_div, caixa, zoom))
+          + layout.filtro_video(lay["modo"], lay["camera"], selo, has_subs, lay.get("janela"), trocas_div, caixa, zoom,
+                                         lay.get("x", 0.5)))
     run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", fonte, *(["-i", "selo.png"] if selo else []),
                 "-filter_complex", vf, "-map", "[v]", "-map", "[aud]",
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
                 "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "corte.mp4"], cwd=d)
-    if lay["modo"] == "dividido":  # cópia 16:9 só da live, para thumbnails e compilados (o corte não tem mais a live inteira)
+    if lay["modo"] in ("dividido", "cheio"):  # cópia 16:9 só da live, para thumbnails e compilados (o corte não tem mais a live inteira)
         run_ffmpeg(["-ss", f"{offset:.2f}", "-t", f"{dur:.2f}", "-i", fonte, "-vf", "scale=1280:-2,format=yuv420p",
                     "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", "-c:a", "aac", "-b:a", "128k",
                     "-movflags", "+faststart", "live.mp4"], cwd=d)

@@ -1,6 +1,8 @@
 """Formato do corte vertical (1080x1920).
 
 - "padrao": a live inteira no meio, com fundo desfocado em cima e embaixo.
+- "cheio": tela cheia. Só o miolo vertical (9:16) da live enche os 1080x1920, e as laterais ficam de fora, onde
+  costumam estar os alertas de doação/Pix, o chat e as molduras. Opção "tela_cheia" nas configurações.
 - "dividido": para gameplay com a câmera do streamer sobreposta ao jogo. A câmera vai em cima (1080x768)
   e o jogo embaixo (1080x1152), ocupando a tela toda. A IA (Gemini) olha um quadro do corte e marca onde
   está a câmera.
@@ -131,7 +133,17 @@ def _perguntar(jpg):
 
 def decidir(clip, quadro_jpg):
     """Escolhe o formato do corte. quadro_jpg: bytes de um quadro 16:9 da live (ou None).
-    Devolve {"modo": "dividido"|"padrao", "camera": [x,y,w,h] 0-1 ou None, "tipo", "fonte", "motivo"}."""
+    Devolve {"modo": "dividido"|"padrao"|"cheio", "camera": [x,y,w,h] 0-1 ou None, "tipo", "fonte", "motivo"}.
+    A tela cheia entra por cima do formato padrão (a tela dividida do gameplay com câmera continua como é)."""
+    res = _decidir(clip, quadro_jpg)
+    modo = config.get("tela_cheia")
+    if res["modo"] == "padrao" and (modo == "todos" or (modo == "conversa" and res.get("tipo") == "conversa")):
+        res = dict(res, modo="cheio", x=max(0, min(100, int(config.get("tela_cheia_pos")))) / 100,
+                   motivo="tela cheia (" + ("conversa" if res.get("tipo") == "conversa" else "todos os cortes") + ")")
+    return res
+
+
+def _decidir(clip, quadro_jpg):
     from .titulos import _chave_gemini
     if config.get("formato_corte") != "auto":
         return {"modo": "padrao", "camera": None, "tipo": None, "fonte": "config", "motivo": "formato fixo nas configurações"}
@@ -202,12 +214,13 @@ def _zoom(entrada, saida, w, h, zoom):
             f"[{saida}_0][{saida}_z]overlay=0:0:enable='{_enable(zoom)}'[{saida}]")
 
 
-def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None, gancho_caixa=None, zoom=None):
+def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None, gancho_caixa=None, zoom=None, pos_x=0.5):
     """filter_complex do vídeo. Entrada 0 = live; entrada 1 = selo.png (se selo). Saída [v].
     camera: a parte da câmera que vai em cima; janela: a janela inteira dela (fica de fora do jogo).
     trocas (só na tela dividida): [(ini, fim, "rosto"|"jogo")] em segundos do corte: nesses trechos a tela
     inteira vira só a câmera (reação) ou só o jogo (detalhe), como na edição dos canais grandes.
-    zoom: [(ini, fim)] em que a imagem do streamer fica mais fechada (jump cuts; o jogo não muda)."""
+    zoom: [(ini, fim)] em que a imagem do streamer fica mais fechada (jump cuts; o jogo não muda).
+    pos_x (só na tela cheia): onde o recorte 9:16 fica na largura da live, 0 = esquerda ... 1 = direita."""
     if modo == "dividido":
         x, y, w, h = camera
         jx, jy, jw, jh = recorte_jogo(janela or camera)
@@ -233,6 +246,12 @@ def filtro_video(modo, camera, selo, legenda, janela=None, trocas=None, gancho_c
         atual_div = "base3" if jogo_cheio else ("base2" if rosto else "base")
         g = g if atual_div == "base" else g + f";[{atual_div}]null[basef]"
         y_selo = f"{ALT_CAM}-h/2"           # na emenda entre a câmera e o jogo
+    elif modo == "cheio":
+        # o miolo 9:16 da live (altura inteira) enche a tela; recorte antes de ampliar, com lanczos
+        g = (f"[0:v]setpts=PTS-STARTPTS,crop=w='min(iw,floor(ih*9/16/2)*2)':h=ih:x='(iw-ow)*{pos_x:.3f}':y=0,"
+             f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{H},setsar=1[base0];"
+             + _zoom("base0", "base", W, H, zoom))
+        y_selo = "230"                      # abaixo da barra de cima do app, fora do rosto
     else:
         g = ("[0:v]setpts=PTS-STARTPTS,split=2[a][b];"
              f"[a]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"

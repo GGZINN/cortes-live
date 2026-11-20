@@ -144,7 +144,6 @@ class Stream:
             "duracao": round(dur, 1), "status": "na fila", "url_live": self.url,
             "motivo": "Corte", "pontuacao": 0, "pico_rel": min(3.0, dur / 2),
             "bruto_offset": round(offset, 3),  # onde o trecho começa no bruto.ts (para refazer o corte)
-            "de_video": self.recorder.video,   # o clipper reembala o bruto para o corte não sair com o som adiantado
         }
         clip.update(meta)
         clipper.add_clip(clip)
